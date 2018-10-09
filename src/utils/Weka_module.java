@@ -1310,7 +1310,7 @@ public class Weka_module {
             arff.setInstances(data);
             arff.setFile(new File(outfile + ".tmp"));
             arff.writeBatch();
-            //change non numeric attributes to ensure compatibility
+            //change non-numeric attributes to ensure compatibility
             String classString = "";
             Classifier model = (Classifier) weka.core.SerializationHelper.read(modelFile);
             HashMap<String, String> hm = new HashMap<>();
@@ -1326,7 +1326,7 @@ public class Weka_module {
                 PrintWriter pw = new PrintWriter(new FileWriter(outfile));
                 while (br.ready()) {
                     String line = br.readLine();
-                    if (line.startsWith("@attribute") && !line.endsWith(" numeric") && !line.contains("@attribute Instances")) {
+                    if (line.startsWith("@attribute") && !line.endsWith(" numeric") && !line.contains("@attribute Instance")) {
                         String attribute = line.replace("@attribute ", "").trim();
                         attribute = attribute.substring(0, attribute.indexOf("{"));
                         pw.println(hm.get(attribute));
