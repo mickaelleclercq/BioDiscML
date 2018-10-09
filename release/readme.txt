@@ -1,6 +1,6 @@
-##################
-#### BioDiscML####
-##################
+###################
+#### BioDiscML ####
+###################
 
 # Description
 The identification of biomarker signatures in omics molecular profiling is an 
@@ -19,11 +19,14 @@ retrieves correlated biomarkers not included in the final model to better
 understand the signature. The software has been implemented to automate all 
 machine learning steps, including data pre-processing, feature selection, model 
 selection, and performance evaluation. 
+https://github.com/mickaelleclercq/BioDiscML/
 
 #### Program usage #### 
 # Config file
 Before executing BioDiscML, a config file must be created. Use the template to 
-create your own. Everything is detailled in the config.conf file. 
+create your own. Everything is detailled in the config.conf file. Examples are 
+available in the Test_datasets at: 
+https://github.com/mickaelleclercq/BioDiscML/tree/master/release/Test_datasets
 
 # train a new model
 java -jar bruteforceML.jar -config config.conf -train
