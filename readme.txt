@@ -21,6 +21,8 @@ machine learning steps, including data pre-processing, feature selection, model
 selection, and performance evaluation. 
 https://github.com/mickaelleclercq/BioDiscML/
 
+REQUIRES JAVA 8
+
 #### Program usage #### 
 # Config file
 Before executing BioDiscML, a config file must be created. Use the template to 
