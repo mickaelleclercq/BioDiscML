@@ -606,7 +606,10 @@ public class Training {
                                             trainFileName.replace("data_to_train.csv", "data_to_test.csv"),//test file
                                             Main.isclassification, out);
                             tro.CC = rr2.CC;
+                            tro.RRSE = rr2.RRSE;
                             tro.RMSE = rr2.RMSE;
+                            tro.MAE = rr2.MAE;
+                            tro.RAE = rr2.RAE;
                             testResults = tro.toStringRegression();
                         }
                     }
@@ -751,7 +754,8 @@ public class Training {
                             + "\t" + broTrain.toStringRegression()
                             + "\t" + testResults
                             + "\t" + broTrainTest.toStringRegression()
-                            + "\t" + stats + "\t" + ao.getRetainedAttributesIdClassInString();
+                            + "\t" + stats
+                            + "\t" + ao.getRetainedAttributesIdClassInString();
                 }
 
                 //CREATE ID
