@@ -282,9 +282,14 @@ public class Weka_module {
             String classifier_options,
             String attributesToUse,
             Boolean classification, int numberOfFolds) {
+
         try {
             // load data
             Instances data = myData;
+            //reduc numberOfFolds if needed
+            if (data.numInstances() < numberOfFolds) {
+                numberOfFolds = data.numInstances();
+            }
             //set last attribute as index
             if (data.classIndex() == -1) {
                 data.setClassIndex(data.numAttributes() - 1);
@@ -1960,6 +1965,9 @@ public class Weka_module {
             meanBERs = getMean(alBERs);
             meanCCs = getMean(alCCs);
             meanRMSEs = getMean(alRMSEs);
+            meanRAEs = getMean(alRAEs);
+            meanRRSEs = getMean(alRRSEs);
+            meanMAEs = getMean(alMAEs);
         }
     }
 
