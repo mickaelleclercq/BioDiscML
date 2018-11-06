@@ -474,6 +474,9 @@ public class Main {
                                 hmTestFiles.put(wd + value.replace(",", "").trim(), ""); //filename
                             }
                             break;
+                        case "cpus":
+                            cpus = value.trim();
+                            break;
 
                     }
                     line = br.readLine();

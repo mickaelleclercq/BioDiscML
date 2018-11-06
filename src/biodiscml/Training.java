@@ -623,9 +623,8 @@ public class Training {
                         Weka_module weka2 = new Weka_module();
                         weka2.setARFFfile(trainFileName.replace("data_to_train.csv", "all_data.arff"));
                         weka2.setDataFromArff();
-                        weka2.myData = weka2.extractFeaturesFromDatasetBasedOnModel(cr.model, weka2.myData);
-
                         if (isClassification) {
+                            weka2.myData = weka2.extractFeaturesFromDatasetBasedOnModel(cr.model, weka2.myData);
                             for (int i = 0; i < Main.bootstrapFolds; i++) {
                                 Weka_module.ClassificationResultsObject cro
                                         = (Weka_module.ClassificationResultsObject) weka2.trainClassifierHoldOutCVandTest(
@@ -642,10 +641,11 @@ public class Training {
                                 broTrainTest.alBERs.add(Double.valueOf(cro.BER));
                             }
                         } else {
+                            weka2.myData = weka2.extractFeaturesFromDatasetBasedOnModel(rr.model, weka2.myData);
                             for (int i = 0; i < Main.bootstrapFolds; i++) {
                                 Weka_module.RegressionResultsObject rro
                                         = (Weka_module.RegressionResultsObject) weka2.trainClassifierHoldOutCVandTest(classifier, classifier_options,
-                                                ao.getRetainedAttributesIdClassInString(), isClassification, i);
+                                                null, isClassification, i);
                                 broTrainTest.alCCs.add(Double.valueOf(rro.CC));
                                 broTrainTest.alMAEs.add(Double.valueOf(rro.MAE));
                                 broTrainTest.alRMSEs.add(Double.valueOf(rro.RMSE));
