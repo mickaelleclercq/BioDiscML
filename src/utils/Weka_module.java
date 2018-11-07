@@ -524,8 +524,8 @@ public class Weka_module {
             if (data.classIndex() == -1) {
                 data.setClassIndex(data.numAttributes() - 1);
             }
-            //delete ids
-            //data.deleteAttributeAt(0);
+            //get id attribute
+            Attribute id = data.attribute(0);
 
             weka.filters.supervised.attribute.AttributeSelection select = new weka.filters.supervised.attribute.AttributeSelection();
             String options = "-E "
@@ -552,10 +552,16 @@ public class Weka_module {
                 select.setInputFormat(data);
                 filteredData = Filter.useFilter(data, select);
             }
+            //add identifier if it has been lost after information gain
+            if (!filteredData.attribute(0).equals(data.attribute(0))) {
+                filteredData.insertAttributeAt(data.attribute(0), 0);
+            }
+            filteredData.attribute(0);
 
             //save data as csv
             CSVSaver csv = new CSVSaver();
             csv.setInstances(filteredData);
+
             csv.setFile(new File(outfile));
             if (new File(outfile.replace(".csv", ".arff")).exists()) {
                 new File(outfile.replace(".csv", ".arff")).delete();
@@ -1448,7 +1454,6 @@ public class Weka_module {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-
     }
 
     public static class RegressionResultsObject {

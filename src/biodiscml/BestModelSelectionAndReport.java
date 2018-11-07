@@ -354,7 +354,6 @@ public class BestModelSelectionAndReport {
                         broTrain.alRRSEs.add(Double.valueOf(rro.RRSE));
                     }
                     broTrain.computeMeans();
-                    System.out.println(broTrain.toStringRegression());
                     pw.println(broTrain.toStringRegressionDetails());
                 }
                 pw.flush();
@@ -368,8 +367,14 @@ public class BestModelSelectionAndReport {
                         //get arff test filename generated before training
                         String arffTestFile = trainFileName.replace("data_to_train.csv", "data_to_test.arff");
                         //set the outfile of the extracted features needed to test the current model
-                        String arffTestFileWithExtractedModelFeatures = arffTestFile.
-                                replace("_a.classification.data_to_test.arff", "_d." + classifierName + ".test_features.arff");
+                        String arffTestFileWithExtractedModelFeatures = "";
+                        if (classification) {
+                            arffTestFileWithExtractedModelFeatures = arffTestFile.
+                                    replace("_a.classification.data_to_test.arff", "_d." + classifierName + ".test_features.arff");
+                        } else {
+                            arffTestFileWithExtractedModelFeatures = arffTestFile.
+                                    replace("_a.regression.data_to_test.arff", "_d." + classifierName + ".test_features.arff");
+                        }
                         //check if test set is here
                         if (!new File(arffTestFile).exists()) {
                             pw.println("Test file " + arffTestFile + " not found");
@@ -419,7 +424,9 @@ public class BestModelSelectionAndReport {
                                 rocCurveGraphs.createRocCurvesWithConfidence(alROCs, classification, modelFilename, ".roc_test.png");
                             }
                         } else {
-                            Weka_module.RegressionResultsObject rr2 = (Weka_module.RegressionResultsObject) weka2.testClassifierFromFileSource(new File(weka2.ARFFfile), modelFilename + ".model", Main.isclassification);
+                            Weka_module.RegressionResultsObject rr2
+                                    = (Weka_module.RegressionResultsObject) weka2.testClassifierFromFileSource(new File(weka2.ARFFfile),
+                                            modelFilename + ".model", classification);
                             System.out.println("[score_testing] Average CC: " + rr2.CC);
                             System.out.println("[score_testing] Average RMSE: " + rr2.RMSE);
                             //
@@ -434,11 +441,11 @@ public class BestModelSelectionAndReport {
                             Weka_module weka3 = new Weka_module();
                             weka3.setARFFfile(trainFileName.replace("data_to_train.csv", "all_data.arff"));
                             weka3.setDataFromArff();
-                            weka3.myData = weka3.extractFeaturesFromDatasetBasedOnModel(cr.model, weka3.myData);
 
                             if (classification) {
+                                weka3.myData = weka3.extractFeaturesFromDatasetBasedOnModel(cr.model, weka3.myData);
                                 System.out.println("Bootstrap evaluation on TRAIN AND TEST sets of " + co.classifier + " " + co.options
-                                        + " optimized by " + co.optimizer + "...");
+                                        + " optimized by " + co.optimizer);
                                 pw.println("\n#Bootstrap evaluation performance on TRAIN AND TEST set, "
                                         + Main.bootstrapFolds + " times weighted average (and standard deviation) on various random seeds");
                                 for (int i = 0; i < Main.bootstrapFolds; i++) {
@@ -462,6 +469,7 @@ public class BestModelSelectionAndReport {
                                     rocCurveGraphs.createRocCurvesWithConfidence(alROCs, classification, modelFilename, ".roc.png");
                                 }
                             } else {
+                                weka3.myData = weka3.extractFeaturesFromDatasetBasedOnModel(rr.model, weka3.myData);
                                 System.out.println("Bootstrap evaluation on TRAIN AND TEST sets of " + ro.classifier + " "
                                         + ro.options + "optimized by " + ro.optimizer.toUpperCase());
                                 pw.println("\n#Bootstrap evaluation performance on TRAIN AND TEST set, "
@@ -469,7 +477,7 @@ public class BestModelSelectionAndReport {
                                 for (int i = 0; i < Main.bootstrapFolds; i++) {
                                     Weka_module.RegressionResultsObject rro
                                             = (Weka_module.RegressionResultsObject) weka.trainClassifierHoldOutCVandTest(ro.classifier, ro.options,
-                                                    ro.featuresSeparatedByCommas, classification, i);
+                                                    null, classification, i);
                                     broTrainTest.alCCs.add(Double.valueOf(rro.CC));
                                     broTrainTest.alMAEs.add(Double.valueOf(rro.MAE));
                                     broTrainTest.alRMSEs.add(Double.valueOf(rro.RMSE));
@@ -477,7 +485,7 @@ public class BestModelSelectionAndReport {
                                     broTrainTest.alRRSEs.add(Double.valueOf(rro.RRSE));
                                 }
                                 broTrainTest.computeMeans();
-                                System.out.println(broTrainTest.toStringRegression());
+                                System.out.println(broTrainTest.toStringRegressionDetails());
                                 pw.println(broTrainTest.toStringRegressionDetails());
                             }
                             broTrainTest.computeMeans();
