@@ -31,7 +31,7 @@ https://github.com/mickaelleclercq/BioDiscML/tree/master/release/Test_datasets
 
 ### Train a new model
 ```Bash
-java -jar bruteforceML.jar -config config.conf -train
+java -jar biodiscml.jar -config config.conf -train
 ```
 config_myData.conf (text file) quick start content example (See release/Test_datasets folder)
 ```
@@ -47,7 +47,7 @@ numberOfBestModelsSortingMetric=TRAIN_BS_MCC
 
 ### Choose best model(s)
 ```Bash
-java -jar bruteforceML.jar -config config_example.conf -bestmodel 
+java -jar biodiscml.jar -config config_example.conf -bestmodel 
 ```
 When training completed, stopped or still in execution, best model 
 selection can be executed. This command reads the results file. Best 
@@ -57,7 +57,7 @@ in an excel-like program and order models by your favorite metrics or
 filters. Each model has an identifier (modelID) you can provide to 
 the command. Example:
 ```Bash
-java -jar bruteforceML.jar -config config.conf -bestmodel modelID_1 modelID_2
+java -jar biodiscml.jar -config config.conf -bestmodel modelID_1 modelID_2
 ```
 ### Output files
 Note: {project_name} is set in the config.conf file

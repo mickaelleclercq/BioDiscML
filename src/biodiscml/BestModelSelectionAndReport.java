@@ -23,6 +23,7 @@ import java.util.TreeMap;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
+import utils.UpSetR;
 import utils.Weka_module;
 import weka.core.SerializationHelper;
 
@@ -81,15 +82,18 @@ public class BestModelSelectionAndReport {
         } else {
             init(featureSelectionFile.replace("RELIEFF.csv", "RELIEFF.arff"), classification);
         }
+
         try {
             BufferedReader br = new BufferedReader(new FileReader(predictionsResultsFile));
             TreeMap<String, Object> tmModels = new TreeMap<>(); //<metric modelID, classification/regression Object>
             HashMap<String, Object> hmModels = new HashMap<>(); //<modelID, classification/regression Object>
+
             //in case of RMSE or BER, we want the minimum value instead of the maximal one
             if (!metricToMinimize) {
                 tmModels = new TreeMap<>(Collections.reverseOrder());
             }
             String line = br.readLine();
+
             //fill header mapping
             String header = line;
             int cpt = 0;
@@ -259,6 +263,7 @@ public class BestModelSelectionAndReport {
                     System.out.println("# ID: " + ro.identifier);
                     pw.println("# Classifier: " + ro.classifier + " " + ro.options + "\n# Optimizer: " + ro.optimizer.toUpperCase());
                 }
+
                 //show combined models in case of combined vote
                 if (Main.combineModels) {
                     pw.println("# Combined classifiers:");
@@ -282,6 +287,13 @@ public class BestModelSelectionAndReport {
                     }
                 }
                 pw.flush();
+
+                //UpSetR
+                if (Main.UpSetR) {
+                    utils.UpSetR up = new UpSetR();
+                    up.creatUpSetRDatasetFromSignature(co,featureSelectionFile, predictionsResultsFile);
+                }
+
                 //10CV performance
                 System.out.println("# 10 fold cross validation performance");
                 pw.println("\n# 10 fold cross validation performance");
@@ -293,6 +305,7 @@ public class BestModelSelectionAndReport {
                     pw.println(rr.toStringDetails().replace("[score_training] ", ""));
                 }
                 pw.flush();
+
                 //LOOCV performance
                 System.out.println("# LOOCV (Leave-One-Out cross validation) performance");
                 pw.println("\n# LOOCV (Leave-One-Out Cross Validation) performance");
@@ -503,6 +516,7 @@ public class BestModelSelectionAndReport {
                     }
                 }
                 pw.flush();
+
                 //output features
                 if (classification) {
                     try {
@@ -528,6 +542,7 @@ public class BestModelSelectionAndReport {
                     }
                 }
                 pw.flush();
+
                 //retrieve correlated genes
                 if (retrieveCorrelatedGenes) {
                     if (new File(trainFileName).exists()) {
@@ -554,6 +569,7 @@ public class BestModelSelectionAndReport {
                         System.out.println("Feature file " + trainFileName + " not found. Unable to calculate correlated genes");
                     }
                     pw.flush();
+
                     //retreive rankings
                     String ranking = "";
                     if (classification) {
@@ -610,6 +626,7 @@ public class BestModelSelectionAndReport {
                         }
                         System.out.println("[done]");
                     }
+
                     //close file
                     pw.println("\n\n## End of file ##");
                     pw.close();
@@ -778,7 +795,7 @@ public class BestModelSelectionAndReport {
     /**
      * classification object
      */
-    private static class classificationObject {
+    public static class classificationObject {
 
         public ArrayList<String> featureList = new ArrayList<>();
         public String featuresSeparatedByCommas = "";
@@ -793,7 +810,7 @@ public class BestModelSelectionAndReport {
         public classificationObject() {
         }
 
-        private classificationObject(String line) {
+        public classificationObject(String line) {
 
             identifier = line.split("\t")[hmResultsHeaderNames.get("ID")];
             classifier = line.split("\t")[hmResultsHeaderNames.get("classifier")];
@@ -869,7 +886,7 @@ public class BestModelSelectionAndReport {
 
     }
 
-    private static class regressionObject {
+    public static class regressionObject {
 
         public ArrayList<String> featureList = new ArrayList<>();
         public String featuresSeparatedByCommas;

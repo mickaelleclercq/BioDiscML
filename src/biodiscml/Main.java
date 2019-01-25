@@ -82,6 +82,7 @@ public class Main {
     //TODO
     static boolean retreiveCorrelatedGenesByRankingScore = false; //avoid for non-binary classes and regression
     static boolean ROCcurves = false; //experimental
+    static boolean UpSetR = false; //experimental
 
     public static void main(String[] args) throws IOException {
         System.out.println("#### BioDiscML ####\n");

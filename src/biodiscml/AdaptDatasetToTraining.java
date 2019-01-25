@@ -200,7 +200,8 @@ public class AdaptDatasetToTraining {
                             if (!Main.hmExcludedFeatures.containsKey(s)) { //if it is not a rejected feature
                                 // print values and replace , per .
                                 String out = tbo.hmData.get(s).get(idIndex).replace(",", ".");
-                                if (out.isEmpty() || out.equals("NA") || out.equals("N/A")) {
+                                if (out.isEmpty() || out.equals("NA") || out.equals("na")
+                                        ||out.equals("N/A")||out.equals("n/a")) {
                                     out = "?";
                                 }
                                 pw.print("\t" + out);
