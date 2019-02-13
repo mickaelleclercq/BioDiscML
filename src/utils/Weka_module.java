@@ -1340,7 +1340,11 @@ public class Weka_module {
                     if (line.startsWith("@attribute") && !line.endsWith(" numeric") && !line.contains("@attribute Instance")) {
                         String attribute = line.replace("@attribute ", "").trim();
                         attribute = attribute.substring(0, attribute.indexOf("{"));
-                        pw.println(hm.get(attribute));
+                        if (hm.get(attribute) != null) {
+                            pw.println(hm.get(attribute));
+                        } else {
+                            pw.println(line);
+                        }
                     } else {
                         pw.println(line);
                     }
