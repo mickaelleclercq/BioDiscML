@@ -257,11 +257,15 @@ public class BestModelSelectionAndReport {
                 if (classification) {
                     pw.println("# ID: " + co.identifier);
                     System.out.println("# ID: " + co.identifier);
-                    pw.println("# Classifier: " + co.classifier + " " + co.options + "\n# Optimizer: " + co.optimizer.toUpperCase());
+                    pw.println("# Classifier: " + co.classifier + " " + co.options
+                            + "\n# Optimizer: " + co.optimizer.toUpperCase()
+                            + "\n# Feature search mode: " + co.mode);
                 } else {
                     pw.println("# ID: " + ro.identifier);
                     System.out.println("# ID: " + ro.identifier);
-                    pw.println("# Classifier: " + ro.classifier + " " + ro.options + "\n# Optimizer: " + ro.optimizer.toUpperCase());
+                    pw.println("# Classifier: " + ro.classifier + " " + ro.options
+                            + "\n# Optimizer: " + ro.optimizer.toUpperCase()
+                            + "\n# Feature search mode: " + co.mode);
                 }
 
                 //show combined models in case of combined vote
@@ -291,7 +295,7 @@ public class BestModelSelectionAndReport {
                 //UpSetR
                 if (Main.UpSetR) {
                     utils.UpSetR up = new UpSetR();
-                    up.creatUpSetRDatasetFromSignature(co,featureSelectionFile, predictionsResultsFile);
+                    up.creatUpSetRDatasetFromSignature(co, featureSelectionFile, predictionsResultsFile);
                 }
 
                 //10CV performance
@@ -521,7 +525,7 @@ public class BestModelSelectionAndReport {
                 if (classification) {
                     try {
                         pw.print("\n# Selected Attributes\t(Total attributes:" + cr.numberOfFeatures + "). "
-                                + "Occurences are shown if you chose combined model\n");
+                                + "Occurrences are shown if you chose combined model\n");
                         pw.print(cr.features);
                         pw.println("\n# Attribute ranking by merit calculated by information gain");
                         pw.print(cr.getFeatureRankingResults());
@@ -532,7 +536,7 @@ public class BestModelSelectionAndReport {
                 } else {
                     try {
                         pw.print("\n# Selected Attributes\t(Total attributes:" + rr.numberOfFeatures + "). "
-                                + "Occurences are shown if you chose combined model\n");
+                                + "Occurrences are shown if you chose combined model\n");
                         pw.print(rr.features);
                         pw.println("\n# Attribute ranking by merit calculated by RELIEFF");
                         pw.print(rr.getFeatureRankingResults());
