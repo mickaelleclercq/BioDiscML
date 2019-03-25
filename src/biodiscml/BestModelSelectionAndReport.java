@@ -22,7 +22,6 @@ import java.util.LinkedHashMap;
 import java.util.TreeMap;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
-import org.apache.commons.math3.stat.descriptive.rank.Median;
 import utils.UpSetR;
 import utils.Weka_module;
 import weka.core.SerializationHelper;
@@ -326,52 +325,52 @@ public class BestModelSelectionAndReport {
                 }
                 pw.flush();
 
-                //BOOTSTRAP performance TRAIN set
+                //REPEATED HOLDOUT performance TRAIN set
                 ArrayList<Object> alROCs = new ArrayList<>();
-                Weka_module.bootstrapResultsObject broTrain = new Weka_module.bootstrapResultsObject();
+                Weka_module.evaluationPerformancesResultsObject eproTrain = new Weka_module.evaluationPerformancesResultsObject();
                 if (classification) {
-                    System.out.println("Bootstrap evaluation on TRAIN set of " + co.classifier + " " + co.options
+                    System.out.println("Repeated Holdout evaluation on TRAIN set of " + co.classifier + " " + co.options
                             + " optimized by " + co.optimizer + "...");
-                    pw.println("\n#Bootstrap evaluation performance on TRAIN set, "
-                            + Main.bootstrapFolds + " times weighted average (and standard deviation) on various random seeds");
-                    for (int i = 0; i < Main.bootstrapFolds; i++) {
+                    pw.println("\n#Repeated Holdout evaluation performance on TRAIN set, "
+                            + Main.bootstrapAndRepeatedHoldoutFolds + " times weighted average (and standard deviation) on various random seeds");
+                    for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                         Weka_module.ClassificationResultsObject cro
-                                = (Weka_module.ClassificationResultsObject) weka.trainClassifierHoldOutCVandTest(co.classifier, co.options,
+                                = (Weka_module.ClassificationResultsObject) weka.trainClassifierRepeatedHoldOutCVandTest(co.classifier, co.options,
                                         co.featuresSeparatedByCommas, classification, i);
-                        broTrain.alAUCs.add(Double.valueOf(cro.AUC));
-                        broTrain.alpAUCs.add(Double.valueOf(cro.pAUC));
-                        broTrain.alAUPRCs.add(Double.valueOf(cro.AUPRC));
-                        broTrain.alACCs.add(Double.valueOf(cro.ACC));
-                        broTrain.alSEs.add(Double.valueOf(cro.TPR));
-                        broTrain.alSPs.add(Double.valueOf(cro.TNR));
-                        broTrain.alMCCs.add(Double.valueOf(cro.MCC));
-                        broTrain.alBERs.add(Double.valueOf(cro.BER));
+                        eproTrain.alAUCs.add(Double.valueOf(cro.AUC));
+                        eproTrain.alpAUCs.add(Double.valueOf(cro.pAUC));
+                        eproTrain.alAUPRCs.add(Double.valueOf(cro.AUPRC));
+                        eproTrain.alACCs.add(Double.valueOf(cro.ACC));
+                        eproTrain.alSEs.add(Double.valueOf(cro.TPR));
+                        eproTrain.alSPs.add(Double.valueOf(cro.TNR));
+                        eproTrain.alMCCs.add(Double.valueOf(cro.MCC));
+                        eproTrain.alBERs.add(Double.valueOf(cro.BER));
                         alROCs.add(cro);
                         // System.out.println(i+"\t"+Double.valueOf(cro.AUC));
                     }
-                    broTrain.computeMeans();
-                    System.out.println(broTrain.toStringClassificationDetails());
-                    pw.println(broTrain.toStringClassificationDetails());
+                    eproTrain.computeMeans();
+                    System.out.println(eproTrain.toStringClassificationDetails());
+                    pw.println(eproTrain.toStringClassificationDetails());
 
                     if (Main.ROCcurves) {
                         rocCurveGraphs.createRocCurvesWithConfidence(alROCs, classification, modelFilename, ".roc_train.png");
                     }
                 } else {
-                    System.out.println("Bootstrap evaluation on TRAIN set of " + ro.classifier + " "
+                    System.out.println("Repeated Holdout evaluation on TRAIN set of " + ro.classifier + " "
                             + ro.options + "optimized by " + ro.optimizer.toUpperCase());
-                    pw.println("\n\n#Bootstrap evaluation performance on TRAIN set, " + Main.bootstrapFolds + " times average on various random seeds");
-                    for (int i = 0; i < Main.bootstrapFolds; i++) {
+                    pw.println("\n\n#Repeated Holdout evaluation performance on TRAIN set, " + Main.bootstrapAndRepeatedHoldoutFolds + " times average on various random seeds");
+                    for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                         Weka_module.RegressionResultsObject rro
-                                = (Weka_module.RegressionResultsObject) weka.trainClassifierHoldOutCVandTest(ro.classifier, ro.options,
+                                = (Weka_module.RegressionResultsObject) weka.trainClassifierRepeatedHoldOutCVandTest(ro.classifier, ro.options,
                                         ro.featuresSeparatedByCommas, classification, i);
-                        broTrain.alCCs.add(Double.valueOf(rro.CC));
-                        broTrain.alMAEs.add(Double.valueOf(rro.MAE));
-                        broTrain.alRMSEs.add(Double.valueOf(rro.RMSE));
-                        broTrain.alRAEs.add(Double.valueOf(rro.RAE));
-                        broTrain.alRRSEs.add(Double.valueOf(rro.RRSE));
+                        eproTrain.alCCs.add(Double.valueOf(rro.CC));
+                        eproTrain.alMAEs.add(Double.valueOf(rro.MAE));
+                        eproTrain.alRMSEs.add(Double.valueOf(rro.RMSE));
+                        eproTrain.alRAEs.add(Double.valueOf(rro.RAE));
+                        eproTrain.alRRSEs.add(Double.valueOf(rro.RRSE));
                     }
-                    broTrain.computeMeans();
-                    pw.println(broTrain.toStringRegressionDetails());
+                    eproTrain.computeMeans();
+                    pw.println(eproTrain.toStringRegressionDetails());
                 }
                 pw.flush();
 
@@ -451,8 +450,8 @@ public class BestModelSelectionAndReport {
                             pw.println("Average RMSE: " + rr2.RMSE);
                         }
 
-                        //BOOTSTRAP TRAIN_TEST
-                        Weka_module.bootstrapResultsObject broTrainTest = new Weka_module.bootstrapResultsObject();
+                        //REPEATED HOLDOUT TRAIN_TEST
+                        Weka_module.evaluationPerformancesResultsObject broTrainTest = new Weka_module.evaluationPerformancesResultsObject();
                         try {
                             alROCs = new ArrayList<>();
                             Weka_module weka3 = new Weka_module();
@@ -461,13 +460,13 @@ public class BestModelSelectionAndReport {
 
                             if (classification) {
                                 weka3.myData = weka3.extractFeaturesFromDatasetBasedOnModel(cr.model, weka3.myData);
-                                System.out.println("Bootstrap evaluation on TRAIN AND TEST sets of " + co.classifier + " " + co.options
+                                System.out.println("Repeated Holdout evaluation on TRAIN AND TEST sets of " + co.classifier + " " + co.options
                                         + " optimized by " + co.optimizer);
-                                pw.println("\n#Bootstrap evaluation performance on TRAIN AND TEST set, "
-                                        + Main.bootstrapFolds + " times weighted average (and standard deviation) on various random seeds");
-                                for (int i = 0; i < Main.bootstrapFolds; i++) {
+                                pw.println("\n#Repeated Holdout evaluation performance on TRAIN AND TEST set, "
+                                        + Main.bootstrapAndRepeatedHoldoutFolds + " times weighted average (and standard deviation) on various random seeds");
+                                for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                                     Weka_module.ClassificationResultsObject cro
-                                            = (Weka_module.ClassificationResultsObject) weka3.trainClassifierHoldOutCVandTest(co.classifier, co.options,
+                                            = (Weka_module.ClassificationResultsObject) weka3.trainClassifierRepeatedHoldOutCVandTest(co.classifier, co.options,
                                                     null, classification, i);
                                     broTrainTest.alAUCs.add(Double.valueOf(cro.AUC));
                                     broTrainTest.alpAUCs.add(Double.valueOf(cro.pAUC));
@@ -487,13 +486,13 @@ public class BestModelSelectionAndReport {
                                 }
                             } else {
                                 weka3.myData = weka3.extractFeaturesFromDatasetBasedOnModel(rr.model, weka3.myData);
-                                System.out.println("Bootstrap evaluation on TRAIN AND TEST sets of " + ro.classifier + " "
+                                System.out.println("Repeated Holdout evaluation on TRAIN AND TEST sets of " + ro.classifier + " "
                                         + ro.options + "optimized by " + ro.optimizer.toUpperCase());
-                                pw.println("\n#Bootstrap evaluation performance on TRAIN AND TEST set, "
-                                        + Main.bootstrapFolds + " times weighted average (and standard deviation) on various random seeds");
-                                for (int i = 0; i < Main.bootstrapFolds; i++) {
+                                pw.println("\n#Repeated Holdout evaluation performance on TRAIN AND TEST set, "
+                                        + Main.bootstrapAndRepeatedHoldoutFolds + " times weighted average (and standard deviation) on various random seeds");
+                                for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                                     Weka_module.RegressionResultsObject rro
-                                            = (Weka_module.RegressionResultsObject) weka.trainClassifierHoldOutCVandTest(ro.classifier, ro.options,
+                                            = (Weka_module.RegressionResultsObject) weka.trainClassifierRepeatedHoldOutCVandTest(ro.classifier, ro.options,
                                                     null, classification, i);
                                     broTrainTest.alCCs.add(Double.valueOf(rro.CC));
                                     broTrainTest.alMAEs.add(Double.valueOf(rro.MAE));

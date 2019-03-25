@@ -371,7 +371,17 @@ public class Weka_module {
 
     }
 
-    public Object trainClassifierHoldOutCVandTest(String classifier, String classifier_options,
+    /**
+     * Repeated HoldOut
+     *
+     * @param classifier
+     * @param classifier_options
+     * @param attributesToUse
+     * @param classification
+     * @param seed
+     * @return
+     */
+    public Object trainClassifierRepeatedHoldOutCVandTest(String classifier, String classifier_options,
             String attributesToUse, Boolean classification, int seed) {
         try {
             // load data
@@ -1889,7 +1899,11 @@ public class Weka_module {
         return pauc;
     }
 
-    public static class bootstrapResultsObject {
+    /**
+     * this object is compatible with bootstrap and repeated holdout method to
+     * store repeated iterations performances in arrays
+     */
+    public static class evaluationPerformancesResultsObject {
 
         public ArrayList<Double> alAUCs = new ArrayList<>();
         public ArrayList<Double> alpAUCs = new ArrayList<>();
@@ -1917,7 +1931,7 @@ public class Weka_module {
         public String meanRAEs;
         public String meanRRSEs;
 
-        public bootstrapResultsObject() {
+        public evaluationPerformancesResultsObject() {
         }
 
         public String toStringClassification() {

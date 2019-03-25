@@ -109,14 +109,14 @@ public class Training {
                     + "\tTRAIN_LOOCV_SPE"
                     + "\tTRAIN_LOOCV_MCC"
                     + "\tTRAIN_LOOCV_BER"
-                    //bootstrap TRAIN
-                    + "\tTRAIN_BS_ACC"
-                    + "\tTRAIN_BS_AUC"
-                    + "\tTRAIN_BS_AUPRC"
-                    + "\tTRAIN_BS_SEN"
-                    + "\tTRAIN_BS_SPE"
-                    + "\tTRAIN_BS_MCC"
-                    + "\tTRAIN_BS_BER"
+                    //Repeated Holdout TRAIN
+                    + "\tTRAIN_RH_ACC"
+                    + "\tTRAIN_RH_AUC"
+                    + "\tTRAIN_RH_AUPRC"
+                    + "\tTRAIN_RH_SEN"
+                    + "\tTRAIN_RH_SPE"
+                    + "\tTRAIN_RH_MCC"
+                    + "\tTRAIN_RH_BER"
                     //test
                     + "\tTEST_ACC"
                     + "\tTEST_AUC"
@@ -125,14 +125,14 @@ public class Training {
                     + "\tTEST_SPE"
                     + "\tTEST_MCC"
                     + "\tTEST_BER"
-                    //bootstrap TRAIN_TEST
-                    + "\tTRAIN_TEST_BS_ACC"
-                    + "\tTRAIN_TEST_BS_AUC"
-                    + "\tTRAIN_TEST_BS_AUPRC"
-                    + "\tTRAIN_TEST_BS_SEN"
-                    + "\tTRAIN_TEST_BS_SPE"
-                    + "\tTRAIN_TEST_BS_MCC"
-                    + "\tTRAIN_TEST_BS_BER"
+                    //Repeated Holdout TRAIN_TEST
+                    + "\tTRAIN_TEST_RH_ACC"
+                    + "\tTRAIN_TEST_RH_AUC"
+                    + "\tTRAIN_TEST_RH_AUPRC"
+                    + "\tTRAIN_TEST_RH_SEN"
+                    + "\tTRAIN_TEST_RH_SPE"
+                    + "\tTRAIN_TEST_RH_MCC"
+                    + "\tTRAIN_TEST_RH_BER"
                     //stats
                     + "\tAVG_BER"
                     + "\tSTD_BER"
@@ -207,24 +207,24 @@ public class Training {
                     + "\tTRAIN_LOOCV_RMSE"
                     + "\tTRAIN_LOOCV_RAE"
                     + "\tTRAIN_LOOCV_RRSE"
-                    //BOOTSRAP
-                    + "\tTRAIN_BS_CC"
-                    + "\tTRAIN_BS_MAE"
-                    + "\tTRAIN_BS_RMSE"
-                    + "\tTRAIN_BS_RAE"
-                    + "\tTRAIN_BS_RRSE"
+                    //Repeated Holdout
+                    + "\tTRAIN_RH_CC"
+                    + "\tTRAIN_RH_MAE"
+                    + "\tTRAIN_RH_RMSE"
+                    + "\tTRAIN_RH_RAE"
+                    + "\tTRAIN_RH_RRSE"
                     //TEST SET
                     + "\tTEST_CC"
                     + "\tTEST_MAE"
                     + "\tTEST_RMSE"
                     + "\tTEST_RAE"
                     + "\tTEST_RRSE"
-                    //BOOTSRAP TRAIN_TEST
-                    + "\tTRAIN_TEST_BS_CC"
-                    + "\tTRAIN_TEST_BS_MAE"
-                    + "\tTRAIN_TEST_BS_RMSE"
-                    + "\tTRAIN_TEST_BS_RAE"
-                    + "\tTRAIN_TEST_BS_RRSE"
+                    //RepeatedHoldout TRAIN_TEST
+                    + "\tTRAIN_TEST_RH_CC"
+                    + "\tTRAIN_TEST_RH_MAE"
+                    + "\tTRAIN_TEST_RH_RMSE"
+                    + "\tTRAIN_TEST_RH_RAE"
+                    + "\tTRAIN_TEST_RH_RRSE"
                     //stats
                     + "\tAVG_CC"
                     + "\tSTD_CC"
@@ -536,37 +536,37 @@ public class Training {
                     rrLoocv = (Weka_module.RegressionResultsObject) oLoocv;
                 }
 
-                //BOOTSTRAP
-                Weka_module.bootstrapResultsObject broTrain = new Weka_module.bootstrapResultsObject();
+                //Repeated Holdout
+                Weka_module.evaluationPerformancesResultsObject eproTrain = new Weka_module.evaluationPerformancesResultsObject(); //object compatible with repeated holdout
                 if (isClassification) {
-                    for (int i = 0; i < Main.bootstrapFolds; i++) {
+                    for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                         Weka_module.ClassificationResultsObject cro
-                                = (Weka_module.ClassificationResultsObject) weka.trainClassifierHoldOutCVandTest(classifier, classifier_options,
+                                = (Weka_module.ClassificationResultsObject) weka.trainClassifierRepeatedHoldOutCVandTest(classifier, classifier_options,
                                         ao.getRetainedAttributesIdClassInString(), isClassification, i);
-                        broTrain.alAUCs.add(Double.valueOf(cro.AUC));
-                        broTrain.alpAUCs.add(Double.valueOf(cro.pAUC));
-                        broTrain.alAUPRCs.add(Double.valueOf(cro.AUPRC));
-                        broTrain.alACCs.add(Double.valueOf(cro.ACC));
-                        broTrain.alSEs.add(Double.valueOf(cro.TPR));
-                        broTrain.alSPs.add(Double.valueOf(cro.TNR));
-                        broTrain.alMCCs.add(Double.valueOf(cro.MCC));
-                        broTrain.alBERs.add(Double.valueOf(cro.BER));
+                        eproTrain.alAUCs.add(Double.valueOf(cro.AUC));
+                        eproTrain.alpAUCs.add(Double.valueOf(cro.pAUC));
+                        eproTrain.alAUPRCs.add(Double.valueOf(cro.AUPRC));
+                        eproTrain.alACCs.add(Double.valueOf(cro.ACC));
+                        eproTrain.alSEs.add(Double.valueOf(cro.TPR));
+                        eproTrain.alSPs.add(Double.valueOf(cro.TNR));
+                        eproTrain.alMCCs.add(Double.valueOf(cro.MCC));
+                        eproTrain.alBERs.add(Double.valueOf(cro.BER));
                     }
                 } else {
-                    for (int i = 0; i < Main.bootstrapFolds; i++) {
+                    for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                         Weka_module.RegressionResultsObject rro
-                                = (Weka_module.RegressionResultsObject) weka.trainClassifierHoldOutCVandTest(classifier, classifier_options,
+                                = (Weka_module.RegressionResultsObject) weka.trainClassifierRepeatedHoldOutCVandTest(classifier, classifier_options,
                                         ao.getRetainedAttributesIdClassInString(), isClassification, i);
 
-                        broTrain.alCCs.add(Double.valueOf(rro.CC));
-                        broTrain.alMAEs.add(Double.valueOf(rro.MAE));
-                        broTrain.alRMSEs.add(Double.valueOf(rro.RMSE));
-                        broTrain.alRAEs.add(Double.valueOf(rro.RAE));
-                        broTrain.alRRSEs.add(Double.valueOf(rro.RRSE));
+                        eproTrain.alCCs.add(Double.valueOf(rro.CC));
+                        eproTrain.alMAEs.add(Double.valueOf(rro.MAE));
+                        eproTrain.alRMSEs.add(Double.valueOf(rro.RMSE));
+                        eproTrain.alRAEs.add(Double.valueOf(rro.RAE));
+                        eproTrain.alRRSEs.add(Double.valueOf(rro.RRSE));
 
                     }
                 }
-                broTrain.computeMeans();
+                eproTrain.computeMeans();
 
                 // TEST SET
                 Weka_module.testResultsObject tro = new Weka_module.testResultsObject();
@@ -619,8 +619,8 @@ public class Training {
                     }
                 }
 
-                //BOOTSTRAP TRAIN_TEST
-                Weka_module.bootstrapResultsObject broTrainTest = new Weka_module.bootstrapResultsObject();
+                //Repeated Holdout TRAIN_TEST
+                Weka_module.evaluationPerformancesResultsObject eproTrainTest = new Weka_module.evaluationPerformancesResultsObject();
                 try {
                     if (Main.doSampling) {
                         Weka_module weka2 = new Weka_module();
@@ -628,35 +628,35 @@ public class Training {
                         weka2.setDataFromArff();
                         if (isClassification) {
                             weka2.myData = weka2.extractFeaturesFromDatasetBasedOnModel(cr.model, weka2.myData);
-                            for (int i = 0; i < Main.bootstrapFolds; i++) {
+                            for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                                 Weka_module.ClassificationResultsObject cro
-                                        = (Weka_module.ClassificationResultsObject) weka2.trainClassifierHoldOutCVandTest(
+                                        = (Weka_module.ClassificationResultsObject) weka2.trainClassifierRepeatedHoldOutCVandTest(
                                                 classifier, classifier_options,
                                                 null, isClassification, i);
 
-                                broTrainTest.alAUCs.add(Double.valueOf(cro.AUC));
-                                broTrainTest.alpAUCs.add(Double.valueOf(cro.pAUC));
-                                broTrainTest.alAUPRCs.add(Double.valueOf(cro.AUPRC));
-                                broTrainTest.alACCs.add(Double.valueOf(cro.ACC));
-                                broTrainTest.alSEs.add(Double.valueOf(cro.TPR));
-                                broTrainTest.alSPs.add(Double.valueOf(cro.TNR));
-                                broTrainTest.alMCCs.add(Double.valueOf(cro.MCC));
-                                broTrainTest.alBERs.add(Double.valueOf(cro.BER));
+                                eproTrainTest.alAUCs.add(Double.valueOf(cro.AUC));
+                                eproTrainTest.alpAUCs.add(Double.valueOf(cro.pAUC));
+                                eproTrainTest.alAUPRCs.add(Double.valueOf(cro.AUPRC));
+                                eproTrainTest.alACCs.add(Double.valueOf(cro.ACC));
+                                eproTrainTest.alSEs.add(Double.valueOf(cro.TPR));
+                                eproTrainTest.alSPs.add(Double.valueOf(cro.TNR));
+                                eproTrainTest.alMCCs.add(Double.valueOf(cro.MCC));
+                                eproTrainTest.alBERs.add(Double.valueOf(cro.BER));
                             }
                         } else {
                             weka2.myData = weka2.extractFeaturesFromDatasetBasedOnModel(rr.model, weka2.myData);
-                            for (int i = 0; i < Main.bootstrapFolds; i++) {
+                            for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                                 Weka_module.RegressionResultsObject rro
-                                        = (Weka_module.RegressionResultsObject) weka2.trainClassifierHoldOutCVandTest(classifier, classifier_options,
+                                        = (Weka_module.RegressionResultsObject) weka2.trainClassifierRepeatedHoldOutCVandTest(classifier, classifier_options,
                                                 null, isClassification, i);
-                                broTrainTest.alCCs.add(Double.valueOf(rro.CC));
-                                broTrainTest.alMAEs.add(Double.valueOf(rro.MAE));
-                                broTrainTest.alRMSEs.add(Double.valueOf(rro.RMSE));
-                                broTrainTest.alRAEs.add(Double.valueOf(rro.RAE));
-                                broTrainTest.alRRSEs.add(Double.valueOf(rro.RRSE));
+                                eproTrainTest.alCCs.add(Double.valueOf(rro.CC));
+                                eproTrainTest.alMAEs.add(Double.valueOf(rro.MAE));
+                                eproTrainTest.alRMSEs.add(Double.valueOf(rro.RMSE));
+                                eproTrainTest.alRAEs.add(Double.valueOf(rro.RAE));
+                                eproTrainTest.alRRSEs.add(Double.valueOf(rro.RRSE));
                             }
                         }
-                        broTrainTest.computeMeans();
+                        eproTrainTest.computeMeans();
                     }
                 } catch (Exception e) {
                     if (Main.debug) {
@@ -667,12 +667,12 @@ public class Training {
                 //STATISTICS AND OUTPUT
                 if (isClassification) {
                     //statistics
-                    double BERs[] = {Double.valueOf(cr.BER), Double.valueOf(broTrain.meanBERs), Double.valueOf(crLoocv.BER)};
+                    double BERs[] = {Double.valueOf(cr.BER), Double.valueOf(eproTrain.meanBERs), Double.valueOf(crLoocv.BER)};
                     if (Main.doSampling) {
                         BERs = new double[]{Double.valueOf(cr.BER), Double.valueOf(crLoocv.BER),
-                            Double.valueOf(broTrain.meanBERs),
+                            Double.valueOf(eproTrain.meanBERs),
                             Double.valueOf(tro.BER),
-                            Double.valueOf(broTrainTest.meanBERs)};
+                            Double.valueOf(eproTrainTest.meanBERs)};
                     }
                     StandardDeviation std = new StandardDeviation();
                     std.setData(BERs);
@@ -682,12 +682,12 @@ public class Training {
                     m.setData(BERs);
                     double averageBER = m.evaluate();
 
-                    double[] MCCs = {Double.valueOf(cr.MCC), Double.valueOf(broTrain.meanMCCs), Double.valueOf(crLoocv.MCC)};
+                    double[] MCCs = {Double.valueOf(cr.MCC), Double.valueOf(eproTrain.meanMCCs), Double.valueOf(crLoocv.MCC)};
                     if (Main.doSampling) {
                         MCCs = new double[]{Double.valueOf(cr.MCC), Double.valueOf(crLoocv.MCC),
-                            Double.valueOf(broTrain.meanMCCs),
+                            Double.valueOf(eproTrain.meanMCCs),
                             Double.valueOf(tro.MCC),
-                            Double.valueOf(broTrainTest.meanMCCs),};
+                            Double.valueOf(eproTrainTest.meanMCCs),};
                     }
                     std = new StandardDeviation();
                     std.setData(MCCs);
@@ -706,18 +706,18 @@ public class Training {
                     lastOutput = out
                             + "\t" + cr.numberOfFeatures + "\t" + cr.toString()
                             + "\t" + crLoocv.toStringShort()
-                            + "\t" + broTrain.toStringClassification()
+                            + "\t" + eproTrain.toStringClassification()
                             + "\t" + testResults
-                            + "\t" + broTrainTest.toStringClassification()
+                            + "\t" + eproTrainTest.toStringClassification()
                             + "\t" + stats + "\t" + ao.getRetainedAttributesIdClassInString();
                 } else {
                     //statistics
-                    double[] CCs = {Double.valueOf(rr.CC), Double.valueOf(broTrain.meanCCs), Double.valueOf(rrLoocv.CC)};
+                    double[] CCs = {Double.valueOf(rr.CC), Double.valueOf(eproTrain.meanCCs), Double.valueOf(rrLoocv.CC)};
                     if (Main.doSampling) {
                         CCs = new double[]{Double.valueOf(rr.CC), Double.valueOf(rrLoocv.CC),
-                            Double.valueOf(broTrain.meanCCs),
+                            Double.valueOf(eproTrain.meanCCs),
                             Double.valueOf(tro.CC),
-                            Double.valueOf(broTrainTest.meanCCs)};
+                            Double.valueOf(eproTrainTest.meanCCs)};
                     }
                     StandardDeviation std = new StandardDeviation();
                     std.setData(CCs);
@@ -728,13 +728,13 @@ public class Training {
                     double averageCC = m.evaluate();
 
                     double[] RMSEs = {Double.valueOf(rr.RMSE),
-                        Double.valueOf(broTrain.meanRMSEs), Double.valueOf(rrLoocv.RMSE)};
+                        Double.valueOf(eproTrain.meanRMSEs), Double.valueOf(rrLoocv.RMSE)};
                     if (Main.doSampling) {
                         RMSEs = new double[]{Double.valueOf(rr.RMSE),
                             Double.valueOf(rrLoocv.RMSE),
-                            Double.valueOf(broTrain.meanRMSEs),
+                            Double.valueOf(eproTrain.meanRMSEs),
                             Double.valueOf(tro.RMSE),
-                            Double.valueOf(broTrainTest.meanRMSEs)};
+                            Double.valueOf(eproTrainTest.meanRMSEs)};
                     }
                     std = new StandardDeviation();
                     std.setData(RMSEs);
@@ -751,9 +751,9 @@ public class Training {
                     lastOutput = out
                             + "\t" + rr.numberOfFeatures + "\t" + rr.toString()
                             + "\t" + rrLoocv.toString()
-                            + "\t" + broTrain.toStringRegression()
+                            + "\t" + eproTrain.toStringRegression()
                             + "\t" + testResults
-                            + "\t" + broTrainTest.toStringRegression()
+                            + "\t" + eproTrainTest.toStringRegression()
                             + "\t" + stats
                             + "\t" + ao.getRetainedAttributesIdClassInString();
                 }

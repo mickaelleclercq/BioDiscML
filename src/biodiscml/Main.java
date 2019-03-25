@@ -71,7 +71,7 @@ public class Main {
     public static int maxNumberOfSelectedFeatures = 1000;
     public static boolean doSampling = true;
     public static int samplingFold = 3; //separate the set in x parts, keep 1 for test, others for training
-    public static int bootstrapFolds = 100;
+    public static int bootstrapAndRepeatedHoldoutFolds = 100; // Also used for repeated holdout
     public static String cpus = "max";
     public static boolean combineModels = false;
     public static String combinationRule = "AVG";
@@ -433,7 +433,7 @@ public class Main {
                             maxNumberOfFeaturesInModel = Integer.valueOf(value.trim());
                             break;
                         case "boostrapFolds":
-                            bootstrapFolds = Integer.valueOf(value.trim());
+                            bootstrapAndRepeatedHoldoutFolds = Integer.valueOf(value.trim());
                             break;
                         case "spearmanCorrelation_lower":
                             spearmanCorrelation_lower = Double.valueOf(value.trim());
