@@ -126,6 +126,14 @@ For each model, we perform various evaluations summarized in this table:
 | TRAIN_RH_SPE | Repeated holdout Specificity on Train set |
 | TRAIN_RH_MCC | Repeated holdout Matthews Correlation Coefficient on Train set |
 | TRAIN_RH_BER | Repeated holdout Balanced Error Rate on Train set |
+| TRAIN_BS_ACC | Bootstrap Accuracy on Train set |
+| TRAIN_BS_AUC | Bootstrap Area Under The Curve on Train set |
+| TRAIN_BS_AUPRC | Bootstrap Area Under Precision Recall Curve on Train set |
+| TRAIN_BS_SEN | Bootstrap Sensitivity on Train set |
+| TRAIN_BS_SPE | Bootstrap Specificity on Train set |
+| TRAIN_BS_MCC | Bootstrap Matthews Correlation Coefficient on Train set |
+| TRAIN_BS_BER | Bootstrap Balanced Error Rate on Train set |
+| TRAIN_BS.632+ | Bootstrap .632+ rule |
 | TEST_ACC | Evaluation Accuracy on test set|
 | TEST_AUC | Evaluation Area Under The Curve on test set|
 | TEST_AUPRC |Evaluation Area Under Precision Recall Curve on test set |
@@ -140,6 +148,14 @@ For each model, we perform various evaluations summarized in this table:
 | TRAIN_TEST_RH_SPE | Repeated holdout Specificity on merged Train and Test sets|
 | TRAIN_TEST_RH_MCC | Repeated holdout Matthews Correlation Coefficient on merged Train and Test sets|
 | TRAIN_TEST_RH_BER | Repeated holdout Balanced Error Rate on merged Train and Test sets|
+| TRAIN_TEST_BS_ACC |Bootstrap Accuracy on merged Train and Test sets |
+| TRAIN_TEST_BS_AUC | Bootstrap  Area Under The Curve on merged Train and Test sets|
+| TRAIN_TEST_BS_AUPRC | Bootstrap Area Under Precision Recall Curve on merged Train and Test sets|
+| TRAIN_TEST_BS_SEN | Bootstrap Sensitivity on merged Train and Test sets|
+| TRAIN_TEST_BS_SPE | Bootstrap Specificity on merged Train and Test sets|
+| TRAIN_TEST_BS_MCC | Bootstrap Matthews Correlation Coefficient on merged Train and Test sets|
+| TRAIN_TEST_BS_BER | Bootstrap Balanced Error Rate on merged Train and Test sets|
+| TRAIN_TEST_BS_BER_BS.632+ | Bootstrap .632+ rule on merged Train and Test sets|
 | AVG_BER | Average of all calculated Balanced Error Rates |
 | STD_BER | Standard deviation of the calculated Balanced Error Rates|
 | AVG_MCC | Average of all calculated Matthews Correlation Coefficients |
@@ -179,5 +195,4 @@ for both train and test sets.
 - {project_name}_.{model_name}_{model_hyperparameters}_{feature_search_mode}.*model
 
 Serialized model compatible with weka
-
 
