@@ -14,6 +14,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -51,6 +52,9 @@ public class BestModelSelectionAndReport {
             String predictionsResultsFile,
             String type) {
         df.setMaximumFractionDigits(3);
+        DecimalFormatSymbols dfs = new DecimalFormatSymbols();
+        dfs.setDecimalSeparator('.');
+        df.setDecimalFormatSymbols(dfs);
         String bestOrCombine = "Select best ";
         if (Main.combineModels) {
             bestOrCombine = "Combine ";
@@ -327,30 +331,30 @@ public class BestModelSelectionAndReport {
 
                 //REPEATED HOLDOUT performance TRAIN set
                 ArrayList<Object> alROCs = new ArrayList<>();
-                Weka_module.evaluationPerformancesResultsObject eproTrain = new Weka_module.evaluationPerformancesResultsObject();
+                Weka_module.evaluationPerformancesResultsObject eproRHTrain = new Weka_module.evaluationPerformancesResultsObject();
                 if (classification) {
                     System.out.println("Repeated Holdout evaluation on TRAIN set of " + co.classifier + " " + co.options
                             + " optimized by " + co.optimizer + "...");
                     pw.println("\n#Repeated Holdout evaluation performance on TRAIN set, "
-                            + Main.bootstrapAndRepeatedHoldoutFolds + " times weighted average (and standard deviation) on various random seeds");
+                            + Main.bootstrapAndRepeatedHoldoutFolds + " times weighted average (and standard deviation) on random seeds");
                     for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                         Weka_module.ClassificationResultsObject cro
-                                = (Weka_module.ClassificationResultsObject) weka.trainClassifierRepeatedHoldOutCVandTest(co.classifier, co.options,
-                                        co.featuresSeparatedByCommas, classification, i);
-                        eproTrain.alAUCs.add(Double.valueOf(cro.AUC));
-                        eproTrain.alpAUCs.add(Double.valueOf(cro.pAUC));
-                        eproTrain.alAUPRCs.add(Double.valueOf(cro.AUPRC));
-                        eproTrain.alACCs.add(Double.valueOf(cro.ACC));
-                        eproTrain.alSEs.add(Double.valueOf(cro.TPR));
-                        eproTrain.alSPs.add(Double.valueOf(cro.TNR));
-                        eproTrain.alMCCs.add(Double.valueOf(cro.MCC));
-                        eproTrain.alBERs.add(Double.valueOf(cro.BER));
+                                = (Weka_module.ClassificationResultsObject) weka.trainClassifierHoldOutValidation(co.classifier, co.options,
+                                        co.featuresSeparatedByCommas, classification);
+                        eproRHTrain.alAUCs.add(Double.valueOf(cro.AUC));
+                        eproRHTrain.alpAUCs.add(Double.valueOf(cro.pAUC));
+                        eproRHTrain.alAUPRCs.add(Double.valueOf(cro.AUPRC));
+                        eproRHTrain.alACCs.add(Double.valueOf(cro.ACC));
+                        eproRHTrain.alSEs.add(Double.valueOf(cro.TPR));
+                        eproRHTrain.alSPs.add(Double.valueOf(cro.TNR));
+                        eproRHTrain.alMCCs.add(Double.valueOf(cro.MCC));
+                        eproRHTrain.alBERs.add(Double.valueOf(cro.BER));
                         alROCs.add(cro);
                         // System.out.println(i+"\t"+Double.valueOf(cro.AUC));
                     }
-                    eproTrain.computeMeans();
-                    System.out.println(eproTrain.toStringClassificationDetails());
-                    pw.println(eproTrain.toStringClassificationDetails());
+                    eproRHTrain.computeMeans();
+                    System.out.println(eproRHTrain.toStringClassificationDetails());
+                    pw.println(eproRHTrain.toStringClassificationDetails().replace("[score_training] ", ""));
 
                     if (Main.ROCcurves) {
                         rocCurveGraphs.createRocCurvesWithConfidence(alROCs, classification, modelFilename, ".roc_train.png");
@@ -358,19 +362,80 @@ public class BestModelSelectionAndReport {
                 } else {
                     System.out.println("Repeated Holdout evaluation on TRAIN set of " + ro.classifier + " "
                             + ro.options + "optimized by " + ro.optimizer.toUpperCase());
-                    pw.println("\n\n#Repeated Holdout evaluation performance on TRAIN set, " + Main.bootstrapAndRepeatedHoldoutFolds + " times average on various random seeds");
+                    pw.println("\n\n#Repeated Holdout evaluation performance on TRAIN set, " + Main.bootstrapAndRepeatedHoldoutFolds + " times average on random seeds");
                     for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                         Weka_module.RegressionResultsObject rro
-                                = (Weka_module.RegressionResultsObject) weka.trainClassifierRepeatedHoldOutCVandTest(ro.classifier, ro.options,
-                                        ro.featuresSeparatedByCommas, classification, i);
-                        eproTrain.alCCs.add(Double.valueOf(rro.CC));
-                        eproTrain.alMAEs.add(Double.valueOf(rro.MAE));
-                        eproTrain.alRMSEs.add(Double.valueOf(rro.RMSE));
-                        eproTrain.alRAEs.add(Double.valueOf(rro.RAE));
-                        eproTrain.alRRSEs.add(Double.valueOf(rro.RRSE));
+                                = (Weka_module.RegressionResultsObject) weka.trainClassifierHoldOutValidation(ro.classifier, ro.options,
+                                        ro.featuresSeparatedByCommas, classification);
+                        eproRHTrain.alCCs.add(Double.valueOf(rro.CC));
+                        eproRHTrain.alMAEs.add(Double.valueOf(rro.MAE));
+                        eproRHTrain.alRMSEs.add(Double.valueOf(rro.RMSE));
+                        eproRHTrain.alRAEs.add(Double.valueOf(rro.RAE));
+                        eproRHTrain.alRRSEs.add(Double.valueOf(rro.RRSE));
                     }
-                    eproTrain.computeMeans();
-                    pw.println(eproTrain.toStringRegressionDetails());
+                    eproRHTrain.computeMeans();
+                    pw.println(eproRHTrain.toStringRegressionDetails().replace("[score_training] ", ""));
+                }
+                pw.flush();
+
+                //BOOTSTRAP performance TRAIN set
+                double bootstrapTrain632plus = -1;
+                Weka_module.evaluationPerformancesResultsObject eproBSTrain = new Weka_module.evaluationPerformancesResultsObject();
+                if (classification) {
+                    System.out.println("Bootstrap evaluation on TRAIN set of " + co.classifier + " " + co.options
+                            + " optimized by " + co.optimizer + "...");
+                    pw.println("\n#Bootstrap evaluation performance on TRAIN set, "
+                            + Main.bootstrapAndRepeatedHoldoutFolds + " times weighted average (and standard deviation) on random seeds");
+                    for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
+                        Weka_module.ClassificationResultsObject cro
+                                = (Weka_module.ClassificationResultsObject) weka.trainClassifierBootstrap(co.classifier, co.options,
+                                        co.featuresSeparatedByCommas, classification);
+                        eproBSTrain.alAUCs.add(Double.valueOf(cro.AUC));
+                        eproBSTrain.alpAUCs.add(Double.valueOf(cro.pAUC));
+                        eproBSTrain.alAUPRCs.add(Double.valueOf(cro.AUPRC));
+                        eproBSTrain.alACCs.add(Double.valueOf(cro.ACC));
+                        eproBSTrain.alSEs.add(Double.valueOf(cro.TPR));
+                        eproBSTrain.alSPs.add(Double.valueOf(cro.TNR));
+                        eproBSTrain.alMCCs.add(Double.valueOf(cro.MCC));
+                        eproBSTrain.alBERs.add(Double.valueOf(cro.BER));
+                        alROCs.add(cro);
+                        // System.out.println(i+"\t"+Double.valueOf(cro.AUC));
+                    }
+                    eproBSTrain.computeMeans();
+                    System.out.println(eproBSTrain.toStringClassificationDetails());
+                    pw.println(eproBSTrain.toStringClassificationDetails().replace("[score_training] ", ""));
+
+                    //632+ rule
+                    System.out.println("Bootstrap .632+ rule calculated on TRAIN set of " + co.classifier + " " + co.options
+                            + " optimized by " + co.optimizer + "...");
+                    pw.println("\n#Bootstrap .632+ rule calculated on TRAIN set, "
+                            + Main.bootstrapAndRepeatedHoldoutFolds + " folds with random seeds");
+
+                    bootstrapTrain632plus = weka.trainClassifierBootstrap632plus(co.classifier, co.options,
+                            co.featuresSeparatedByCommas);
+                    System.out.println(df.format(bootstrapTrain632plus));
+                    pw.println(df.format(bootstrapTrain632plus));
+
+                    if (Main.ROCcurves) {
+                        rocCurveGraphs.createRocCurvesWithConfidence(alROCs, classification, modelFilename, ".roc_train.png");
+                    }
+                } else {
+                    System.out.println("Bootstrap evaluation on TRAIN set of " + ro.classifier + " "
+                            + ro.options + "optimized by " + ro.optimizer.toUpperCase());
+                    pw.println("\n#Bootstrap evaluation performance on TRAIN set, "
+                            + Main.bootstrapAndRepeatedHoldoutFolds + " times average on random seeds");
+                    for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
+                        Weka_module.RegressionResultsObject rro
+                                = (Weka_module.RegressionResultsObject) weka.trainClassifierBootstrap(ro.classifier, ro.options,
+                                        ro.featuresSeparatedByCommas, classification);
+                        eproBSTrain.alCCs.add(Double.valueOf(rro.CC));
+                        eproBSTrain.alMAEs.add(Double.valueOf(rro.MAE));
+                        eproBSTrain.alRMSEs.add(Double.valueOf(rro.RMSE));
+                        eproBSTrain.alRAEs.add(Double.valueOf(rro.RAE));
+                        eproBSTrain.alRRSEs.add(Double.valueOf(rro.RRSE));
+                    }
+                    eproBSTrain.computeMeans();
+                    pw.println(eproBSTrain.toStringRegressionDetails().replace("[score_training] ", ""));
                 }
                 pw.flush();
 
@@ -451,7 +516,7 @@ public class BestModelSelectionAndReport {
                         }
 
                         //REPEATED HOLDOUT TRAIN_TEST
-                        Weka_module.evaluationPerformancesResultsObject broTrainTest = new Weka_module.evaluationPerformancesResultsObject();
+                        Weka_module.evaluationPerformancesResultsObject eproRHTrainTest = new Weka_module.evaluationPerformancesResultsObject();
                         try {
                             alROCs = new ArrayList<>();
                             Weka_module weka3 = new Weka_module();
@@ -463,24 +528,24 @@ public class BestModelSelectionAndReport {
                                 System.out.println("Repeated Holdout evaluation on TRAIN AND TEST sets of " + co.classifier + " " + co.options
                                         + " optimized by " + co.optimizer);
                                 pw.println("\n#Repeated Holdout evaluation performance on TRAIN AND TEST set, "
-                                        + Main.bootstrapAndRepeatedHoldoutFolds + " times weighted average (and standard deviation) on various random seeds");
+                                        + Main.bootstrapAndRepeatedHoldoutFolds + " times weighted average (and standard deviation) on random seeds");
                                 for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                                     Weka_module.ClassificationResultsObject cro
-                                            = (Weka_module.ClassificationResultsObject) weka3.trainClassifierRepeatedHoldOutCVandTest(co.classifier, co.options,
-                                                    null, classification, i);
-                                    broTrainTest.alAUCs.add(Double.valueOf(cro.AUC));
-                                    broTrainTest.alpAUCs.add(Double.valueOf(cro.pAUC));
-                                    broTrainTest.alAUPRCs.add(Double.valueOf(cro.AUPRC));
-                                    broTrainTest.alACCs.add(Double.valueOf(cro.ACC));
-                                    broTrainTest.alSEs.add(Double.valueOf(cro.TPR));
-                                    broTrainTest.alSPs.add(Double.valueOf(cro.TNR));
-                                    broTrainTest.alMCCs.add(Double.valueOf(cro.MCC));
-                                    broTrainTest.alBERs.add(Double.valueOf(cro.BER));
+                                            = (Weka_module.ClassificationResultsObject) weka3.trainClassifierHoldOutValidation(co.classifier, co.options,
+                                                    null, classification);
+                                    eproRHTrainTest.alAUCs.add(Double.valueOf(cro.AUC));
+                                    eproRHTrainTest.alpAUCs.add(Double.valueOf(cro.pAUC));
+                                    eproRHTrainTest.alAUPRCs.add(Double.valueOf(cro.AUPRC));
+                                    eproRHTrainTest.alACCs.add(Double.valueOf(cro.ACC));
+                                    eproRHTrainTest.alSEs.add(Double.valueOf(cro.TPR));
+                                    eproRHTrainTest.alSPs.add(Double.valueOf(cro.TNR));
+                                    eproRHTrainTest.alMCCs.add(Double.valueOf(cro.MCC));
+                                    eproRHTrainTest.alBERs.add(Double.valueOf(cro.BER));
                                     alROCs.add(cro);
                                 }
-                                broTrainTest.computeMeans();
-                                System.out.println(broTrainTest.toStringClassificationDetails());
-                                pw.println(broTrainTest.toStringClassificationDetails());
+                                eproRHTrainTest.computeMeans();
+                                System.out.println(eproRHTrainTest.toStringClassificationDetails());
+                                pw.println(eproRHTrainTest.toStringClassificationDetails().replace("[score_training] ", ""));
                                 if (Main.ROCcurves) {
                                     rocCurveGraphs.createRocCurvesWithConfidence(alROCs, classification, modelFilename, ".roc.png");
                                 }
@@ -489,27 +554,101 @@ public class BestModelSelectionAndReport {
                                 System.out.println("Repeated Holdout evaluation on TRAIN AND TEST sets of " + ro.classifier + " "
                                         + ro.options + "optimized by " + ro.optimizer.toUpperCase());
                                 pw.println("\n#Repeated Holdout evaluation performance on TRAIN AND TEST set, "
-                                        + Main.bootstrapAndRepeatedHoldoutFolds + " times weighted average (and standard deviation) on various random seeds");
+                                        + Main.bootstrapAndRepeatedHoldoutFolds + " times weighted average (and standard deviation) on random seeds");
                                 for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                                     Weka_module.RegressionResultsObject rro
-                                            = (Weka_module.RegressionResultsObject) weka.trainClassifierRepeatedHoldOutCVandTest(ro.classifier, ro.options,
-                                                    null, classification, i);
-                                    broTrainTest.alCCs.add(Double.valueOf(rro.CC));
-                                    broTrainTest.alMAEs.add(Double.valueOf(rro.MAE));
-                                    broTrainTest.alRMSEs.add(Double.valueOf(rro.RMSE));
-                                    broTrainTest.alRAEs.add(Double.valueOf(rro.RAE));
-                                    broTrainTest.alRRSEs.add(Double.valueOf(rro.RRSE));
+                                            = (Weka_module.RegressionResultsObject) weka.trainClassifierHoldOutValidation(ro.classifier, ro.options,
+                                                    null, classification);
+                                    eproRHTrainTest.alCCs.add(Double.valueOf(rro.CC));
+                                    eproRHTrainTest.alMAEs.add(Double.valueOf(rro.MAE));
+                                    eproRHTrainTest.alRMSEs.add(Double.valueOf(rro.RMSE));
+                                    eproRHTrainTest.alRAEs.add(Double.valueOf(rro.RAE));
+                                    eproRHTrainTest.alRRSEs.add(Double.valueOf(rro.RRSE));
                                 }
-                                broTrainTest.computeMeans();
-                                System.out.println(broTrainTest.toStringRegressionDetails());
-                                pw.println(broTrainTest.toStringRegressionDetails());
+                                eproRHTrainTest.computeMeans();
+                                System.out.println(eproRHTrainTest.toStringRegressionDetails());
+                                pw.println(eproRHTrainTest.toStringRegressionDetails().replace("[score_training] ", ""));
                             }
-                            broTrainTest.computeMeans();
+                            eproRHTrainTest.computeMeans();
                         } catch (Exception e) {
                             if (Main.debug) {
                                 e.printStackTrace();
                             }
                         }
+
+                        //BOOTSRAP TRAIN_TEST
+                        Weka_module.evaluationPerformancesResultsObject eproBSTrainTest = new Weka_module.evaluationPerformancesResultsObject();
+                        try {
+                            alROCs = new ArrayList<>();
+                            Weka_module weka3 = new Weka_module();
+                            weka3.setARFFfile(trainFileName.replace("data_to_train.csv", "all_data.arff"));
+                            weka3.setDataFromArff();
+
+                            if (classification) {
+                                weka3.myData = weka3.extractFeaturesFromDatasetBasedOnModel(cr.model, weka3.myData);
+                                System.out.println("Bootstrap evaluation on TRAIN AND TEST sets of " + co.classifier + " " + co.options
+                                        + " optimized by " + co.optimizer);
+                                pw.println("\n#Bootstrap evaluation performance on TRAIN AND TEST set, "
+                                        + Main.bootstrapAndRepeatedHoldoutFolds + " times weighted average (and standard deviation) on random seeds");
+                                for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
+                                    Weka_module.ClassificationResultsObject cro
+                                            = (Weka_module.ClassificationResultsObject) weka3.trainClassifierBootstrap(co.classifier, co.options,
+                                                    null, classification);
+                                    eproBSTrainTest.alAUCs.add(Double.valueOf(cro.AUC));
+                                    eproBSTrainTest.alpAUCs.add(Double.valueOf(cro.pAUC));
+                                    eproBSTrainTest.alAUPRCs.add(Double.valueOf(cro.AUPRC));
+                                    eproBSTrainTest.alACCs.add(Double.valueOf(cro.ACC));
+                                    eproBSTrainTest.alSEs.add(Double.valueOf(cro.TPR));
+                                    eproBSTrainTest.alSPs.add(Double.valueOf(cro.TNR));
+                                    eproBSTrainTest.alMCCs.add(Double.valueOf(cro.MCC));
+                                    eproBSTrainTest.alBERs.add(Double.valueOf(cro.BER));
+                                    alROCs.add(cro);
+                                }
+                                eproBSTrainTest.computeMeans();
+                                System.out.println(eproBSTrainTest.toStringClassificationDetails());
+                                pw.println(eproBSTrainTest.toStringClassificationDetails().replace("[score_training] ", ""));
+
+                                //632+ rule
+                                System.out.println("Bootstrap .632+ rule calculated on TRAIN AND TEST set of " + co.classifier + " " + co.options
+                                        + " optimized by " + co.optimizer + "...");
+                                pw.println("\n#Bootstrap .632+ rule calculated on TRAIN AND TEST set, "
+                                        + Main.bootstrapAndRepeatedHoldoutFolds + " folds with random seeds");
+
+                                bootstrapTrain632plus = weka3.trainClassifierBootstrap632plus(co.classifier, co.options,
+                                        null);
+                                System.out.println(df.format(bootstrapTrain632plus));
+                                pw.println(df.format(bootstrapTrain632plus));
+
+                                if (Main.ROCcurves) {
+                                    rocCurveGraphs.createRocCurvesWithConfidence(alROCs, classification, modelFilename, ".roc.png");
+                                }
+                            } else {
+                                weka3.myData = weka3.extractFeaturesFromDatasetBasedOnModel(rr.model, weka3.myData);
+                                System.out.println("Bootstrap evaluation on TRAIN AND TEST sets of " + ro.classifier + " "
+                                        + ro.options + "optimized by " + ro.optimizer.toUpperCase());
+                                pw.println("\n#Bootstrap evaluation performance on TRAIN AND TEST set, "
+                                        + Main.bootstrapAndRepeatedHoldoutFolds + " times weighted average (and standard deviation) on random seeds");
+                                for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
+                                    Weka_module.RegressionResultsObject rro
+                                            = (Weka_module.RegressionResultsObject) weka.trainClassifierBootstrap(ro.classifier, ro.options,
+                                                    null, classification);
+                                    eproBSTrainTest.alCCs.add(Double.valueOf(rro.CC));
+                                    eproBSTrainTest.alMAEs.add(Double.valueOf(rro.MAE));
+                                    eproBSTrainTest.alRMSEs.add(Double.valueOf(rro.RMSE));
+                                    eproBSTrainTest.alRAEs.add(Double.valueOf(rro.RAE));
+                                    eproBSTrainTest.alRRSEs.add(Double.valueOf(rro.RRSE));
+                                }
+                                eproBSTrainTest.computeMeans();
+                                System.out.println(eproBSTrainTest.toStringRegressionDetails());
+                                pw.println(eproBSTrainTest.toStringRegressionDetails().replace("[score_training] ", ""));
+                            }
+                            eproBSTrainTest.computeMeans();
+                        } catch (Exception e) {
+                            if (Main.debug) {
+                                e.printStackTrace();
+                            }
+                        }
+
                         //remove test file arff once done
                         new File(arffTestFileWithExtractedModelFeatures).delete();
                     }
@@ -557,6 +696,9 @@ public class BestModelSelectionAndReport {
                         for (String correlation : tmsCorrelatedgenes.keySet()) {
                             pw.println(correlation);
                         }
+                        if (tmsCorrelatedgenes.isEmpty()) {
+                            pw.println("#nothing found !");
+                        }
                         System.out.println("[done]");
 
                         System.out.print("Search correlated features (pearson)...");
@@ -566,6 +708,9 @@ public class BestModelSelectionAndReport {
                                 = RetreiveCorrelatedGenes.pearsonCorrelation(modelFilename + ".train_features.csv", trainFileName);
                         for (String correlation : tmpCorrelatedgenes.keySet()) {
                             pw.println(correlation);
+                        }
+                        if (tmpCorrelatedgenes.isEmpty()) {
+                            pw.println("#nothing found !");
                         }
                         System.out.println("[done]");
                     } else {

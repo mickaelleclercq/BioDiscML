@@ -17,6 +17,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 import libsvm.*;
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.analysis.integration.TrapezoidIntegrator;
@@ -30,6 +31,7 @@ import weka.classifiers.Evaluation;
 import weka.classifiers.evaluation.ThresholdCurve;
 import weka.classifiers.evaluation.output.prediction.PlainText;
 import weka.core.Attribute;
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Range;
 import weka.core.UnsupportedAttributeTypeException;
@@ -372,17 +374,16 @@ public class Weka_module {
     }
 
     /**
-     * Repeated HoldOut
+     * HoldOut
      *
      * @param classifier
      * @param classifier_options
      * @param attributesToUse
      * @param classification
-     * @param seed
      * @return
      */
-    public Object trainClassifierRepeatedHoldOutCVandTest(String classifier, String classifier_options,
-            String attributesToUse, Boolean classification, int seed) {
+    public Object trainClassifierHoldOutValidation(String classifier, String classifier_options,
+            String attributesToUse, Boolean classification) {
         try {
             // load data
             Instances data = myData;
@@ -410,8 +411,8 @@ public class Weka_module {
                 configuration = filterID + "" + classifier + " -- " + classifier_options;
             }
 
-            // randomize data with number generator
-            data.randomize(new Random(seed));
+            // randomize data
+            data.randomize(new Random());
 
             // Percent split
             int trainSize = (int) Math.round(data.numInstances() * 66 / 100);
@@ -455,6 +456,229 @@ public class Weka_module {
             return null;
         }
 
+    }
+
+    /**
+     * Bootstrap
+     *
+     * @param classifier
+     * @param classifier_options
+     * @param attributesToUse
+     * @param classification
+     * @return
+     */
+    public Object trainClassifierBootstrap(String classifier, String classifier_options,
+            String attributesToUse, Boolean classification) {
+        try {
+            // load data
+            Instances data = myData;
+
+            //set class index
+            if (data.classIndex() == -1) {
+                data.setClassIndex(data.numAttributes() - 1);
+            }
+
+            String configuration = classifier + " " + classifier_options;
+            if (!classifier.contains("meta.Vote") && attributesToUse != null) {
+                //keep only attributesToUse. ID (if present) is still here
+                String options = "";
+                weka.filters.unsupervised.attribute.Remove r = new weka.filters.unsupervised.attribute.Remove();
+                options = "-V -R " + attributesToUse;
+                r.setOptions(weka.core.Utils.splitOptions((options)));
+                r.setInputFormat(data);
+                data = Filter.useFilter(data, r);
+                data.setClassIndex(data.numAttributes() - 1);
+
+                //create weka configuration string
+                String filterID = "weka.classifiers.meta.FilteredClassifier "
+                        + "-F \"weka.filters.unsupervised.attribute.Remove -R 1\" "
+                        + "-W weka.classifiers.";
+                configuration = filterID + "" + classifier + " -- " + classifier_options;
+            }
+
+            Random r = new Random();
+            //train
+            String config[] = Utils.splitOptions(configuration);
+            String classname = config[0];
+            config[0] = "";
+            Classifier model = (Classifier) Utils.forName(Classifier.class, classname, config);
+            StringBuffer sb = new StringBuffer();
+
+            // Custom sampling (100%, with replacement)
+            ArrayList<Instance> al_trainSet = new ArrayList<>(data.size()); // Empty list (add one-by-one)
+            ArrayList<Instance> al_testSet = new ArrayList<>(data); // Full (remove one-by-one)
+            for (int j = 0; j < data.size(); j++) {
+                // Random select instance
+                Instance instance = data.get(r.nextInt(data.size()));
+                // Add to TRAIN, remove from TEST
+                al_trainSet.add(instance);
+                al_testSet.remove(instance);
+            }
+            //train the train set
+            Instances trainSet = new Instances(data, al_trainSet.size());
+            trainSet.addAll(al_trainSet);
+            model.buildClassifier(trainSet);
+
+            // Test the test set
+            Instances testSet = new Instances(data, al_testSet.size());
+            testSet.addAll(al_testSet);
+            Evaluation eval = new Evaluation(data);
+            eval.evaluateModel(model, testSet);
+
+            //return
+            if (classification) {
+                return new ClassificationResultsObject(eval, sb, data, model);
+            } else {
+                return new RegressionResultsObject(eval, sb, data, model);
+            }
+        } catch (Exception e) {
+            if (Main.debug) {
+                e.printStackTrace();
+            }
+            //System.err.println(e.getMessage() + " for " + classifier + " " + classifier_options);
+            return null;
+        }
+
+    }
+
+    /**
+     * Bootstrap .632+
+     *
+     * @param classifier
+     * @param classifier_options
+     * @param attributesToUse
+     * @return
+     */
+    public Double trainClassifierBootstrap632plus(String classifier, String classifier_options,
+            String attributesToUse) {
+        try {
+            // load data
+            Instances data = myData;
+
+            //set class index
+            if (data.classIndex() == -1) {
+                data.setClassIndex(data.numAttributes() - 1);
+            }
+
+            String configuration = classifier + " " + classifier_options;
+            if (!classifier.contains("meta.Vote") && attributesToUse != null) {
+                //keep only attributesToUse. ID (if present) is still here
+                String options = "";
+                weka.filters.unsupervised.attribute.Remove r = new weka.filters.unsupervised.attribute.Remove();
+                options = "-V -R " + attributesToUse;
+                r.setOptions(weka.core.Utils.splitOptions((options)));
+                r.setInputFormat(data);
+                data = Filter.useFilter(data, r);
+                data.setClassIndex(data.numAttributes() - 1);
+
+                //create weka configuration string
+                String filterID = "weka.classifiers.meta.FilteredClassifier "
+                        + "-F \"weka.filters.unsupervised.attribute.Remove -R 1\" "
+                        + "-W weka.classifiers.";
+                configuration = filterID + "" + classifier + " -- " + classifier_options;
+            }
+
+            //train model
+            final String config[] = Utils.splitOptions(configuration);
+            String classname = config[0];
+            config[0] = "";
+            Classifier model = null;
+
+            model = (Classifier) Utils.forName(Classifier.class, classname, config);
+
+            //build model
+            model.buildClassifier(data);
+
+            // evaluate model
+            Evaluation eval = new Evaluation(data);
+            eval.evaluateModel(model, data);
+
+            // Apparent error rate
+            Double err = eval.errorRate();
+
+            // Calculate Leave One Out (LOO) Bootstrap
+            AtomicIntegerArray p_l = new AtomicIntegerArray(data.numClasses());
+            AtomicIntegerArray q_l = new AtomicIntegerArray(data.numClasses());
+            double sum = 0;
+
+            for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
+                Random r = new Random();
+
+                // Custom sampling (100%, with replacement)
+                ArrayList<Instance> al_trainSet = new ArrayList<>(data.size()); // Empty list (add one-by-one)
+                ArrayList<Instance> al_testSet = new ArrayList<>(data); // Full (remove one-by-one)
+                for (int j = 0; j < data.size(); j++) {
+                    // Random select instance
+                    Instance instance = data.get(r.nextInt(data.size()));
+                    // Add to TRAIN, remove from TEST
+                    al_trainSet.add(instance);
+                    al_testSet.remove(instance);
+                }
+                //train the train set
+                Instances trainSet = new Instances(data, al_trainSet.size());
+                trainSet.addAll(al_trainSet);
+                model.buildClassifier(trainSet);
+
+                // Test the test set
+                Instances testSet = new Instances(data, al_testSet.size());
+                testSet.addAll(al_testSet);
+                Evaluation evaluation = new Evaluation(data);
+                evaluation.evaluateModel(model, testSet);
+
+                // total error rates
+                sum += evaluation.errorRate();
+
+                //GAMMA
+                double[][] confusionMatrix = evaluation.confusionMatrix();
+                for (int l = 0; l < data.numClasses(); l++) {
+                    int p_tmp = 0, q_tmp = 0;
+                    for (int n = 0; n < data.numClasses(); n++) {
+                        // Sum for l-th class
+                        p_tmp += confusionMatrix[l][n];
+                        q_tmp += confusionMatrix[n][l];
+                    }
+
+                    // Add data for l-th class
+                    p_l.addAndGet(l, p_tmp);
+                    q_l.addAndGet(l, q_tmp);
+                }
+            }
+            double Err1 = sum / Main.bootstrapAndRepeatedHoldoutFolds;
+
+            // Plain 0.632 bootstrap
+            Double Err632 = .368 * err + .632 * Err1;
+
+            // GAMA
+            final double observations = data.size() * Main.bootstrapAndRepeatedHoldoutFolds;
+            double gama = 0;
+            for (int l = 0; l < data.numClasses(); l++) {
+                // Normalize numbers -> divide by number of all observations (repeats * dataset size)
+                gama += ((double) p_l.get(l) / observations) * (1 - ((double) q_l.get(l) / observations));
+            }
+
+            // Relative overfitting rate (R)
+            double R = (Err1 - err) / (gama - err);
+
+            // Modified variables (according to original journal article)
+            double Err1_ = Double.min(Err1, gama);
+            double R_ = R;
+
+            // R can fall out of [0, 1] -> set it to 0
+            if (!(Err1 > err && gama > err)) {
+                R_ = 0;
+            }
+
+            // The 0.632+ bootstrap (as used in original article)
+            double Err632plus = Err632 + (Err1_ - err) * (.368 * .632 * R_) / (1 - .368 * R_);
+
+            return Err632plus;
+
+        } catch (Exception e) {
+            if (Main.debug) {
+                e.printStackTrace();
+            }
+            return -1.0;
+        }
     }
 
     public void attributeSelectionByRelieFFAndSaveToCSV(String outfile) {
@@ -1916,8 +2140,8 @@ public class Weka_module {
         public String meanACCs;
         public String meanAUCs;
         public String meanAUPRCs;
-        public String meanSEs;
-        public String meanSPs;
+        public String meanSENs;
+        public String meanSPEs;
         public String meanMCCs;
         public String meanBERs;
         public ArrayList<Double> alCCs = new ArrayList<>();
@@ -1941,8 +2165,8 @@ public class Weka_module {
                 return meanACCs + "\t"
                         + meanAUCs + "\t"
                         + meanAUPRCs + "\t"
-                        + meanSEs + "\t"
-                        + meanSPs + "\t"
+                        + meanSENs + "\t"
+                        + meanSPEs + "\t"
                         + meanMCCs + "\t"
                         + meanBERs;
             }
@@ -1952,8 +2176,8 @@ public class Weka_module {
             return "[score_training] Average weighted ACC: " + meanACCs + "\n"
                     + "[score_training] Average weighted AUC: " + meanAUCs + "\n"
                     + "[score_training] Average weighted AUPRC: " + meanAUPRCs + "\n"
-                    + "[score_training] Average weighted SEN: " + meanSEs + "\n"
-                    + "[score_training] Average weighted SPE: " + meanSPs + "\n"
+                    + "[score_training] Average weighted SEN: " + meanSENs + "\n"
+                    + "[score_training] Average weighted SPE: " + meanSPEs + "\n"
                     + "[score_training] Average weighted MCC: " + meanMCCs + "\n"
                     + "[score_training] Average weighted BER: " + meanBERs;
         }
@@ -1982,8 +2206,8 @@ public class Weka_module {
             meanACCs = getMean(alACCs);
             meanAUCs = getMean(alAUCs);
             meanAUPRCs = getMean(alAUPRCs);
-            meanSEs = getMean(alSEs);
-            meanSPs = getMean(alSPs);
+            meanSENs = getMean(alSEs);
+            meanSPEs = getMean(alSPs);
             meanMCCs = getMean(alMCCs);
             meanBERs = getMean(alBERs);
             meanCCs = getMean(alCCs);
