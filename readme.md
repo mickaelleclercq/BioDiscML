@@ -36,14 +36,18 @@ https://github.com/mickaelleclercq/BioDiscML/tree/master/release/Test_datasets
 java -jar biodiscml.jar -config config.conf -train
 ```
 config_myData.conf (text file) quick start content example (See release/Test_datasets folder)
+This configuration takes as input a file (myData.csv) and name it myProjectName.
+A sampling (default 2/3 for training and 1/3 for testing) is performed before 
+classification procedure to predict the myOutcome class. One best model will 
+be selected based on Repated Holdout performance MCC on the train set. 
 ```
-project=myDataName
+project=myProjectName
 trainFile=myData.csv
 sampling=true
 doClassification=true
 classificationClassName=myOutcome
 numberOfBestModels=1
-numberOfBestModelsSortingMetric=TRAIN_BS_MCC
+numberOfBestModelsSortingMetric=TRAIN_TEST_RH_MCC
 ```
 
 ### Choose best model(s)
@@ -115,13 +119,13 @@ For each model, we perform various evaluations summarized in this table:
 | TRAIN_LOOCV_SPE | Leave-One-Out Cross Validation Specificity on Train set |
 | TRAIN_LOOCV_MCC | Leave-One-Out Cross Validation Matthews Correlation Coefficient on Train set|
 | TRAIN_LOOCV_BER | Leave-One-Out Cross Validation Balanced Error Rate on Train set|
-| TRAIN_BS_ACC | Bootstrapping Accuracy on Train set |
-| TRAIN_BS_AUC | Bootstrapping Area Under The Curve on Train set |
-| TRAIN_BS_AUPRC | Bootstrapping Area Under Precision Recall Curve on Train set |
-| TRAIN_BS_SEN | Bootstrapping Sensitivity on Train set |
-| TRAIN_BS_SPE | Bootstrapping Specificity on Train set |
-| TRAIN_BS_MCC | Bootstrapping Matthews Correlation Coefficient on Train set |
-| TRAIN_BS_BER | Bootstrapping Balanced Error Rate on Train set |
+| TRAIN_RH_ACC | Repeated holdout Accuracy on Train set |
+| TRAIN_RH_AUC | Repeated holdout Area Under The Curve on Train set |
+| TRAIN_RH_AUPRC | Repeated holdout Area Under Precision Recall Curve on Train set |
+| TRAIN_RH_SEN | Repeated holdout Sensitivity on Train set |
+| TRAIN_RH_SPE | Repeated holdout Specificity on Train set |
+| TRAIN_RH_MCC | Repeated holdout Matthews Correlation Coefficient on Train set |
+| TRAIN_RH_BER | Repeated holdout Balanced Error Rate on Train set |
 | TEST_ACC | Evaluation Accuracy on test set|
 | TEST_AUC | Evaluation Area Under The Curve on test set|
 | TEST_AUPRC |Evaluation Area Under Precision Recall Curve on test set |
@@ -129,13 +133,13 @@ For each model, we perform various evaluations summarized in this table:
 | TEST_SPE | Evaluation Specificity on test set|
 | TEST_MCC | Evaluation Matthews Correlation Coefficient on test set|
 | TEST_BER | Evaluation Balanced Error Rate on test set|
-| TRAIN_TEST_BS_ACC |Bootstrapping Accuracy on merged Train and Test sets |
-| TRAIN_TEST_BS_AUC | Bootstrapping  Area Under The Curve on merged Train and Test sets|
-| TRAIN_TEST_BS_AUPRC | Bootstrapping Area Under Precision Recall Curve on merged Train and Test sets|
-| TRAIN_TEST_BS_SEN | Bootstrapping Sensitivity on merged Train and Test sets|
-| TRAIN_TEST_BS_SPE | Bootstrapping Specificity on merged Train and Test sets|
-| TRAIN_TEST_BS_MCC | Bootstrapping Matthews Correlation Coefficient on merged Train and Test sets|
-| TRAIN_TEST_BS_BER | Bootstrapping Balanced Error Rate on merged Train and Test sets|
+| TRAIN_TEST_RH_ACC |Repeated holdout Accuracy on merged Train and Test sets |
+| TRAIN_TEST_RH_AUC | Repeated holdout  Area Under The Curve on merged Train and Test sets|
+| TRAIN_TEST_RH_AUPRC | Repeated holdout Area Under Precision Recall Curve on merged Train and Test sets|
+| TRAIN_TEST_RH_SEN | Repeated holdout Sensitivity on merged Train and Test sets|
+| TRAIN_TEST_RH_SPE | Repeated holdout Specificity on merged Train and Test sets|
+| TRAIN_TEST_RH_MCC | Repeated holdout Matthews Correlation Coefficient on merged Train and Test sets|
+| TRAIN_TEST_RH_BER | Repeated holdout Balanced Error Rate on merged Train and Test sets|
 | AVG_BER | Average of all calculated Balanced Error Rates |
 | STD_BER | Standard deviation of the calculated Balanced Error Rates|
 | AVG_MCC | Average of all calculated Matthews Correlation Coefficients |
