@@ -730,7 +730,7 @@ public class Training {
                 }
 
                 //BOOTSTRAP TRAIN_TEST AND BOOTSTRAP .632+ rule TRAIN_TEST
-                double bootstrapTrainTest632plus = -1.0;
+                double bootstrapTrainTest632plus = 1000;
                 Weka_module.evaluationPerformancesResultsObject eproBSTrainTest = new Weka_module.evaluationPerformancesResultsObject();
                 try {
                     if (Main.doSampling) {
@@ -830,6 +830,10 @@ public class Training {
                             + df.format(StdMCC);
 
                     //output
+                    String b632 = df.format(bootstrapTrainTest632plus);
+                    if (bootstrapTrainTest632plus != 1000) {
+                        b632 = "";
+                    }
                     lastOutput = out
                             + "\t" + cr.numberOfFeatures + "\t" + cr.toString()
                             + "\t" + crLoocv.toStringShort()
@@ -839,7 +843,7 @@ public class Training {
                             + "\t" + testResults
                             + "\t" + eproRHTrainTest.toStringClassification()
                             + "\t" + eproBSTrainTest.toStringClassification()
-                            + "\t" + df.format(bootstrapTrainTest632plus)
+                            + "\t" + b632
                             + "\t" + stats + "\t" + ao.getRetainedAttributesIdClassInString();
                 } else {
                     //statistics
