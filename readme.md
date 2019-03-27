@@ -161,6 +161,7 @@ For each model, we perform various evaluations summarized in this table:
 | AVG_MCC | Average of all calculated Matthews Correlation Coefficients |
 | STD_MCC |Standard deviation of the calculated Matthews Correlation Coefficients |
 | AttributeList | Selected features. Use the option -bestmodel to generate a report and get the features' full names|
+
 Note that all columns refering to a test set will be empty if no test set have been generated or provided
 
 - {project_name}_d.{model_name}_{model_hyperparameters}_{feature_search_mode}.*details.txt
