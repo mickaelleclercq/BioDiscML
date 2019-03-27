@@ -12,6 +12,7 @@ import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
+import java.util.stream.Collectors;
 import org.apache.commons.math3.stat.descriptive.moment.*;
 import utils.Weka_module;
 import utils.utils;
@@ -322,15 +323,25 @@ public class Training {
             //EXECUTE IN PARRALLEL
             System.out.println("total classifiers to test: " + alClassifiers.size());
             if (parrallel) {
-                alClassifiers.parallelStream().map((classif) -> {
+                alClassifiers.stream().parallel().unordered().map((classif) -> {
                     String s = StepWiseFeatureSelectionTraining(classif[0], classif[1], classif[2], classif[3]);
                     if (!s.contains("ERROR")) {
                         pw.println(s);
                     }
                     return classif;
-                }).forEach((_item) -> {
+                }).forEachOrdered((_item) -> {
                     pw.flush();
                 });
+
+//                alClassifiers.stream().parallel().map((classif) -> {
+//                    String s = StepWiseFeatureSelectionTraining(classif[0], classif[1], classif[2], classif[3]);
+//                    if (!s.contains("ERROR")) {
+//                        pw.println(s);
+//                    }
+//                    return classif;
+//                }).forEachOrdered((_item) -> {
+//                    pw.flush();
+//                });
             } else {
                 alClassifiers.stream().map((classif) -> {
                     String s = StepWiseFeatureSelectionTraining(classif[0], classif[1], classif[2], classif[3]);
@@ -600,7 +611,7 @@ public class Training {
                 eproRHTrain.computeMeans();
 
                 //BOOTSTRAP AND BOOTSTRAP .632+ rule TRAIN
-                double bootstrapTrain632plus = -1;
+                double bootstrapTrain632plus = 1000;
                 Weka_module.evaluationPerformancesResultsObject eproBSTrain = new Weka_module.evaluationPerformancesResultsObject();
                 if (isClassification) {
                     bootstrapTrain632plus = weka.trainClassifierBootstrap632plus(classifier, classifier_options,
@@ -830,20 +841,25 @@ public class Training {
                             + df.format(StdMCC);
 
                     //output
-                    String b632 = df.format(bootstrapTrainTest632plus);
-                    if (bootstrapTrainTest632plus != 1000) {
-                        b632 = "";
+                    String bt632 = df.format(bootstrapTrain632plus);
+                    if (bt632.equals(1000)) {
+                        bt632 = "";
                     }
+                    String btt632 = df.format(bootstrapTrainTest632plus);
+                    if (bootstrapTrainTest632plus == 1000) {
+                        btt632 = "";
+                    }
+
                     lastOutput = out
                             + "\t" + cr.numberOfFeatures + "\t" + cr.toString()
                             + "\t" + crLoocv.toStringShort()
                             + "\t" + eproRHTrain.toStringClassification()
                             + "\t" + eproBSTrain.toStringClassification()
-                            + "\t" + df.format(bootstrapTrain632plus)
+                            + "\t" + bt632
                             + "\t" + testResults
                             + "\t" + eproRHTrainTest.toStringClassification()
                             + "\t" + eproBSTrainTest.toStringClassification()
-                            + "\t" + b632
+                            + "\t" + btt632
                             + "\t" + stats + "\t" + ao.getRetainedAttributesIdClassInString();
                 } else {
                     //statistics
