@@ -117,13 +117,13 @@ public class Training {
                     + "\tTRAIN_RH_MCC"
                     + "\tTRAIN_RH_BER"
                     //Bootstrap TRAIN
-                    + "\tTRAIN_RH_ACC"
-                    + "\tTRAIN_RH_AUC"
-                    + "\tTRAIN_RH_AUPRC"
-                    + "\tTRAIN_RH_SEN"
-                    + "\tTRAIN_RH_SPE"
-                    + "\tTRAIN_RH_MCC"
-                    + "\tTRAIN_RH_BER"
+                    + "\tTRAIN_BS_ACC"
+                    + "\tTRAIN_BS_AUC"
+                    + "\tTRAIN_BS_AUPRC"
+                    + "\tTRAIN_BS_SEN"
+                    + "\tTRAIN_BS_SPE"
+                    + "\tTRAIN_BS_MCC"
+                    + "\tTRAIN_BS_BER"
                     //Bootstrap .632+ TRAIN
                     + "\tTRAIN_BS.632+"
                     //test
