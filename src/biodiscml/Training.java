@@ -525,7 +525,7 @@ public class Training {
                             if (isClassification) {
                                 lastOutput = out
                                         + "\t" + cr.numberOfFeatures + "\t" + cr.toString() + "\t" + ao.getRetainedAttributesIdClassInString();
-                                // System.out.println(lastOutput);
+                                //System.out.println(lastOutput);
 
                             } else {
                                 lastOutput = out
@@ -957,7 +957,7 @@ public class Training {
     private static double getValueToMaximize(String valueWanted, Weka_module.ClassificationResultsObject cr,
             Weka_module.RegressionResultsObject rr) {
 
-        switch (valueWanted) {
+        switch (valueWanted.toLowerCase()) {
             //classification
             case "auc":
                 return Double.parseDouble(cr.AUC);
