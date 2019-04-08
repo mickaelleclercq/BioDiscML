@@ -232,7 +232,7 @@ public class BestModelSelectionAndReport {
                 } else {
                     ro = (regressionObject) classifier;
                     modelFilename = Main.wd + Main.project
-                            + "d." + ro.classifier + "_" + ro.options.replace(" ", "").replace("\\", "").replace("\"", "") + "_"
+                            + "d." + ro.classifier + "_" + ro.printOptions() + "_"
                             + ro.optimizer.toUpperCase().trim() + "_" + ro.mode;
                     trainingOutput = weka.trainClassifier(ro.classifier, ro.options,
                             ro.featuresSeparatedByCommas, classification, 10);
@@ -1037,7 +1037,7 @@ public class BestModelSelectionAndReport {
     public static class regressionObject {
 
         public ArrayList<String> featureList = new ArrayList<>();
-        public String featuresSeparatedByCommas;
+        public String featuresSeparatedByCommas="";
         public String classifier;
         public String optimizer;
         public String options;
