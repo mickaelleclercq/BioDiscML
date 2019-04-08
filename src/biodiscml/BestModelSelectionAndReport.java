@@ -268,7 +268,7 @@ public class BestModelSelectionAndReport {
                     System.out.println("# ID: " + ro.identifier);
                     pw.println("# Classifier: " + ro.classifier + " " + ro.options
                             + "\n# Optimizer: " + ro.optimizer.toUpperCase()
-                            + "\n# Feature search mode: " + co.mode);
+                            + "\n# Feature search mode: " + ro.mode);
                 }
 
                 //show combined models in case of combined vote

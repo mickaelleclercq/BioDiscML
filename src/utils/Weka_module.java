@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicIntegerArray;
@@ -296,6 +297,7 @@ public class Weka_module {
             if (data.classIndex() == -1) {
                 data.setClassIndex(data.numAttributes() - 1);
             }
+            data.attribute(data.numAttributes() - 1).isNumeric();
             /**
              * if we are using Vote, it means it already contains the features
              * to use for each classifier
@@ -691,15 +693,7 @@ public class Weka_module {
                 data.setClassIndex(data.numAttributes() - 1);
             }
 
-            //store IDs
-//            ArrayList<String> alIDs = new ArrayList<String>();
-//            String IDname = data.attribute(0).name();
-//            FastVector fv = new FastVector();
-//            Enumeration en = data.attribute(0).enumerateValues();
-//            while (en.hasMoreElements()) {
-//                fv.addElement((String) en.nextElement());
-//            }
-//            data.deleteAttributeAt(0);
+            
             weka.filters.supervised.attribute.AttributeSelection select = new weka.filters.supervised.attribute.AttributeSelection();
 
             //filter based on ranker score threshold
@@ -707,6 +701,19 @@ public class Weka_module {
             select.setOptions(weka.core.Utils.splitOptions((options)));
             select.setInputFormat(data);
             Instances filteredData = Filter.useFilter(data, select);
+            //restoring instances IDs as first attribute
+//            Attribute attributeInstances = filteredData.attribute("Instance");
+//            filteredData.deleteAttributeAt(filteredData.attribute("Instance").index());
+//            filteredData.insertAttributeAt(attributeInstances, 0);
+//
+//            Enumeration e = attributeInstances.enumerateValues();
+//            int cpt = 0;
+//            while (e.hasMoreElements()) {
+//                String s = (String) e.nextElement();
+//                filteredData.instance(cpt).setValue(0, s);
+//                cpt++;
+//            }
+//            filteredData.attribute(0).isNominal();
 
             System.out.println("Total attributes: " + (filteredData.numAttributes() - 1));
             //remove some attribute if we have too many of them
@@ -725,18 +732,24 @@ public class Weka_module {
                 select.setInputFormat(data);
                 filteredData = Filter.useFilter(data, select);
             }
-
-//            //restore IDs
-//            Attribute att = new Attribute(IDname, fv);
-//            filteredData.insertAttributeAt(att, 0);
-//            for (int i = 0; i < filteredData.numInstances(); i++) {
-//                filteredData.instance(i).setValue(0, (String) fv.elementAt(i));
-//            }
-//            filteredData.instance(1);
-//            filteredData.attribute(1);
-            //save data as arff
+            //store IDs
+            List<String> alIDs = new ArrayList<>() ;
+            Enumeration en = filteredData.enumerateInstances();           
+            while (en.hasMoreElements()) {
+                alIDs.add(((Instance) en.nextElement()).stringValue(filteredData.attribute("Instance")));
+            }
+            filteredData.deleteAttributeAt(filteredData.attribute("Instance").index());
+            
+           //restore IDs
+            Attribute att = new Attribute("Instance", alIDs);
+            filteredData.insertAttributeAt(att, 0);
+            for (int i = 0; i < filteredData.numInstances(); i++) {
+                filteredData.instance(i).setValue(0, (String) alIDs.get(i));
+            }
+            //save data as csv
             CSVSaver csv = new CSVSaver();
             csv.setInstances(filteredData);
+
             csv.setFile(new File(outfile));
             if (new File(outfile.replace(".csv", ".arff")).exists()) {
                 new File(outfile.replace(".csv", ".arff")).delete();

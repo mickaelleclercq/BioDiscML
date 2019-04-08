@@ -66,7 +66,7 @@ public class Main {
     public static double pearsonCorrelation_lower = -0.95;
     public static double pearsonCorrelation_upper = 0.95;
     public static String bestModelsSortingMetric = "AVG_MCC";
-    public static double bestModelsSortingMetricThreshold = 0.6;
+    public static double bestModelsSortingMetricThreshold = 0.1;
     public static Integer maxNumberOfFeaturesInModel = 250;
     public static int maxNumberOfSelectedFeatures = 1000;
     public static boolean doSampling = true;
@@ -323,9 +323,9 @@ public class Main {
         System.out.println("#### Reading configuration file " + configFile);
         String line = null;
         try {
-            BufferedReader br = new BufferedReader(new FileReader(configFile));
-            line = br.readLine();
+            BufferedReader br = new BufferedReader(new FileReader(configFile));            
             while (br.ready()) {
+                line = br.readLine();
                 if (!line.startsWith("#") && !line.trim().isEmpty()) {
                     String option = line.split("=")[0].trim();
                     String value = line.split("=")[1].trim();
@@ -480,10 +480,7 @@ public class Main {
                             break;
 
                     }
-                    line = br.readLine();
-                } else {
-                    line = br.readLine();
-                }
+                } 
             }
             CVfolder = wd + CVfolder;
 

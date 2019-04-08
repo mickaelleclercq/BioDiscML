@@ -204,6 +204,14 @@ public class Training {
             ranking = weka.featureRankingForClassification();
             System.out.println("[done]");
 
+            //reset arff and keep compatible header
+            weka.setCSVFile(new File(featureSelectionFile));
+            weka.csvToArff(isClassification);
+            weka.makeCompatibleARFFheaders(dataToTrainModel.replace("data_to_train.csv", "data_to_train.arff"),
+                    featureSelectionFile.replace("infoGain.csv", "infoGain.arff"));
+            weka.setARFFfile(featureSelectionFile.replace("infoGain.csv", "infoGain.arff"));
+            weka.setDataFromArff();
+
         } else {
             //REGRESSION
             if (Main.debug) {
@@ -305,15 +313,15 @@ public class Training {
             System.out.print("Selecting attributes and ranking by RelieFF...");
             weka.attributeSelectionByRelieFFAndSaveToCSV(featureSelectionFile);
             System.out.println("[done]");
-        }
 
-        //reset arff and keep compatible header
-        weka.setCSVFile(new File(featureSelectionFile));
-        weka.csvToArff(isClassification);
-        weka.makeCompatibleARFFheaders(dataToTrainModel.replace("data_to_train.csv", "data_to_train.arff"),
-                featureSelectionFile.replace("infoGain.csv", "infoGain.arff"));
-        weka.setARFFfile(featureSelectionFile.replace("infoGain.csv", "infoGain.arff"));
-        weka.setDataFromArff();
+            //reset arff and keep compatible header
+            weka.setCSVFile(new File(featureSelectionFile));
+            weka.csvToArff(isClassification);
+            weka.makeCompatibleARFFheaders(dataToTrainModel.replace("data_to_train.csv", "data_to_train.arff"),
+                    featureSelectionFile.replace("RELIEFF.csv", "RELIEFF.arff"));
+            weka.setARFFfile(featureSelectionFile.replace("RELIEFF.csv", "RELIEFF.arff"));
+            weka.setDataFromArff();
+        }
 
         try {
             //PREPARE OUTPUT
