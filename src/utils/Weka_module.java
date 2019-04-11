@@ -385,7 +385,7 @@ public class Weka_module {
      * @return
      */
     public Object trainClassifierHoldOutValidation(String classifier, String classifier_options,
-            String attributesToUse, Boolean classification) {
+            String attributesToUse, Boolean classification, int seed) {
         try {
             // load data
             Instances data = myData;
@@ -414,7 +414,7 @@ public class Weka_module {
             }
 
             // randomize data
-            data.randomize(new Random());
+            data.randomize(new Random(seed));
 
             // Percent split
             int trainSize = (int) Math.round(data.numInstances() * 66 / 100);
@@ -470,7 +470,7 @@ public class Weka_module {
      * @return
      */
     public Object trainClassifierBootstrap(String classifier, String classifier_options,
-            String attributesToUse, Boolean classification) {
+            String attributesToUse, Boolean classification, int seed) {
         try {
             // load data
             Instances data = myData;
@@ -498,7 +498,7 @@ public class Weka_module {
                 configuration = filterID + "" + classifier + " -- " + classifier_options;
             }
 
-            Random r = new Random();
+            Random r = new Random(seed);
             //train
             String config[] = Utils.splitOptions(configuration);
             String classname = config[0];
