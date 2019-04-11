@@ -61,10 +61,10 @@ public class Main {
     public static ArrayList<String> regressionBruteForceCommands = new ArrayList<>(); //classifier, optimizer
     public static double pAUC_lower = 0;
     public static double pAUC_upper = 0.3;
-    public static double spearmanCorrelation_lower = -0.95;
-    public static double spearmanCorrelation_upper = 0.95;
-    public static double pearsonCorrelation_lower = -0.95;
-    public static double pearsonCorrelation_upper = 0.95;
+    public static double spearmanCorrelation_lower = -0.99;
+    public static double spearmanCorrelation_upper = 0.99;
+    public static double pearsonCorrelation_lower = -0.99;
+    public static double pearsonCorrelation_upper = 0.99;
     public static String bestModelsSortingMetric = "AVG_MCC";
     public static double bestModelsSortingMetricThreshold = 0.1;
     public static Integer maxNumberOfFeaturesInModel = 250;
@@ -80,7 +80,7 @@ public class Main {
     public static String bench_AUC = "";
 
     //TODO
-    static boolean retreiveCorrelatedGenesByRankingScore = false; //avoid for non-binary classes and regression
+    static boolean retreiveCorrelatedGenesByRankingScore = true; //avoid for non-binary classes and regression
     static boolean ROCcurves = false; //experimental
     static boolean UpSetR = false; //experimental
 
