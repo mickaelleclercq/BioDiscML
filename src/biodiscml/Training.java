@@ -9,6 +9,8 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
@@ -32,7 +34,7 @@ public class Training {
     public static String resultsSummaryHeader = "";
     public static int cptPassed = 0;
     public static int cptFailed = 0;
-    public boolean parrallel = false;
+    public boolean parrallel = true;
     public static String trainFileName = "";
     public static DecimalFormat df = new DecimalFormat();
 
@@ -52,6 +54,9 @@ public class Training {
         DecimalFormatSymbols dfs = new DecimalFormatSymbols();
         dfs.setDecimalSeparator('.');
         df.setDecimalFormatSymbols(dfs);
+        if (Main.cpus.equals("1")) {
+            parrallel = false;
+        }
         System.out.println("Training on " + dataToTrainModel + ". All tested models results will be in " + resultsFile);
         alClassifiers = new ArrayList<>();
         isClassification = type.equals("class");
@@ -172,10 +177,6 @@ public class Training {
                     if (optimizer.equals("ALL")) {
                         addClassifierToQueue(classifier, options);
                     } else {
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "F"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "FB"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "B"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "BF"});
                         alClassifiers.add(new String[]{classifier, options, optimizer, "top5"});
                         alClassifiers.add(new String[]{classifier, options, optimizer, "top10"});
                         alClassifiers.add(new String[]{classifier, options, optimizer, "top15"});
@@ -185,6 +186,10 @@ public class Training {
                         alClassifiers.add(new String[]{classifier, options, optimizer, "top50"});
                         alClassifiers.add(new String[]{classifier, options, optimizer, "top75"});
                         alClassifiers.add(new String[]{classifier, options, optimizer, "top100"});
+                        alClassifiers.add(new String[]{classifier, options, optimizer, "F"});
+                        alClassifiers.add(new String[]{classifier, options, optimizer, "FB"});
+                        alClassifiers.add(new String[]{classifier, options, optimizer, "B"});
+                        alClassifiers.add(new String[]{classifier, options, optimizer, "BF"});
                     }
 
                 }
@@ -285,10 +290,6 @@ public class Training {
                     if (optimizer.equals("ALL")) {
                         addRegressionToQueue(classifier, options);
                     } else {
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "F"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "FB"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "B"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "BF"});
                         alClassifiers.add(new String[]{classifier, options, optimizer, "top5"});
                         alClassifiers.add(new String[]{classifier, options, optimizer, "top10"});
                         alClassifiers.add(new String[]{classifier, options, optimizer, "top15"});
@@ -298,6 +299,10 @@ public class Training {
                         alClassifiers.add(new String[]{classifier, options, optimizer, "top50"});
                         alClassifiers.add(new String[]{classifier, options, optimizer, "top75"});
                         alClassifiers.add(new String[]{classifier, options, optimizer, "top100"});
+                        alClassifiers.add(new String[]{classifier, options, optimizer, "F"});
+                        alClassifiers.add(new String[]{classifier, options, optimizer, "FB"});
+                        alClassifiers.add(new String[]{classifier, options, optimizer, "B"});
+                        alClassifiers.add(new String[]{classifier, options, optimizer, "BF"});
                     }
                 }
             } else {
@@ -387,7 +392,7 @@ public class Training {
     private static String StepWiseFeatureSelectionTraining(String classifier, String classifier_options, String valueToMaximizeOrMinimize,
             String searchMethod) {
         String out = classifier + "\t" + classifier_options + "\t" + valueToMaximizeOrMinimize.toUpperCase() + "\t" + searchMethod;
-
+        Instant start = Instant.now();
         System.out.println("[model] (" + (cptPassed++) + "/" + alClassifiers.size() + ")" + out);
         String lastOutput = "";
 
@@ -398,6 +403,8 @@ public class Training {
                 || valueToMaximizeOrMinimize.equals("rae")
                 || valueToMaximizeOrMinimize.equals("rrse");
 
+        //short test
+        //if test passed
         try {
             StringBuilder predictions = new StringBuilder();
             StringBuilder selectedAttributes = new StringBuilder();
@@ -415,6 +422,14 @@ public class Training {
             int cpt = 0;
             Weka_module.ClassificationResultsObject cr = null;
             Weka_module.RegressionResultsObject rr = null;
+
+            // SHORT TEST to ensure compatibility of the model
+            o = weka.shortTestTrainClassifier(classifier, classifier_options,
+                    ao.getRetainedAttributesIdClassInString(), isClassification);
+            if (o.getClass().getName().equals("java.lang.String")) {
+                return "ERROR";
+            }
+
             //TOP X features search
             if (searchMethod.startsWith("top")) {
                 int top = Integer.valueOf(searchMethod.replace("top", ""));
@@ -565,29 +580,46 @@ public class Training {
                 //LOOCV
                 Weka_module.ClassificationResultsObject crLoocv = null;
                 Weka_module.RegressionResultsObject rrLoocv = null;
-                Object oLoocv;
-                if (isClassification) {
-                    oLoocv = weka.trainClassifier(classifier, classifier_options,
-                            ao.getRetainedAttributesIdClassInString(), isClassification,
-                            cr.dataset.numInstances());
-                } else {
-                    oLoocv = weka.trainClassifier(classifier, classifier_options,
-                            ao.getRetainedAttributesIdClassInString(), isClassification,
-                            rr.dataset.numInstances());
-                }
-
-                if (oLoocv instanceof String || oLoocv == null) {
+                String loocvOut = "";
+                if (Main.loocv) {
                     if (Main.debug) {
-                        System.err.println("[error] LOOCV failed");
+                        System.out.println("LOOCV Train set " + Main.bootstrapAndRepeatedHoldoutFolds + " times");
                     }
-                } else if (isClassification) {
-                    crLoocv = (Weka_module.ClassificationResultsObject) oLoocv;
-                } else {
-                    rrLoocv = (Weka_module.RegressionResultsObject) oLoocv;
-                }
+                    Object oLoocv;
+                    if (isClassification) {
+                        oLoocv = weka.trainClassifier(classifier, classifier_options,
+                                ao.getRetainedAttributesIdClassInString(), isClassification,
+                                cr.dataset.numInstances());
+                    } else {
+                        oLoocv = weka.trainClassifier(classifier, classifier_options,
+                                ao.getRetainedAttributesIdClassInString(), isClassification,
+                                rr.dataset.numInstances());
+                    }
 
+                    if (oLoocv instanceof String || oLoocv == null) {
+                        if (Main.debug) {
+                            System.err.println("[error] LOOCV failed");
+                        }
+                    } else if (isClassification) {
+                        crLoocv = (Weka_module.ClassificationResultsObject) oLoocv;
+                        loocvOut = crLoocv.toStringShort();
+                    } else {
+                        rrLoocv = (Weka_module.RegressionResultsObject) oLoocv;
+                        loocvOut = rrLoocv.toString();
+                    }
+
+                } else {
+                    if (isClassification) {
+                        loocvOut = "\t" + "\t" + "\t" + "\t" + "\t" + "\t";
+                    } else {
+                        loocvOut = "\t" + "\t" + "\t" + "\t";
+                    }
+                }
                 //Repeated Holdout
                 Weka_module.evaluationPerformancesResultsObject eproRHTrain = new Weka_module.evaluationPerformancesResultsObject();
+                if (Main.debug) {
+                    System.out.println("Repeated Holdout on Train set " + Main.bootstrapAndRepeatedHoldoutFolds + " times");
+                }
                 if (isClassification) {
                     for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                         Weka_module.ClassificationResultsObject cro
@@ -619,6 +651,9 @@ public class Training {
                 eproRHTrain.computeMeans();
 
                 //BOOTSTRAP AND BOOTSTRAP .632+ rule TRAIN
+                if (Main.debug) {
+                    System.out.println("Bootstrapping on Train set " + Main.bootstrapAndRepeatedHoldoutFolds + " times");
+                }
                 double bootstrapTrain632plus = 1000;
                 Weka_module.evaluationPerformancesResultsObject eproBSTrain = new Weka_module.evaluationPerformancesResultsObject();
                 if (isClassification) {
@@ -653,6 +688,9 @@ public class Training {
                 eproBSTrain.computeMeans();
 
                 // TEST SET
+                if (Main.debug) {
+                    System.out.println("Evalutation on Test set ");
+                }
                 Weka_module.testResultsObject tro = new Weka_module.testResultsObject();
                 String testResults = null;
                 if (isClassification) {
@@ -704,6 +742,9 @@ public class Training {
                 }
 
                 //REPEATED HOLDOUT TRAIN_TEST
+                if (Main.debug) {
+                    System.out.println("Repeated Holdout on Train AND Test set " + Main.bootstrapAndRepeatedHoldoutFolds + " times");
+                }
                 Weka_module.evaluationPerformancesResultsObject eproRHTrainTest = new Weka_module.evaluationPerformancesResultsObject();
                 try {
                     if (Main.doSampling) {
@@ -749,6 +790,9 @@ public class Training {
                 }
 
                 //BOOTSTRAP TRAIN_TEST AND BOOTSTRAP .632+ rule TRAIN_TEST
+                if (Main.debug) {
+                    System.out.println("Bootstrapping on Train AND Test set " + Main.bootstrapAndRepeatedHoldoutFolds + " times");
+                }
                 double bootstrapTrainTest632plus = 1000;
                 Weka_module.evaluationPerformancesResultsObject eproBSTrainTest = new Weka_module.evaluationPerformancesResultsObject();
                 try {
@@ -798,21 +842,38 @@ public class Training {
 
                 //STATISTICS AND OUTPUT
                 if (isClassification) {
-                    //statistics
-                    double BERs[] = {Double.valueOf(cr.BER),
-                        Double.valueOf(eproRHTrain.meanBERs),
-                        Double.valueOf(eproBSTrain.meanBERs),
-                        Double.valueOf(crLoocv.BER)};
-                    if (Main.doSampling) {
-                        BERs = new double[]{
-                            Double.valueOf(cr.BER),
-                            Double.valueOf(crLoocv.BER),
+                    //average BER
+                    double BERs[] = null;
+                    if (Main.loocv) {
+                        BERs = new double[]{Double.valueOf(cr.BER),
                             Double.valueOf(eproRHTrain.meanBERs),
                             Double.valueOf(eproBSTrain.meanBERs),
-                            Double.valueOf(tro.BER),
-                            Double.valueOf(eproRHTrainTest.meanBERs),
-                            Double.valueOf(eproBSTrainTest.meanBERs)};
+                            Double.valueOf(crLoocv.BER)};
+                        if (Main.doSampling) {
+                            BERs = new double[]{
+                                Double.valueOf(cr.BER),
+                                Double.valueOf(crLoocv.BER),
+                                Double.valueOf(eproRHTrain.meanBERs),
+                                Double.valueOf(eproBSTrain.meanBERs),
+                                Double.valueOf(tro.BER),
+                                Double.valueOf(eproRHTrainTest.meanBERs),
+                                Double.valueOf(eproBSTrainTest.meanBERs)};
+                        }
+                    } else {
+                        BERs = new double[]{Double.valueOf(cr.BER),
+                            Double.valueOf(eproRHTrain.meanBERs),
+                            Double.valueOf(eproBSTrain.meanBERs)};
+                        if (Main.doSampling) {
+                            BERs = new double[]{
+                                Double.valueOf(cr.BER),
+                                Double.valueOf(eproRHTrain.meanBERs),
+                                Double.valueOf(eproBSTrain.meanBERs),
+                                Double.valueOf(tro.BER),
+                                Double.valueOf(eproRHTrainTest.meanBERs),
+                                Double.valueOf(eproBSTrainTest.meanBERs)};
+                        }
                     }
+
                     StandardDeviation std = new StandardDeviation();
                     std.setData(BERs);
                     double StdBER = std.evaluate();
@@ -821,20 +882,38 @@ public class Training {
                     m.setData(BERs);
                     double averageBER = m.evaluate();
 
-                    double[] MCCs = {Double.valueOf(cr.MCC),
-                        Double.valueOf(eproRHTrain.meanMCCs),
-                        Double.valueOf(eproBSTrain.meanMCCs),
-                        Double.valueOf(crLoocv.MCC)};
-                    if (Main.doSampling) {
-                        MCCs = new double[]{
-                            Double.valueOf(cr.MCC),
-                            Double.valueOf(crLoocv.MCC),
+                    //average MCC
+                    double[] MCCs;
+                    if (Main.loocv) {
+                        MCCs = new double[]{Double.valueOf(cr.MCC),
                             Double.valueOf(eproRHTrain.meanMCCs),
                             Double.valueOf(eproBSTrain.meanMCCs),
-                            Double.valueOf(tro.MCC),
-                            Double.valueOf(eproRHTrainTest.meanMCCs),
-                            Double.valueOf(eproBSTrainTest.meanMCCs)};
+                            Double.valueOf(crLoocv.MCC)};
+                        if (Main.doSampling) {
+                            MCCs = new double[]{
+                                Double.valueOf(cr.MCC),
+                                Double.valueOf(crLoocv.MCC),
+                                Double.valueOf(eproRHTrain.meanMCCs),
+                                Double.valueOf(eproBSTrain.meanMCCs),
+                                Double.valueOf(tro.MCC),
+                                Double.valueOf(eproRHTrainTest.meanMCCs),
+                                Double.valueOf(eproBSTrainTest.meanMCCs)};
+                        }
+                    } else {
+                        MCCs = new double[]{Double.valueOf(cr.MCC),
+                            Double.valueOf(eproRHTrain.meanMCCs),
+                            Double.valueOf(eproBSTrain.meanMCCs)};
+                        if (Main.doSampling) {
+                            MCCs = new double[]{
+                                Double.valueOf(cr.MCC),
+                                Double.valueOf(eproRHTrain.meanMCCs),
+                                Double.valueOf(eproBSTrain.meanMCCs),
+                                Double.valueOf(tro.MCC),
+                                Double.valueOf(eproRHTrainTest.meanMCCs),
+                                Double.valueOf(eproBSTrainTest.meanMCCs)};
+                        }
                     }
+
                     std = new StandardDeviation();
                     std.setData(MCCs);
                     double StdMCC = std.evaluate();
@@ -859,8 +938,9 @@ public class Training {
                     }
 
                     lastOutput = out
-                            + "\t" + cr.numberOfFeatures + "\t" + cr.toString()
-                            + "\t" + crLoocv.toStringShort()
+                            + "\t" + cr.numberOfFeatures
+                            + "\t" + cr.toString()
+                            + "\t" + loocvOut
                             + "\t" + eproRHTrain.toStringClassification()
                             + "\t" + eproBSTrain.toStringClassification()
                             + "\t" + bt632
@@ -871,21 +951,39 @@ public class Training {
                             + "\t" + stats + "\t" + ao.getRetainedAttributesIdClassInString();
                 } else {
                     //statistics
-                    double[] CCs = {
-                        Double.valueOf(rr.CC),
-                        Double.valueOf(eproRHTrain.meanCCs),
-                        Double.valueOf(eproBSTrain.meanCCs),
-                        Double.valueOf(rrLoocv.CC)};
-                    if (Main.doSampling) {
+                    double[] CCs;
+                    if (Main.loocv) {
                         CCs = new double[]{
                             Double.valueOf(rr.CC),
-                            Double.valueOf(rrLoocv.CC),
                             Double.valueOf(eproRHTrain.meanCCs),
                             Double.valueOf(eproBSTrain.meanCCs),
-                            Double.valueOf(tro.CC),
-                            Double.valueOf(eproRHTrainTest.meanCCs),
-                            Double.valueOf(eproBSTrainTest.meanCCs)};
+                            Double.valueOf(rrLoocv.CC)};
+                        if (Main.doSampling) {
+                            CCs = new double[]{
+                                Double.valueOf(rr.CC),
+                                Double.valueOf(rrLoocv.CC),
+                                Double.valueOf(eproRHTrain.meanCCs),
+                                Double.valueOf(eproBSTrain.meanCCs),
+                                Double.valueOf(tro.CC),
+                                Double.valueOf(eproRHTrainTest.meanCCs),
+                                Double.valueOf(eproBSTrainTest.meanCCs)};
+                        }
+                    } else {
+                        CCs = new double[]{
+                            Double.valueOf(rr.CC),
+                            Double.valueOf(eproRHTrain.meanCCs),
+                            Double.valueOf(eproBSTrain.meanCCs)};
+                        if (Main.doSampling) {
+                            CCs = new double[]{
+                                Double.valueOf(rr.CC),
+                                Double.valueOf(eproRHTrain.meanCCs),
+                                Double.valueOf(eproBSTrain.meanCCs),
+                                Double.valueOf(tro.CC),
+                                Double.valueOf(eproRHTrainTest.meanCCs),
+                                Double.valueOf(eproBSTrainTest.meanCCs)};
+                        }
                     }
+
                     StandardDeviation std = new StandardDeviation();
                     std.setData(CCs);
                     double StdCC = std.evaluate();
@@ -893,21 +991,37 @@ public class Training {
                     Mean m = new Mean();
                     m.setData(CCs);
                     double averageCC = m.evaluate();
-
-                    double[] RMSEs = {Double.valueOf(rr.RMSE),
-                        Double.valueOf(eproRHTrain.meanRMSEs),
-                        Double.valueOf(eproBSTrain.meanRMSEs),
-                        Double.valueOf(rrLoocv.RMSE)};
-                    if (Main.doSampling) {
-                        RMSEs = new double[]{
-                            Double.valueOf(rr.RMSE),
-                            Double.valueOf(rrLoocv.RMSE),
+                    double[] RMSEs;
+                    if (Main.loocv) {
+                        RMSEs = new double[]{Double.valueOf(rr.RMSE),
                             Double.valueOf(eproRHTrain.meanRMSEs),
                             Double.valueOf(eproBSTrain.meanRMSEs),
-                            Double.valueOf(tro.RMSE),
-                            Double.valueOf(eproRHTrainTest.meanRMSEs),
-                            Double.valueOf(eproBSTrainTest.meanRMSEs)};
+                            Double.valueOf(rrLoocv.RMSE)};
+                        if (Main.doSampling) {
+                            RMSEs = new double[]{
+                                Double.valueOf(rr.RMSE),
+                                Double.valueOf(rrLoocv.RMSE),
+                                Double.valueOf(eproRHTrain.meanRMSEs),
+                                Double.valueOf(eproBSTrain.meanRMSEs),
+                                Double.valueOf(tro.RMSE),
+                                Double.valueOf(eproRHTrainTest.meanRMSEs),
+                                Double.valueOf(eproBSTrainTest.meanRMSEs)};
+                        }
+                    } else {
+                        RMSEs = new double[]{Double.valueOf(rr.RMSE),
+                            Double.valueOf(eproRHTrain.meanRMSEs),
+                            Double.valueOf(eproBSTrain.meanRMSEs)};
+                        if (Main.doSampling) {
+                            RMSEs = new double[]{
+                                Double.valueOf(rr.RMSE),
+                                Double.valueOf(eproRHTrain.meanRMSEs),
+                                Double.valueOf(eproBSTrain.meanRMSEs),
+                                Double.valueOf(tro.RMSE),
+                                Double.valueOf(eproRHTrainTest.meanRMSEs),
+                                Double.valueOf(eproBSTrainTest.meanRMSEs)};
+                        }
                     }
+
                     std = new StandardDeviation();
                     std.setData(RMSEs);
                     double StdRMSE = std.evaluate();
@@ -922,7 +1036,7 @@ public class Training {
                             + df.format(StdRMSE);
                     lastOutput = out
                             + "\t" + rr.numberOfFeatures + "\t" + rr.toString()
-                            + "\t" + rrLoocv.toString()
+                            + "\t" + loocvOut
                             + "\t" + eproRHTrain.toStringRegression()
                             + "\t" + eproBSTrain.toStringRegression()
                             + "\t" + testResults
@@ -966,6 +1080,11 @@ public class Training {
             if (Main.debug) {
                 e.printStackTrace();
             }
+        }
+        Instant finish = Instant.now();
+        long s = Duration.between(start, finish).toMillis();
+        if (Main.debug) {
+            System.out.println("model created in [" + s + "s]");
         }
         return out + "\t" + lastOutput;
     }

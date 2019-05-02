@@ -76,6 +76,7 @@ public class Main {
     public static boolean combineModels = false;
     public static String combinationRule = "AVG";
     public static double maxRankingScoreDifference = 0.005; //for correlated gene retreiving
+    public static boolean loocv = true;
     //benchmark
     public static String bench_AUC = "";
 
@@ -323,7 +324,7 @@ public class Main {
         System.out.println("#### Reading configuration file " + configFile);
         String line = null;
         try {
-            BufferedReader br = new BufferedReader(new FileReader(configFile));            
+            BufferedReader br = new BufferedReader(new FileReader(configFile));
             while (br.ready()) {
                 line = br.readLine();
                 if (!line.startsWith("#") && !line.trim().isEmpty()) {
@@ -432,7 +433,7 @@ public class Main {
                         case "maxNumberOfFeaturesInModel":
                             maxNumberOfFeaturesInModel = Integer.valueOf(value.trim());
                             break;
-                        case "boostrapFolds":
+                        case "bootstrapFolds":
                             bootstrapAndRepeatedHoldoutFolds = Integer.valueOf(value.trim());
                             break;
                         case "spearmanCorrelation_lower":
@@ -465,6 +466,9 @@ public class Main {
                         case "roc_curves":
                             ROCcurves = Boolean.valueOf(value.trim());
                             break;
+                        case "loocv":
+                            loocv = Boolean.valueOf(value.trim());
+                            break;
                         case "samplingFold":
                             samplingFold = Integer.valueOf(value.trim());
                             break;
@@ -480,7 +484,7 @@ public class Main {
                             break;
 
                     }
-                } 
+                }
             }
             CVfolder = wd + CVfolder;
 
