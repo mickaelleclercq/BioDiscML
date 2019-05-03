@@ -9,8 +9,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.sql.Time;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -276,6 +279,92 @@ public class Weka_module {
     }
 
     /**
+     *
+     * @param attributesToUse
+     * @return
+     */
+    public Object shortTestTrainClassifier(String classifier,
+            String classifier_options,
+            String attributesToUse,
+            Boolean classification) {
+
+        try {
+            // load data
+            Instances data = myData;
+
+            //set last attribute as index
+            if (data.classIndex() == -1) {
+                data.setClassIndex(data.numAttributes() - 1);
+            }
+            data.attribute(data.numAttributes() - 1).isNumeric();
+            /**
+             * if we are using Vote, it means it already contains the features
+             * to use for each classifier
+             */
+            String configuration = classifier + " " + classifier_options;
+            if (!classifier.contains("meta.Vote")) {
+                //keep only attributesToUse. ID is still here
+                String options = "";
+                weka.filters.unsupervised.attribute.Remove r = new weka.filters.unsupervised.attribute.Remove();
+                options = "-V -R " + attributesToUse;
+                r.setOptions(weka.core.Utils.splitOptions((options)));
+                r.setInputFormat(data);
+                data = Filter.useFilter(data, r);
+                data.setClassIndex(data.numAttributes() - 1);
+
+                //create weka configuration string
+                //remove ID from classification
+                String filterID = ""
+                        + "weka.classifiers.meta.FilteredClassifier "
+                        + "-F \"weka.filters.unsupervised.attribute.Remove -R 1\" "
+                        + "-W weka.classifiers.";
+
+                //create config
+                configuration = filterID + "" + classifier + " -- " + classifier_options;
+            }
+
+            //if cost sensitive case
+            if (classifier.contains("CostSensitiveClassifier")) {
+                int falseExemples = data.attributeStats(data.classIndex()).nominalCounts[1];
+                int trueExemples = data.attributeStats(data.classIndex()).nominalCounts[0];
+                double ratio = (double) trueExemples / (double) falseExemples;
+                classifier_options = classifier_options.replace("ratio", df.format(ratio));
+            }
+
+            //train
+            final String config[] = Utils.splitOptions(configuration);
+            String classname = config[0];
+            config[0] = "";
+            Classifier model = null;
+
+            model = (Classifier) Utils.forName(Classifier.class, classname, config);
+
+            //evaluation
+            if (Main.debug) {
+                System.out.print("\tShort test of model...");
+            }
+
+            //build model to save it
+            model.buildClassifier(data);
+            return model;
+
+        } catch (Exception e) {
+            String message = "[model error] " + classifier + " " + classifier_options + " | " + e.getMessage();
+            if (Main.debug) {
+//                if (!e.getMessage().contains("handle") && !e.getMessage().contains("supported")) {
+//
+//                }
+                e.printStackTrace();
+                System.err.println(message);
+
+            }
+            return message;
+
+        }
+
+    }
+
+    /**
      * http://bayesianconspiracy.blogspot.ca/2009/10/usr-bin-env-groovy-import-weka_10.html
      *
      * @param attributesToUse
@@ -340,7 +429,13 @@ public class Weka_module {
 
             model = (Classifier) Utils.forName(Classifier.class, classname, config);
 
-            // evaluation
+            //evaluation
+            Instant start = null;
+            if (Main.debug) {
+                System.out.print("\tEvaluation of model with 10CV...");
+                start = Instant.now();
+            }
+
             Evaluation eval = new Evaluation(data);
             StringBuffer sb = new StringBuffer();
             PlainText pt = new PlainText();
@@ -348,6 +443,12 @@ public class Weka_module {
 
             //10 fold cross validation
             eval.crossValidateModel(model, data, numberOfFolds, new Random(1), pt, new Range("first,last"), true);
+
+            if (Main.debug) {
+                Instant finish = Instant.now();
+                long s = Duration.between(start, finish).toMillis();
+                System.out.println(" in " + s + "ms");
+            }
 
             //build model to save it
             model.buildClassifier(data);
@@ -441,9 +542,20 @@ public class Weka_module {
             model.buildClassifier(train);
 
             //evaluation
+            Instant start = null;
+            if (Main.debug) {
+                System.out.print("\tEvaluation of model [" + seed + "]...");
+                start = Instant.now();
+            }
+
             Evaluation eval = new Evaluation(test);
             eval.evaluateModel(model, test);
 
+            if (Main.debug) {
+                Instant finish = Instant.now();
+                long s = Duration.between(start, finish).toMillis();
+                System.out.println(" in " + s + "ms");
+            }
             //return
             if (classification) {
                 return new ClassificationResultsObject(eval, sb, data, model);
@@ -506,6 +618,13 @@ public class Weka_module {
             Classifier model = (Classifier) Utils.forName(Classifier.class, classname, config);
             StringBuffer sb = new StringBuffer();
 
+            //evaluation
+            Instant start = null;
+            if (Main.debug) {
+                System.out.print("\tEvaluation of model [" + seed + "]...");
+                start = Instant.now();
+            }
+
             // Custom sampling (100%, with replacement)
             ArrayList<Instance> al_trainSet = new ArrayList<>(data.size()); // Empty list (add one-by-one)
             ArrayList<Instance> al_testSet = new ArrayList<>(data); // Full (remove one-by-one)
@@ -526,6 +645,13 @@ public class Weka_module {
             testSet.addAll(al_testSet);
             Evaluation eval = new Evaluation(data);
             eval.evaluateModel(model, testSet);
+
+            if (Main.debug) {
+                Instant finish = Instant.now();
+                long s = Duration.between(start, finish).toMillis();
+                double d = s / 1000;
+                System.out.println(" in " + s + "ms");
+            }
 
             //return
             if (classification) {
@@ -693,7 +819,6 @@ public class Weka_module {
                 data.setClassIndex(data.numAttributes() - 1);
             }
 
-            
             weka.filters.supervised.attribute.AttributeSelection select = new weka.filters.supervised.attribute.AttributeSelection();
 
             //filter based on ranker score threshold
@@ -733,14 +858,14 @@ public class Weka_module {
                 filteredData = Filter.useFilter(data, select);
             }
             //store IDs
-            List<String> alIDs = new ArrayList<>() ;
-            Enumeration en = filteredData.enumerateInstances();           
+            List<String> alIDs = new ArrayList<>();
+            Enumeration en = filteredData.enumerateInstances();
             while (en.hasMoreElements()) {
                 alIDs.add(((Instance) en.nextElement()).stringValue(filteredData.attribute("Instance")));
             }
             filteredData.deleteAttributeAt(filteredData.attribute("Instance").index());
-            
-           //restore IDs
+
+            //restore IDs
             Attribute att = new Attribute("Instance", alIDs);
             filteredData.insertAttributeAt(att, 0);
             for (int i = 0; i < filteredData.numInstances(); i++) {

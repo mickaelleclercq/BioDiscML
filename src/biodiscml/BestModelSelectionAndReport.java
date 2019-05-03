@@ -56,6 +56,8 @@ public class BestModelSelectionAndReport {
         dfs.setDecimalSeparator('.');
         df.setDecimalFormatSymbols(dfs);
         String bestOrCombine = "Select best ";
+        ArrayList<Double> alMCCs = new ArrayList<>();
+        ArrayList<Double> alCCs = new ArrayList<>();
         if (Main.combineModels) {
             bestOrCombine = "Combine ";
         }
@@ -306,28 +308,34 @@ public class BestModelSelectionAndReport {
                 pw.println("\n# 10 fold cross validation performance");
                 if (classification) {
                     System.out.println(cr.toStringDetails());
+                    alMCCs.add(Double.valueOf(cr.MCC));
                     pw.println(cr.toStringDetails().replace("[score_training] ", ""));
                 } else {
                     System.out.println(rr.toStringDetails());
+                    alCCs.add(Double.valueOf(rr.CC));
                     pw.println(rr.toStringDetails().replace("[score_training] ", ""));
                 }
                 pw.flush();
 
                 //LOOCV performance
-                System.out.println("# LOOCV (Leave-One-Out cross validation) performance");
-                pw.println("\n# LOOCV (Leave-One-Out Cross Validation) performance");
-                if (classification) {
-                    Weka_module.ClassificationResultsObject cr2 = (Weka_module.ClassificationResultsObject) weka.trainClassifier(co.classifier, co.options,
-                            co.featuresSeparatedByCommas, classification, weka.myData.numInstances());
-                    System.out.println(cr2.toStringDetails());
-                    pw.println(cr2.toStringDetails().replace("[score_training] ", ""));
-                } else {
-                    Weka_module.RegressionResultsObject rr2 = (Weka_module.RegressionResultsObject) weka.trainClassifier(ro.classifier, ro.options,
-                            ro.featuresSeparatedByCommas, classification, weka.myData.numInstances());
-                    System.out.println(rr2.toStringDetails());
-                    pw.println(rr2.toStringDetails().replace("[score_training] ", ""));
+                if (Main.loocv) {
+                    System.out.println("# LOOCV (Leave-One-Out cross validation) performance");
+                    pw.println("\n# LOOCV (Leave-One-Out Cross Validation) performance");
+                    if (classification) {
+                        Weka_module.ClassificationResultsObject cr2 = (Weka_module.ClassificationResultsObject) weka.trainClassifier(co.classifier, co.options,
+                                co.featuresSeparatedByCommas, classification, weka.myData.numInstances());
+                        System.out.println(cr2.toStringDetails());
+                        alMCCs.add(Double.valueOf(cr2.MCC));
+                        pw.println(cr2.toStringDetails().replace("[score_training] ", ""));
+                    } else {
+                        Weka_module.RegressionResultsObject rr2 = (Weka_module.RegressionResultsObject) weka.trainClassifier(ro.classifier, ro.options,
+                                ro.featuresSeparatedByCommas, classification, weka.myData.numInstances());
+                        System.out.println(rr2.toStringDetails());
+                        alCCs.add(Double.valueOf(rr2.CC));
+                        pw.println(rr2.toStringDetails().replace("[score_training] ", ""));
+                    }
+                    pw.flush();
                 }
-                pw.flush();
 
                 //REPEATED HOLDOUT performance TRAIN set
                 ArrayList<Object> alROCs = new ArrayList<>();
@@ -340,7 +348,7 @@ public class BestModelSelectionAndReport {
                     for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                         Weka_module.ClassificationResultsObject cro
                                 = (Weka_module.ClassificationResultsObject) weka.trainClassifierHoldOutValidation(co.classifier, co.options,
-                                        co.featuresSeparatedByCommas, classification,i);
+                                        co.featuresSeparatedByCommas, classification, i);
                         eproRHTrain.alAUCs.add(Double.valueOf(cro.AUC));
                         eproRHTrain.alpAUCs.add(Double.valueOf(cro.pAUC));
                         eproRHTrain.alAUPRCs.add(Double.valueOf(cro.AUPRC));
@@ -354,6 +362,7 @@ public class BestModelSelectionAndReport {
                     }
                     eproRHTrain.computeMeans();
                     System.out.println(eproRHTrain.toStringClassificationDetails());
+                    alMCCs.add(Double.valueOf(eproRHTrain.meanMCCs));
                     pw.println(eproRHTrain.toStringClassificationDetails().replace("[score_training] ", ""));
 
                     if (Main.ROCcurves) {
@@ -366,7 +375,7 @@ public class BestModelSelectionAndReport {
                     for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                         Weka_module.RegressionResultsObject rro
                                 = (Weka_module.RegressionResultsObject) weka.trainClassifierHoldOutValidation(ro.classifier, ro.options,
-                                        ro.featuresSeparatedByCommas, classification,i);
+                                        ro.featuresSeparatedByCommas, classification, i);
                         eproRHTrain.alCCs.add(Double.valueOf(rro.CC));
                         eproRHTrain.alMAEs.add(Double.valueOf(rro.MAE));
                         eproRHTrain.alRMSEs.add(Double.valueOf(rro.RMSE));
@@ -374,6 +383,7 @@ public class BestModelSelectionAndReport {
                         eproRHTrain.alRRSEs.add(Double.valueOf(rro.RRSE));
                     }
                     eproRHTrain.computeMeans();
+                    alCCs.add(Double.valueOf(eproRHTrain.meanCCs));
                     pw.println(eproRHTrain.toStringRegressionDetails().replace("[score_training] ", ""));
                 }
                 pw.flush();
@@ -389,7 +399,7 @@ public class BestModelSelectionAndReport {
                     for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                         Weka_module.ClassificationResultsObject cro
                                 = (Weka_module.ClassificationResultsObject) weka.trainClassifierBootstrap(co.classifier, co.options,
-                                        co.featuresSeparatedByCommas, classification,i);
+                                        co.featuresSeparatedByCommas, classification, i);
                         eproBSTrain.alAUCs.add(Double.valueOf(cro.AUC));
                         eproBSTrain.alpAUCs.add(Double.valueOf(cro.pAUC));
                         eproBSTrain.alAUPRCs.add(Double.valueOf(cro.AUPRC));
@@ -402,6 +412,7 @@ public class BestModelSelectionAndReport {
                         // System.out.println(i+"\t"+Double.valueOf(cro.AUC));
                     }
                     eproBSTrain.computeMeans();
+                    alMCCs.add(Double.valueOf(eproBSTrain.meanMCCs));
                     System.out.println(eproBSTrain.toStringClassificationDetails());
                     pw.println(eproBSTrain.toStringClassificationDetails().replace("[score_training] ", ""));
 
@@ -427,7 +438,7 @@ public class BestModelSelectionAndReport {
                     for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                         Weka_module.RegressionResultsObject rro
                                 = (Weka_module.RegressionResultsObject) weka.trainClassifierBootstrap(ro.classifier, ro.options,
-                                        ro.featuresSeparatedByCommas, classification,i);
+                                        ro.featuresSeparatedByCommas, classification, i);
                         eproBSTrain.alCCs.add(Double.valueOf(rro.CC));
                         eproBSTrain.alMAEs.add(Double.valueOf(rro.MAE));
                         eproBSTrain.alRMSEs.add(Double.valueOf(rro.RMSE));
@@ -435,6 +446,7 @@ public class BestModelSelectionAndReport {
                         eproBSTrain.alRRSEs.add(Double.valueOf(rro.RRSE));
                     }
                     eproBSTrain.computeMeans();
+                    alCCs.add(Double.valueOf(eproBSTrain.meanCCs));
                     pw.println(eproBSTrain.toStringRegressionDetails().replace("[score_training] ", ""));
                 }
                 pw.flush();
@@ -501,6 +513,8 @@ public class BestModelSelectionAndReport {
                             pw.println("MCC: " + cr2.MCC);
                             pw.println("BER: " + cr2.BER);
 
+                            alMCCs.add(Double.valueOf(cr2.MCC));
+
                             if (Main.ROCcurves) {
                                 rocCurveGraphs.createRocCurvesWithConfidence(alROCs, classification, modelFilename, ".roc_test.png");
                             }
@@ -513,6 +527,8 @@ public class BestModelSelectionAndReport {
                             //
                             pw.println("Average CC: " + rr2.CC);
                             pw.println("Average RMSE: " + rr2.RMSE);
+
+                            alCCs.add(Double.valueOf(rr2.CC));
                         }
 
                         //REPEATED HOLDOUT TRAIN_TEST
@@ -532,7 +548,7 @@ public class BestModelSelectionAndReport {
                                 for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                                     Weka_module.ClassificationResultsObject cro
                                             = (Weka_module.ClassificationResultsObject) weka3.trainClassifierHoldOutValidation(co.classifier, co.options,
-                                                    null, classification,i);
+                                                    null, classification, i);
                                     eproRHTrainTest.alAUCs.add(Double.valueOf(cro.AUC));
                                     eproRHTrainTest.alpAUCs.add(Double.valueOf(cro.pAUC));
                                     eproRHTrainTest.alAUPRCs.add(Double.valueOf(cro.AUPRC));
@@ -544,6 +560,7 @@ public class BestModelSelectionAndReport {
                                     alROCs.add(cro);
                                 }
                                 eproRHTrainTest.computeMeans();
+                                alMCCs.add(Double.valueOf(eproRHTrainTest.meanMCCs));
                                 System.out.println(eproRHTrainTest.toStringClassificationDetails());
                                 pw.println(eproRHTrainTest.toStringClassificationDetails().replace("[score_training] ", ""));
                                 if (Main.ROCcurves) {
@@ -558,7 +575,7 @@ public class BestModelSelectionAndReport {
                                 for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                                     Weka_module.RegressionResultsObject rro
                                             = (Weka_module.RegressionResultsObject) weka3.trainClassifierHoldOutValidation(ro.classifier, ro.options,
-                                                    null, classification,i);
+                                                    null, classification, i);
                                     eproRHTrainTest.alCCs.add(Double.valueOf(rro.CC));
                                     eproRHTrainTest.alMAEs.add(Double.valueOf(rro.MAE));
                                     eproRHTrainTest.alRMSEs.add(Double.valueOf(rro.RMSE));
@@ -566,6 +583,7 @@ public class BestModelSelectionAndReport {
                                     eproRHTrainTest.alRRSEs.add(Double.valueOf(rro.RRSE));
                                 }
                                 eproRHTrainTest.computeMeans();
+                                alCCs.add(Double.valueOf(eproRHTrainTest.meanCCs));
                                 System.out.println(eproRHTrainTest.toStringRegressionDetails());
                                 pw.println(eproRHTrainTest.toStringRegressionDetails().replace("[score_training] ", ""));
                             }
@@ -593,7 +611,7 @@ public class BestModelSelectionAndReport {
                                 for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                                     Weka_module.ClassificationResultsObject cro
                                             = (Weka_module.ClassificationResultsObject) weka4.trainClassifierBootstrap(co.classifier, co.options,
-                                                    null, classification,i);
+                                                    null, classification, i);
                                     eproBSTrainTest.alAUCs.add(Double.valueOf(cro.AUC));
                                     eproBSTrainTest.alpAUCs.add(Double.valueOf(cro.pAUC));
                                     eproBSTrainTest.alAUPRCs.add(Double.valueOf(cro.AUPRC));
@@ -605,6 +623,7 @@ public class BestModelSelectionAndReport {
                                     alROCs.add(cro);
                                 }
                                 eproBSTrainTest.computeMeans();
+                                alMCCs.add(Double.valueOf(eproBSTrainTest.meanMCCs));
                                 System.out.println(eproBSTrainTest.toStringClassificationDetails());
                                 pw.println(eproBSTrainTest.toStringClassificationDetails().replace("[score_training] ", ""));
 
@@ -631,7 +650,7 @@ public class BestModelSelectionAndReport {
                                 for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                                     Weka_module.RegressionResultsObject rro
                                             = (Weka_module.RegressionResultsObject) weka4.trainClassifierBootstrap(ro.classifier, ro.options,
-                                                    null, classification,i);
+                                                    null, classification, i);
                                     eproBSTrainTest.alCCs.add(Double.valueOf(rro.CC));
                                     eproBSTrainTest.alMAEs.add(Double.valueOf(rro.MAE));
                                     eproBSTrainTest.alRMSEs.add(Double.valueOf(rro.RMSE));
@@ -639,6 +658,7 @@ public class BestModelSelectionAndReport {
                                     eproBSTrainTest.alRRSEs.add(Double.valueOf(rro.RRSE));
                                 }
                                 eproBSTrainTest.computeMeans();
+                                alCCs.add(Double.valueOf(eproBSTrainTest.meanCCs));
                                 System.out.println(eproBSTrainTest.toStringRegressionDetails());
                                 pw.println(eproBSTrainTest.toStringRegressionDetails().replace("[score_training] ", ""));
                             }
@@ -658,9 +678,15 @@ public class BestModelSelectionAndReport {
                     }
                 }
                 pw.flush();
-                
-                // show average metrics and standard deviation
 
+                // show average metrics and standard deviation
+                if (classification) {
+                    pw.println("\n# Average MCC: " + utils.utils.getMean(alMCCs));
+                    System.out.println("\n# Average MCC: " + utils.utils.getMean(alMCCs));
+                } else {
+                    pw.println("\n# Average CC: " + utils.utils.getMean(alCCs));
+                    System.out.println("\n# Average CC: " + utils.utils.getMean(alCCs));
+                }
                 //output features
                 if (classification) {
                     try {
@@ -1039,7 +1065,7 @@ public class BestModelSelectionAndReport {
     public static class regressionObject {
 
         public ArrayList<String> featureList = new ArrayList<>();
-        public String featuresSeparatedByCommas="";
+        public String featuresSeparatedByCommas = "";
         public String classifier;
         public String optimizer;
         public String options;
