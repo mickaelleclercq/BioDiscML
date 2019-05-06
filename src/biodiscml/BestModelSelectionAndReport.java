@@ -239,7 +239,7 @@ public class BestModelSelectionAndReport {
                     trainingOutput = weka.trainClassifier(ro.classifier, ro.options,
                             ro.featuresSeparatedByCommas, classification, 10);
                     rr = (Weka_module.RegressionResultsObject) trainingOutput;
-                    classifierName = ro.classifier + "_" + ro.options.replace(" ", "").replace("\\", "").replace("\"", "") + "_"
+                    classifierName = ro.classifier + "_" + ro.printOptions() + "_"
                             + ro.optimizer.toUpperCase().trim() + "_" + ro.mode;
                     //save feature file
                     weka.saveFilteredDataToCSV(ro.featuresSeparatedByCommas, classification, modelFilename + ".train_features.csv");
