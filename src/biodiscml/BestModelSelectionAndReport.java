@@ -451,7 +451,7 @@ public class BestModelSelectionAndReport {
                 }
                 pw.flush();
 
-                // TEST SET
+                // IF TEST SET
                 try {
                     if (Main.doSampling) {
                         alROCs = new ArrayList<>();
@@ -477,20 +477,23 @@ public class BestModelSelectionAndReport {
                         Weka_module weka2 = new Weka_module();
                         weka2.setARFFfile(arffTestFile);
                         weka2.setDataFromArff();
+                        // create compatible test file
                         if (Main.combineModels) {
                             //combined model contains the filters, we need to keep the same
                             //features indexes as the b.featureSelection.infoGain.arff
-                            weka2.extractFeaturesFromTestFileBasedOnSelectedFeatures(weka.myData,
+                            weka2.extractFeaturesFromArffFileBasedOnSelectedFeatures(weka.myData,
                                     weka2.myData, arffTestFileWithExtractedModelFeatures);
                         } else {
                             weka2.extractFeaturesFromTestFileBasedOnModel(modelFilename + ".model",
                                     weka2.myData, arffTestFileWithExtractedModelFeatures);
                         }
 
-                        //testing
+                        //TESTING
+                        // reload compatible test file in weka2
                         weka2 = new Weka_module();
                         weka2.setARFFfile(arffTestFileWithExtractedModelFeatures);
                         weka2.setDataFromArff();
+
                         if (classification) {
                             Weka_module.ClassificationResultsObject cr2
                                     = (Weka_module.ClassificationResultsObject) weka2.testClassifierFromFileSource(new File(weka2.ARFFfile),
@@ -530,17 +533,37 @@ public class BestModelSelectionAndReport {
 
                             alCCs.add(Double.valueOf(rr2.CC));
                         }
+                        new File(arffTestFileWithExtractedModelFeatures).delete();
 
                         //REPEATED HOLDOUT TRAIN_TEST
+                        arffTestFileWithExtractedModelFeatures = arffTestFileWithExtractedModelFeatures.replace(".test_features.arff", ".RH_features.arff");
                         Weka_module.evaluationPerformancesResultsObject eproRHTrainTest = new Weka_module.evaluationPerformancesResultsObject();
                         try {
                             alROCs = new ArrayList<>();
+                            // adapt original dataset file to model (extract the needed features)
                             Weka_module weka3 = new Weka_module();
                             weka3.setARFFfile(trainFileName.replace("data_to_train.csv", "all_data.arff"));
                             weka3.setDataFromArff();
+                            // create compatible  file
+                            if (Main.combineModels) {
+                                //combined model contains the filters, we need to keep the same
+                                //features indexes as the b.featureSelection.infoGain.arff
+                                weka3.extractFeaturesFromArffFileBasedOnSelectedFeatures(weka.myData,
+                                        weka3.myData, arffTestFileWithExtractedModelFeatures);
+                            } else {
+                                weka3.extractFeaturesFromTestFileBasedOnModel(modelFilename + ".model",
+                                        weka3.myData, arffTestFileWithExtractedModelFeatures);
+                            }
+
+                            // reload compatible file in weka2
+                            weka3 = new Weka_module();
+                            weka3.setARFFfile(arffTestFileWithExtractedModelFeatures);
+                            weka3.setDataFromArff();
 
                             if (classification) {
-                                weka3.myData = weka3.extractFeaturesFromDatasetBasedOnModel(cr.model, weka3.myData);
+                                if (!Main.combineModels) {
+                                    weka3.myData = weka3.extractFeaturesFromDatasetBasedOnModel(cr.model, weka3.myData);
+                                }
                                 System.out.println("Repeated Holdout evaluation on TRAIN AND TEST sets of " + co.classifier + " " + co.options
                                         + " optimized by " + co.optimizer);
                                 pw.println("\n#Repeated Holdout evaluation performance on TRAIN AND TEST set, "
@@ -567,7 +590,10 @@ public class BestModelSelectionAndReport {
                                     rocCurveGraphs.createRocCurvesWithConfidence(alROCs, classification, modelFilename, ".roc.png");
                                 }
                             } else {
-                                weka3.myData = weka3.extractFeaturesFromDatasetBasedOnModel(rr.model, weka3.myData);
+                                if (!Main.combineModels) {
+                                    weka3.myData = weka3.extractFeaturesFromDatasetBasedOnModel(rr.model, weka3.myData);
+                                }
+
                                 System.out.println("Repeated Holdout evaluation on TRAIN AND TEST sets of " + ro.classifier + " "
                                         + ro.options + "optimized by " + ro.optimizer.toUpperCase());
                                 pw.println("\n#Repeated Holdout evaluation performance on TRAIN AND TEST set, "
@@ -593,8 +619,10 @@ public class BestModelSelectionAndReport {
                                 e.printStackTrace();
                             }
                         }
+                        new File(arffTestFileWithExtractedModelFeatures).delete();
 
                         //BOOTSRAP TRAIN_TEST
+                        arffTestFileWithExtractedModelFeatures = arffTestFileWithExtractedModelFeatures.replace(".RH_features.arff", ".BS_features.arff");
                         Weka_module.evaluationPerformancesResultsObject eproBSTrainTest = new Weka_module.evaluationPerformancesResultsObject();
                         try {
                             alROCs = new ArrayList<>();
@@ -602,8 +630,25 @@ public class BestModelSelectionAndReport {
                             weka4.setARFFfile(trainFileName.replace("data_to_train.csv", "all_data.arff"));
                             weka4.setDataFromArff();
 
+                            // create compatible  file
+                            if (Main.combineModels) {
+                                //combined model contains the filters, we need to keep the same
+                                //features indexes as the b.featureSelection.infoGain.arff
+                                weka4.extractFeaturesFromArffFileBasedOnSelectedFeatures(weka.myData,
+                                        weka4.myData, arffTestFileWithExtractedModelFeatures);
+                            } else {
+                                weka4.extractFeaturesFromTestFileBasedOnModel(modelFilename + ".model",
+                                        weka4.myData, arffTestFileWithExtractedModelFeatures);
+                            }
+
+                            // reload compatible file in weka2
+                            weka4 = new Weka_module();
+                            weka4.setARFFfile(arffTestFileWithExtractedModelFeatures);
+                            weka4.setDataFromArff();
                             if (classification) {
-                                weka4.myData = weka4.extractFeaturesFromDatasetBasedOnModel(cr.model, weka4.myData);
+                                if (!Main.combineModels) {
+                                    weka4.myData = weka4.extractFeaturesFromDatasetBasedOnModel(cr.model, weka4.myData);
+                                }
                                 System.out.println("Bootstrap evaluation on TRAIN AND TEST sets of " + co.classifier + " " + co.options
                                         + " optimized by " + co.optimizer);
                                 pw.println("\n#Bootstrap evaluation performance on TRAIN AND TEST set, "
@@ -642,7 +687,9 @@ public class BestModelSelectionAndReport {
                                     rocCurveGraphs.createRocCurvesWithConfidence(alROCs, classification, modelFilename, ".roc.png");
                                 }
                             } else {
-                                weka4.myData = weka4.extractFeaturesFromDatasetBasedOnModel(rr.model, weka4.myData);
+                                if (!Main.combineModels) {
+                                    weka4.myData = weka4.extractFeaturesFromDatasetBasedOnModel(rr.model, weka4.myData);
+                                }
                                 System.out.println("Bootstrap evaluation on TRAIN AND TEST sets of " + ro.classifier + " "
                                         + ro.options + "optimized by " + ro.optimizer.toUpperCase());
                                 pw.println("\n#Bootstrap evaluation performance on TRAIN AND TEST set, "
