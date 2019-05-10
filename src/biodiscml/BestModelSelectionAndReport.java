@@ -861,15 +861,15 @@ public class BestModelSelectionAndReport {
                         br = new BufferedReader(new FileReader(modelFilename + ".details.txt"));
                         line = "";
                         //go to selected attributes
-                        while (!line.startsWith("# Selected Attributes")) {
+                        while (!line.startsWith("# Attribute ranking by")) {
                             line = br.readLine();
                         }
                         line = br.readLine();
                         //add attributes to hashmap
                         while (!line.startsWith("#")) {
                             if (!line.isEmpty()) {
-                                lhmCorrFeaturesNames.put(line.trim(), "");
-                                lhmFeaturesNames.put(line.trim(), "");
+                                lhmCorrFeaturesNames.put(line.split("\t")[1].trim(), "");
+                                lhmFeaturesNames.put(line.split("\t")[1].trim(), "");
                             }
                             line = br.readLine();
                         }
@@ -992,6 +992,7 @@ public class BestModelSelectionAndReport {
 
         //set local variable of weka object from ARFFfile
         weka.setDataFromArff();
+        weka.myData = weka.convertStringsToNominal(weka.myData);
 //        // check if class has numeric values, hence regression, instead of nominal class (classification)
         classification = weka.isClassification();
     }
