@@ -154,6 +154,32 @@ public class AdaptDatasetToTraining {
             }
             System.exit(0);
         }
+        //remove useless features having 100% the same value
+        try {
+            for (TableObject tbo : al_tables) {
+                for (String s : tbo.getSortedHmDataKeyset()) {
+                    HashMap<String, String> hm = new HashMap<>();
+                    for (String value : tbo.hmData.get(s)) {
+                        hm.put(value, value);
+                    }
+                    if (hm.size() == 1) {
+                        tbo.hmData.remove(s);
+                        if (hm.keySet().toArray()[0].equals("?")) {
+                            System.out.println("Removing feature " + s + " "
+                                    + "because 100% of values are missing");
+                        } else {
+                            System.out.println("Removing feature " + s + " "
+                                    + "because 100% of values have the same value "
+                                    + "{" + hm.keySet().toArray()[0] + "}");
+                        }
+                    }
+
+                }
+                cpt++;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         //create outfile
         if (debug) {
@@ -201,7 +227,7 @@ public class AdaptDatasetToTraining {
                                 // print values and replace , per .
                                 String out = tbo.hmData.get(s).get(idIndex).replace(",", ".");
                                 if (out.isEmpty() || out.equals("NA") || out.equals("na")
-                                        ||out.equals("N/A")||out.equals("n/a")) {
+                                        || out.equals("N/A") || out.equals("n/a")) {
                                     out = "?";
                                 }
                                 pw.print("\t" + out);
