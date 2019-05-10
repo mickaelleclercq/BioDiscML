@@ -18,14 +18,14 @@ import java.util.HashMap;
 public class Main {
 
     public static boolean debug = false;
-    public static boolean isclassification = true;
+    public static boolean isClassification = true;
 
     public static String wd = "";
     public static String project = "myProject";
     public static String CVfolder = "tmpCV"; //cross validation folder. Disabled
 
     //program functions
-    public static String configFile = "config.conf"; //config file
+    public static String configFile = ""; //config file
     public static boolean needConfigFile = true;
     public static boolean training = false;
     public static boolean testing = false;
@@ -89,7 +89,7 @@ public class Main {
         System.out.println("#### BioDiscML ####\n");
         //read configuration file
         System.out.println("#### Parsing options...");
-        setOptions(args); //from command line
+        setOptionsFromCommandLine(args); //from command line
 
         if (needConfigFile) {
             setConfiguration();
@@ -105,7 +105,7 @@ public class Main {
             System.out.println("#### Start training...");
             //CLASSIFICATION
             if (doClassification) {
-                isclassification = true;
+                isClassification = true;
                 //put data together in the same file for ML
                 System.out.println("## Preprocessing of the input file(s)");
                 String CLASSIFICATION_FILE = wd + project + "a.classification.data_to_train.csv"; //output of AdaptDatasetToWeka()
@@ -119,14 +119,13 @@ public class Main {
 
                 //choose best model
                 System.out.println("## Best model selection");
-                String FEATURES_FILE = wd + project + "d.classification.model_features.csv"; // final model features
                 BestModelSelectionAndReport b = new BestModelSelectionAndReport(CLASSIFICATION_FILE, FEATURE_SELECTION_FILE, TRAINING_RESULTS_FILE,
                         "classification");
             }
 
             //REGRESSION
             if (doRegression) {
-                isclassification = false;
+                isClassification = false;
                 //put data together in the same file for ML
                 System.out.println("## Preprocessing of the input file(s)");
                 String REGRESSION_FILE = wd + project + "a.regression.data_to_train.csv";
@@ -203,31 +202,52 @@ public class Main {
      *
      * @param args
      */
-    public static void setOptions(String[] args) {
+    public static void setOptionsFromCommandLine(String[] args) {
+        //parse option
         String cmd = " ";
         for (String s : args) {
             cmd += s + " ";
         }
         String[] options = cmd.split(" -");
+
+        //in case of ccmd present (only authorized AT THE END for now)
+        //this implementation is temporary, need for something more generalized
+        for (int i = 0; i < options.length; i++) {
+            if (options[i].startsWith("ccmd") || options[i].startsWith("rcmd")) {
+                for (int j = i + 1; j < options.length; j++) {
+                    if (!options[j].startsWith("ccmd")
+                            && !options[j].startsWith("rcmd") //TODO implement: && NOT A RESERVED KEYWORD
+                            ) {
+                        options[i] += " -" + options[j];
+                        options[j] = "";
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+        }
+
+        //set options
         boolean prefixesDefined = false;
         for (String s : options) {
             if (s.startsWith("help")) {
-                //help();
+                System.out.println("Check readme.md file or https://github.com/mickaelleclercq/BioDiscML");
+                System.exit(0);
             }
-            // get className
-            if (s.startsWith("config")) {
+            if (s.contains("=")) {
+                setOption(s.split("=")[0], s.split("=")[1]);
+            }
+            // get config
+            if (s.startsWith("config") && configFile.isEmpty()) {
                 configFile = s.split(" ")[1].trim();
+                needConfigFile = false;
             }
             // training
             if (s.startsWith("train")) {
                 training = true;
             }
 
-            //testing: provide a set of parameters
-            if (s.startsWith("test")) {
-                testing = true;
-                needConfigFile = false;
-            }
             //bestmodel
             if (s.startsWith("bestmodel")) {
                 trainingBestModel = true;
@@ -239,50 +259,19 @@ public class Main {
                 }
             }
 
-            //model
-            if (s.startsWith("model")) {
-                modelFile = s.split(" ")[1].trim();
-            }
-            //infiles
-            if (s.startsWith("testfiles")) {
-                String infiles[] = s.split(" ");
-                for (int i = 1; i < infiles.length; i++) {
-                    hmTrainFiles.put(infiles[i], i + "");
-                }
-            }
-            //prefixes
-            if (s.startsWith("prefixes")) {
-                prefixesDefined = true;
-                String prefixes[] = s.split(" ");
-                for (String infile : hmTrainFiles.keySet()) {
-                    int index = Integer.valueOf(hmTrainFiles.get(infile));
-                    String prefixe = prefixes[index];
-                    hmTrainFiles.put(infile, prefixe);
-                }
-            }
-            //mergingID
-            if (s.startsWith("mergingID")) {
-                mergingID = s.split(" ")[1].trim();
+            //testing: provide a set of parameters
+            if (s.startsWith("test")) {
+                testing = true;
+                needConfigFile = false;
             }
 
-            //mergingID
-            if (s.startsWith("className")) {
-                classificationClassName = s.split(" ")[1].trim();
-                regressionClassName = s.split(" ")[1].trim();
-            }
+        }
 
-            //infiles
-            if (s.startsWith("separator")) {
-                separator = s.split(" ")[1].trim();
-            }
-
-            //classification or regression
-            if (s.startsWith("classification")) {
-                isclassification = true;
-            }
-            //classification or regression
-            if (s.startsWith("regression")) {
-                isclassification = false;
+        //if no config file is provided for training, check if we have enough
+        //information to start biodiscml
+        if (configFile.isEmpty() && training) {
+            if (!hmTrainFiles.isEmpty()) {
+                needConfigFile = false;
             }
         }
 
@@ -296,7 +285,7 @@ public class Main {
             System.out.println("#### Mode: testing");
             System.out.println("Merging ID: " + mergingID);
             System.out.println("Configuration file: " + configFile);
-            if (isclassification) {
+            if (isClassification) {
                 System.out.println("Prediction type: Classification");
             } else {
                 System.out.println("Prediction type: Regression");
@@ -331,159 +320,7 @@ public class Main {
                     String option = line.split("=")[0].trim();
                     String value = line.split("=")[1].trim();
                     //System.out.println(option + ":" + value);
-                    switch (option) {
-                        case "debug":
-                            debug = Boolean.valueOf(value.trim());
-                            break;
-                        case "wd":
-                            wd = value.trim();
-                            if (!wd.endsWith(File.separator)) {
-                                wd = wd + File.separator;
-                            }
-                            break;
-                        case "project":
-                            project = value.trim() + "_";
-                            System.out.println("Project name: " + project);
-                            break;
-                        case "cvfolder":
-                            CVfolder = value.trim();
-//                            if (!trainingBestModel) {
-//                                System.out.println("Cross validation folder:" + CVfolder);
-//                            }
-                            break;
-                        case "trainFile":
-                            try {
-                                hmTrainFiles.put(wd + value.split(",")[0].trim(), value.split(",")[1].trim()); //filename,prefix
-                            } catch (Exception e) {
-                                hmTrainFiles.put(wd + value.replace(",", "").trim(), ""); //filename
-                            }
-                            break;
-                        case "excluded":
-                            String excluded[] = value.split(",");
-                            for (String ex : excluded) {
-                                hmExcludedFeatures.put(ex.trim(), "");
-                            }
-                            break;
-                        case "mergingID":
-                            mergingID = value.trim();
-                            if (!trainingBestModel) {
-                                System.out.println("Merging ID: " + mergingID);
-                            }
-                            break;
-                        case "separator":
-                            separator = value.trim();
-                            break;
-                        case "doClassification":
-                            doClassification = Boolean.valueOf(value.trim());
-                            break;
-                        case "classificationClassName":
-                            classificationClassName = value.trim();
-                            if (doClassification) {
-                                System.out.println("ClassificationClassName: " + classificationClassName);
-                            }
-                            break;
-                        case "classificationFastWay":
-                            classificationFastWay = Boolean.valueOf(value.trim());
-                            break;
-                        case "numberOfBestModels":
-                            numberOfBestModels = Integer.valueOf(value.trim());
-                            break;
-                        case "numberOfBestModelsSortingMetric":
-                            bestModelsSortingMetric = value.trim().toUpperCase();
-                            break;
-                        case "numberOfBestModelsSortingMetricThreshold":
-                            bestModelsSortingMetricThreshold = Double.valueOf(value.trim());
-                            break;
-                        case "ccmd":
-                            try {
-                                classificationFastWayCommands.add(value.split(",")[0].trim()
-                                        + ":" + value.split(",")[1].trim().toLowerCase());
-                            } catch (Exception e) {
-                                classificationFastWayCommands.add(value.trim()
-                                        + ":ALL");
-                            }
-                            break;
-                        case "coptimizers":
-                            classificationOptimizers = value.trim().toLowerCase();
-                            break;
-                        case "doRegression":
-                            doRegression = Boolean.valueOf(value.trim());
-                            break;
-                        case "regressionClassName":
-                            regressionClassName = value.trim();
-                            break;
-                        case "regressionFastWay":
-                            regressionFastWay = Boolean.valueOf(value.trim());
-                            break;
-                        case "rcmd":
-                            try {
-                                regressionFastWayCommands.add(value.split(",")[0].trim()
-                                        + ":" + value.split(",")[1].trim().toLowerCase());
-                            } catch (Exception e) {
-                                regressionFastWayCommands.add(value.trim()
-                                        + ":ALL");
-                            }
-                            break;
-                        case "roptimizers":
-                            regressionOptimizers = value.trim().toLowerCase();
-                            break;
-                        case "maxNumberOfSelectedFeatures":
-                            maxNumberOfSelectedFeatures = Integer.valueOf(value.trim());
-                            break;
-                        case "maxNumberOfFeaturesInModel":
-                            maxNumberOfFeaturesInModel = Integer.valueOf(value.trim());
-                            break;
-                        case "bootstrapFolds":
-                            bootstrapAndRepeatedHoldoutFolds = Integer.valueOf(value.trim());
-                            break;
-                        case "spearmanCorrelation_lower":
-                            spearmanCorrelation_lower = Double.valueOf(value.trim());
-                            break;
-                        case "spearmanCorrelation_upper":
-                            spearmanCorrelation_upper = Double.valueOf(value.trim());
-                            break;
-                        case "pearsonCorrelation_lower":
-                            pearsonCorrelation_lower = Double.valueOf(value.trim());
-                            break;
-                        case "pearsonCorrelation_upper":
-                            pearsonCorrelation_upper = Double.valueOf(value.trim());
-                            break;
-                        case "maxRankingScoreDifference":
-                            maxRankingScoreDifference = Double.valueOf(value.trim());
-                            break;
-                        case "retreiveCorrelatedGenesByRankingScore":
-                            retreiveCorrelatedGenesByRankingScore = Boolean.valueOf(value.trim());
-                            break;
-                        case "combineModels":
-                            combineModels = Boolean.valueOf(value.trim());
-                            break;
-                        case "combinationRule":
-                            combinationRule = value.trim().toUpperCase();
-                            break;
-                        case "sampling":
-                            doSampling = Boolean.valueOf(value.trim());
-                            break;
-                        case "roc_curves":
-                            ROCcurves = Boolean.valueOf(value.trim());
-                            break;
-                        case "loocv":
-                            loocv = Boolean.valueOf(value.trim());
-                            break;
-                        case "samplingFold":
-                            samplingFold = Integer.valueOf(value.trim());
-                            break;
-                        case "testSamplingFile":
-                            try {
-                                hmTestFiles.put(wd + value.split(",")[0].trim(), value.split(",")[1].trim()); //filename,prefix
-                            } catch (Exception e) {
-                                hmTestFiles.put(wd + value.replace(",", "").trim(), ""); //filename
-                            }
-                            break;
-                        case "cpus":
-                            cpus = value.trim();
-                            break;
-
-                    }
+                    setOption(option, value);
                 }
             }
             CVfolder = wd + CVfolder;
@@ -529,6 +366,187 @@ public class Main {
             }
         } else {
             System.out.println("Model search mode: Fast way mode");
+        }
+    }
+
+    private static void setOption(String option, String value) {
+        switch (option) {
+            case "config":
+                configFile = value.trim();
+                break;
+            case "debug":
+                debug = Boolean.valueOf(value.trim());
+                break;
+            case "wd":
+                wd = value.trim();
+                if (!wd.endsWith(File.separator)) {
+                    wd = wd + File.separator;
+                }
+                break;
+            case "project":
+                project = value.trim() + "_";
+                System.out.println("Project name: " + project);
+                break;
+            case "cvfolder":
+                CVfolder = value.trim();
+//                            if (!trainingBestModel) {
+//                                System.out.println("Cross validation folder:" + CVfolder);
+//                            }
+                break;
+            case "trainFile":
+                try {
+                    hmTrainFiles.put(wd + value.split(",")[0].trim(), value.split(",")[1].trim()); //filename,prefix
+                } catch (Exception e) {
+                    hmTrainFiles.put(wd + value.replace(",", "").trim(), ""); //filename
+                }
+                break;
+            //for testing mode, we reuse the "hmTrainFiles" variable
+            case "testFile":
+                try {
+                    hmTrainFiles.put(wd + value.split(",")[0].trim(), value.split(",")[1].trim()); //filename,prefix
+                } catch (Exception e) {
+                    hmTrainFiles.put(wd + value.replace(",", "").trim(), ""); //filename
+                }
+                break;
+            case "excluded":
+                String excluded[] = value.split(",");
+                for (String ex : excluded) {
+                    hmExcludedFeatures.put(ex.trim(), "");
+                }
+                break;
+            case "mergingID":
+                mergingID = value.trim();
+                if (!trainingBestModel) {
+                    System.out.println("Merging ID: " + mergingID);
+                }
+                break;
+            case "separator":
+                separator = value.trim();
+                break;
+            //when testing mode
+            case "classification":
+                isClassification = true;
+                break;
+            case "regression":
+                isClassification = false;
+                break;
+
+            case "doClassification":
+                doClassification = Boolean.valueOf(value.trim());
+                break;
+
+            case "classificationClassName":
+                classificationClassName = value.trim();
+                if (doClassification) {
+                    System.out.println("ClassificationClassName: " + classificationClassName);
+                }
+                break;
+            case "classificationFastWay":
+                classificationFastWay = Boolean.valueOf(value.trim());
+                break;
+            case "numberOfBestModels":
+                numberOfBestModels = Integer.valueOf(value.trim());
+                break;
+            case "numberOfBestModelsSortingMetric":
+                bestModelsSortingMetric = value.trim().toUpperCase();
+                break;
+            case "numberOfBestModelsSortingMetricThreshold":
+                bestModelsSortingMetricThreshold = Double.valueOf(value.trim());
+                break;
+            case "ccmd":
+                try {
+                    classificationFastWayCommands.add(value.split(",")[0].trim()
+                            + ":" + value.split(",")[1].trim().toLowerCase());
+                } catch (Exception e) {
+                    classificationFastWayCommands.add(value.trim()
+                            + ":ALL");
+                }
+                break;
+            case "coptimizers":
+                classificationOptimizers = value.trim().toLowerCase();
+                break;
+            case "doRegression":
+                doRegression = Boolean.valueOf(value.trim());
+                break;
+            case "regressionClassName":
+                regressionClassName = value.trim();
+                break;
+            case "regressionFastWay":
+                regressionFastWay = Boolean.valueOf(value.trim());
+                break;
+            case "rcmd":
+                try {
+                    regressionFastWayCommands.add(value.split(",")[0].trim()
+                            + ":" + value.split(",")[1].trim().toLowerCase());
+                } catch (Exception e) {
+                    regressionFastWayCommands.add(value.trim()
+                            + ":ALL");
+                }
+                break;
+            case "roptimizers":
+                regressionOptimizers = value.trim().toLowerCase();
+                break;
+            case "maxNumberOfSelectedFeatures":
+                maxNumberOfSelectedFeatures = Integer.valueOf(value.trim());
+                break;
+            case "maxNumberOfFeaturesInModel":
+                maxNumberOfFeaturesInModel = Integer.valueOf(value.trim());
+                break;
+            case "bootstrapFolds":
+                bootstrapAndRepeatedHoldoutFolds = Integer.valueOf(value.trim());
+                break;
+            case "spearmanCorrelation_lower":
+                spearmanCorrelation_lower = Double.valueOf(value.trim());
+                break;
+            case "spearmanCorrelation_upper":
+                spearmanCorrelation_upper = Double.valueOf(value.trim());
+                break;
+            case "pearsonCorrelation_lower":
+                pearsonCorrelation_lower = Double.valueOf(value.trim());
+                break;
+            case "pearsonCorrelation_upper":
+                pearsonCorrelation_upper = Double.valueOf(value.trim());
+                break;
+            case "maxRankingScoreDifference":
+                maxRankingScoreDifference = Double.valueOf(value.trim());
+                break;
+            case "retreiveCorrelatedGenesByRankingScore":
+                retreiveCorrelatedGenesByRankingScore = Boolean.valueOf(value.trim());
+                break;
+            case "combineModels":
+                combineModels = Boolean.valueOf(value.trim());
+                break;
+            case "combinationRule":
+                combinationRule = value.trim().toUpperCase();
+                break;
+            case "sampling":
+                doSampling = Boolean.valueOf(value.trim());
+                break;
+            case "roc_curves":
+                ROCcurves = Boolean.valueOf(value.trim());
+                break;
+            case "loocv":
+                loocv = Boolean.valueOf(value.trim());
+                break;
+            case "samplingFold":
+                samplingFold = Integer.valueOf(value.trim());
+                break;
+            case "testSamplingFile":
+                try {
+                    hmTestFiles.put(wd + value.split(",")[0].trim(), value.split(",")[1].trim()); //filename,prefix
+                } catch (Exception e) {
+                    hmTestFiles.put(wd + value.replace(",", "").trim(), ""); //filename
+                }
+                break;
+            case "cpus":
+                cpus = value.trim();
+                break;
+
+            //model when testing
+            case "model":
+                modelFile = value.split(" ")[1].trim();
+                break;
+
         }
     }
 
