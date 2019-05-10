@@ -715,10 +715,9 @@ public class Training {
                         if (isClassification) {
                             Weka_module.ClassificationResultsObject cr2 = null;
                             try {
-                                cr2 = (Weka_module.ClassificationResultsObject) weka2.testClassifierFromModel(
-                                        cr.model,
+                                cr2 = (Weka_module.ClassificationResultsObject) weka2.testClassifierFromModel(cr.model,
                                         trainFileName.replace("data_to_train.csv", "data_to_test.csv"),//test file
-                                        Main.isclassification, out);
+                                        Main.isClassification, out);
                             } catch (Exception e) {
                                 if (Main.debug) {
                                     e.printStackTrace();
@@ -735,10 +734,9 @@ public class Training {
 
                         } else {
                             Weka_module.RegressionResultsObject rr2
-                                    = (Weka_module.RegressionResultsObject) weka2.testClassifierFromModel(
-                                            rr.model,
+                                    = (Weka_module.RegressionResultsObject) weka2.testClassifierFromModel(rr.model,
                                             trainFileName.replace("data_to_train.csv", "data_to_test.csv"),//test file
-                                            Main.isclassification, out);
+                                            Main.isClassification, out);
                             tro.CC = rr2.CC;
                             tro.RRSE = rr2.RRSE;
                             tro.RMSE = rr2.RMSE;
