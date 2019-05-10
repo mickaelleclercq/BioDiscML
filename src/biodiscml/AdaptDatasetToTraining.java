@@ -65,7 +65,7 @@ public class AdaptDatasetToTraining {
             }
 
             //perform sampling
-            weka.sampling(trainAndTestFile, trainFile, testFile, Main.isclassification, trainSetRange);
+            weka.sampling(trainAndTestFile, trainFile, testFile, Main.isClassification, trainSetRange);
         }
         System.out.println("");
 

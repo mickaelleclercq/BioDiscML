@@ -77,6 +77,7 @@ public class Main {
     public static String combinationRule = "AVG";
     public static double maxRankingScoreDifference = 0.005; //for correlated gene retreiving
     public static boolean loocv = true;
+    public static boolean computeBestModel = true;
     //benchmark
     public static String bench_AUC = "";
 
@@ -118,9 +119,11 @@ public class Main {
                 Training m = new Training(CLASSIFICATION_FILE, TRAINING_RESULTS_FILE, FEATURE_SELECTION_FILE, "class");
 
                 //choose best model
-                System.out.println("## Best model selection");
-                BestModelSelectionAndReport b = new BestModelSelectionAndReport(CLASSIFICATION_FILE, FEATURE_SELECTION_FILE, TRAINING_RESULTS_FILE,
-                        "classification");
+                if (computeBestModel) {
+                    System.out.println("## Best model selection");
+                    BestModelSelectionAndReport b = new BestModelSelectionAndReport(CLASSIFICATION_FILE, FEATURE_SELECTION_FILE, TRAINING_RESULTS_FILE,
+                            "classification");
+                }
             }
 
             //REGRESSION
@@ -138,9 +141,11 @@ public class Main {
                 Training m = new Training(REGRESSION_FILE, TRAINING_RESULTS_FILE, FEATURE_SELECTION_FILE, "reg");
 
                 //choose best model
-                System.out.println("## Best model selection");
-                BestModelSelectionAndReport b = new BestModelSelectionAndReport(REGRESSION_FILE, FEATURE_SELECTION_FILE, TRAINING_RESULTS_FILE,
-                        "regression");
+                if (computeBestModel) {
+                    System.out.println("## Best model selection");
+                    BestModelSelectionAndReport b = new BestModelSelectionAndReport(REGRESSION_FILE, FEATURE_SELECTION_FILE, TRAINING_RESULTS_FILE,
+                            "regression");
+                }
             }
 
             if (!doClassification && !doRegression) {
@@ -540,6 +545,9 @@ public class Main {
                 break;
             case "cpus":
                 cpus = value.trim();
+                break;
+            case "computeBestModel":
+                computeBestModel = Boolean.valueOf(value.trim());
                 break;
 
             //model when testing

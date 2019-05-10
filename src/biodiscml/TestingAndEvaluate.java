@@ -28,7 +28,7 @@ public class TestingAndEvaluate {
     public void TestingAndEvaluate(String modelFile, String TEST_FILE, String TEST_RESULTS_FILE) {
         Weka_module weka = new Weka_module();
         weka.setCSVFile(new File(TEST_FILE));
-        weka.csvToArff(Main.isclassification);
+        weka.csvToArff(Main.isClassification);
         weka.setDataFromArff();
 
         Weka_module.ClassificationResultsObject cr = null;
@@ -38,15 +38,15 @@ public class TestingAndEvaluate {
             PrintWriter pw = new PrintWriter(new FileWriter(TEST_RESULTS_FILE));
             System.out.println("Test results stored in " + TEST_RESULTS_FILE);
 
-            if (Main.isclassification) {
-                cr = (Weka_module.ClassificationResultsObject) weka.testClassifierFromFileSource(new File(weka.ARFFfile), modelFile, Main.isclassification);
+            if (Main.isClassification) {
+                cr = (Weka_module.ClassificationResultsObject) weka.testClassifierFromFileSource(new File(weka.ARFFfile), modelFile, Main.isClassification);
                 cr.getPredictions();
                 pw.println("instance\tactual\tpredicted\terror\tprobability\n" + cr.predictions);
                 System.out.println(cr.toStringDetails());
                 Main.bench_AUC = cr.AUC;
                 pw.println(cr.toStringDetails());// TODO check format
             } else {
-                rr = (Weka_module.RegressionResultsObject) weka.testClassifierFromFileSource(new File(weka.ARFFfile), modelFile, Main.isclassification);
+                rr = (Weka_module.RegressionResultsObject) weka.testClassifierFromFileSource(new File(weka.ARFFfile), modelFile, Main.isClassification);
                 System.out.println(rr.predictions);
                 pw.println("instance\tactual\tpredicted\terror\tprobability\n" + rr.predictions);
                 rr.toStringDetails();
@@ -69,7 +69,7 @@ public class TestingAndEvaluate {
     public void TestingAndMakePredictions(String modelFile, String TEST_FILE, String TEST_RESULTS_FILE) {
         Weka_module weka = new Weka_module();
         weka.setCSVFile(new File(TEST_FILE));
-        weka.csvToArff(Main.isclassification);
+        weka.csvToArff(Main.isClassification);
         weka.setDataFromArff();
         StringBuffer sb = weka.makePredictions(new File(weka.ARFFfile), modelFile);
         System.out.println("Test results stored in " + TEST_RESULTS_FILE);

@@ -497,7 +497,7 @@ public class BestModelSelectionAndReport {
                         if (classification) {
                             Weka_module.ClassificationResultsObject cr2
                                     = (Weka_module.ClassificationResultsObject) weka2.testClassifierFromFileSource(new File(weka2.ARFFfile),
-                                            modelFilename + ".model", Main.isclassification);
+                                            modelFilename + ".model", Main.isClassification);
                             alROCs.add(cr2);
                             alROCs.add(cr2);
                             System.out.println("[score_testing] ACC: " + cr2.ACC);

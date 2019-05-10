@@ -427,14 +427,13 @@ public class Training {
             Weka_module.ClassificationResultsObject cr = null;
             Weka_module.RegressionResultsObject rr = null;
 
-            if (classifier.equals("rules.OneR") && searchMethod.equals("top75")) {
-                System.out.println("");
-            }
-
             // SHORT TEST to ensure compatibility of the model
             o = weka.shortTestTrainClassifier(classifier, classifier_options,
                     ao.getAttributesIdClassInString(), isClassification);
             if (o.getClass().getName().equals("java.lang.String")) {
+                if (Main.debug) {
+                    System.out.println("SHORT TEST FAILED");
+                }
                 return "ERROR";
             }
 
