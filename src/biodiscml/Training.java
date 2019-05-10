@@ -76,6 +76,7 @@ public class Training {
 
         //set local variable of weka object from ARFFfile
         weka.setDataFromArff();
+        weka.myData = weka.convertStringsToNominal(weka.myData);
 
 //        // check if class has numeric values, hence regression, instead of nominal class (classification)
         //classification = weka.isClassification();
@@ -335,17 +336,21 @@ public class Training {
 
             //EXECUTE IN PARRALLEL
             System.out.println("total classifiers to test: " + alClassifiers.size());
-            if (parrallel) {
-                alClassifiers.stream().parallel().unordered().map((classif) -> {
-                    String s = StepWiseFeatureSelectionTraining(classif[0], classif[1], classif[2], classif[3]);
-                    if (!s.contains("ERROR")) {
-                        pw.println(s);
-                    }
-                    return classif;
-                }).forEachOrdered((_item) -> {
-                    pw.flush();
-                });
 
+            if (parrallel) {
+                alClassifiers
+                        .parallelStream()
+                        .map((classif) -> StepWiseFeatureSelectionTraining(classif[0], classif[1], classif[2], classif[3]))
+                        .map((s) -> {
+                            if (!s.contains("ERROR")) {
+                                pw.println(s);
+                            }
+                            return s;
+                        })
+                        .sorted()
+                        .forEach((_item) -> {
+                            pw.flush();
+                        });
 //                alClassifiers.stream().parallel().map((classif) -> {
 //                    String s = StepWiseFeatureSelectionTraining(classif[0], classif[1], classif[2], classif[3]);
 //                    if (!s.contains("ERROR")) {
@@ -355,6 +360,7 @@ public class Training {
 //                }).forEachOrdered((_item) -> {
 //                    pw.flush();
 //                });
+
             } else {
                 alClassifiers.stream().map((classif) -> {
                     String s = StepWiseFeatureSelectionTraining(classif[0], classif[1], classif[2], classif[3]);
@@ -389,8 +395,8 @@ public class Training {
      * @param valueToMaximizeOrMinimize
      * @return
      */
-    private static String StepWiseFeatureSelectionTraining(String classifier, String classifier_options, String valueToMaximizeOrMinimize,
-            String searchMethod) {
+    private static String StepWiseFeatureSelectionTraining(String classifier, String classifier_options,
+            String valueToMaximizeOrMinimize, String searchMethod) {
         String out = classifier + "\t" + classifier_options + "\t" + valueToMaximizeOrMinimize.toUpperCase() + "\t" + searchMethod;
         Instant start = Instant.now();
         System.out.println("[model] (" + (cptPassed++) + "/" + alClassifiers.size() + ")" + out);
@@ -403,8 +409,6 @@ public class Training {
                 || valueToMaximizeOrMinimize.equals("rae")
                 || valueToMaximizeOrMinimize.equals("rrse");
 
-        //short test
-        //if test passed
         try {
             StringBuilder predictions = new StringBuilder();
             StringBuilder selectedAttributes = new StringBuilder();
@@ -423,9 +427,13 @@ public class Training {
             Weka_module.ClassificationResultsObject cr = null;
             Weka_module.RegressionResultsObject rr = null;
 
+            if (classifier.equals("rules.OneR") && searchMethod.equals("top75")) {
+                System.out.println("");
+            }
+
             // SHORT TEST to ensure compatibility of the model
             o = weka.shortTestTrainClassifier(classifier, classifier_options,
-                    ao.getRetainedAttributesIdClassInString(), isClassification);
+                    ao.getAttributesIdClassInString(), isClassification);
             if (o.getClass().getName().equals("java.lang.String")) {
                 return "ERROR";
             }
@@ -450,6 +458,8 @@ public class Training {
                             rr = (Weka_module.RegressionResultsObject) o;
                         }
                     }
+                } else {
+                    o = null;
                 }
 
             }
@@ -710,7 +720,9 @@ public class Training {
                                         trainFileName.replace("data_to_train.csv", "data_to_test.csv"),//test file
                                         Main.isclassification, out);
                             } catch (Exception e) {
-                                e.printStackTrace();
+                                if (Main.debug) {
+                                    e.printStackTrace();
+                                }
                             }
                             tro.ACC = cr2.ACC;
                             tro.AUC = cr2.AUC;
@@ -1263,6 +1275,16 @@ public class Training {
             for (int i = 1; i < features.length - 1; i++) {//skip ID and class indexes
                 retainedAttributesOnly.add(Integer.valueOf(features[i]));
             }
+        }
+
+        private String getAttributesIdClassInString() {
+            String attributes = "";
+            attributes += (ID) + ",";
+            for (Integer att : alAttributes) {
+                attributes += (att) + ",";
+            }
+            attributes += Class;
+            return attributes;
         }
     }
 
