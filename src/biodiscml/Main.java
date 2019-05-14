@@ -92,9 +92,9 @@ public class Main {
         System.out.println("#### Parsing options...");
         setOptionsFromCommandLine(args); //from command line
 
-        if (needConfigFile) {
+        if (!configFile.isEmpty() && needConfigFile) {
             setConfiguration();
-        }
+        } 
 
         //set number of max cpus to use
         if (!cpus.equals("max")) {
@@ -245,8 +245,7 @@ public class Main {
             }
             // get config
             if (s.startsWith("config") && configFile.isEmpty()) {
-                configFile = s.split(" ")[1].trim();
-                needConfigFile = false;
+                configFile = s.split(" ")[1].trim(); 
             }
             // training
             if (s.startsWith("train")) {
