@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.sql.Time;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.Duration;
@@ -22,7 +21,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicIntegerArray;
-import libsvm.*;
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.analysis.integration.TrapezoidIntegrator;
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
@@ -279,6 +277,7 @@ public class Weka_module {
     }
 
     /**
+     * short test on 10% of instances
      *
      * @param attributesToUse
      * @return
@@ -291,6 +290,14 @@ public class Weka_module {
         try {
             // load data
             Instances data = myData;
+            //get a sample of instances
+            //// randomize data
+            data.randomize(new Random());
+
+            //// Percent split
+            int trainSize = (int) Math.round(data.numInstances() * 90 / 100);
+            int testSize = data.numInstances() - trainSize;
+            data = new Instances(data, trainSize, testSize);
 
             //set last attribute as index
             if (data.classIndex() == -1) {
@@ -341,7 +348,7 @@ public class Weka_module {
 
             //evaluation
             if (Main.debug) {
-                System.out.print("\tShort test of model...");
+                System.out.println("\tShort test of model of 10% of data...");
             }
 
             //build model to save it
@@ -521,7 +528,7 @@ public class Weka_module {
             int trainSize = (int) Math.round(data.numInstances() * 66 / 100);
             int testSize = data.numInstances() - trainSize;
             Instances train = new Instances(data, 0, trainSize);
-            Instances test = new Instances(data, trainSize, testSize); //set last attribute as index
+            Instances test = new Instances(data, trainSize, testSize);
 
             //if cost sensitive case
             if (classifier.contains("CostSensitiveClassifier")) {
@@ -888,11 +895,11 @@ public class Weka_module {
     }
 
     public void attributeSelectionByInfoGainRankingAndSaveToCSV(String outfile) {
-        // load data
+        Instances data = myData;
 
+        //load data
         try {
-            ConverterUtils.DataSource source = new ConverterUtils.DataSource(ARFFfile);
-            Instances data = source.getDataSet();
+
             if (data.classIndex() == -1) {
                 data.setClassIndex(data.numAttributes() - 1);
             }
@@ -943,6 +950,7 @@ public class Weka_module {
 
             //evaluation.crossValidateModel(classifier, data, 10, new Random(1));
         } catch (Exception e) {
+            e.printStackTrace();
             System.err.println(e.getMessage() + "\nImpossible to execute InfoGain. Trying directly Ranking");
             featureRankingForClassification();
         }
@@ -982,6 +990,8 @@ public class Weka_module {
         try {
             ConverterUtils.DataSource source = new ConverterUtils.DataSource(ARFFfile);
             Instances data = source.getDataSet();
+            data = convertStringsToNominal(data);
+            data.numAttributes();
             AttributeSelection attrsel = new AttributeSelection();
             weka.attributeSelection.InfoGainAttributeEval eval = new weka.attributeSelection.InfoGainAttributeEval();
 
@@ -1575,10 +1585,10 @@ public class Weka_module {
      * based on indexes
      *
      * @param featureSelectedData
-     * @param arffTestFileData
+     * @param arffFile
      * @param outfile
      */
-    public void extractFeaturesFromTestFileBasedOnSelectedFeatures(Instances featureSelectedData, Instances arffTestFileData,
+    public void extractFeaturesFromArffFileBasedOnSelectedFeatures(Instances featureSelectedData, Instances arffFile,
             String outfile) {
         //get attribute names of feature selection data
         ArrayList<String> aFeaturesSelected = new ArrayList<>();
@@ -1592,8 +1602,8 @@ public class Weka_module {
             hmModelFeatures.put(f, f);
         }
 
-        Instances data = arffTestFileData;
-        //get index of model features in the arff test file
+        Instances data = arffFile;
+        //get index of model features in the arff  file
         String indexesToKeep = "";
         Enumeration e = data.enumerateAttributes();
         while (e.hasMoreElements()) {
@@ -1830,6 +1840,26 @@ public class Weka_module {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    public Instances convertStringsToNominal(Instances data) {
+        try {
+            Enumeration en = data.enumerateAttributes();
+            while (en.hasMoreElements()) {
+                Attribute a = (Attribute) en.nextElement();
+                if (a.isString()) {
+                    StringToNominal stn = new StringToNominal();
+                    stn.setOptions(new String[]{"-R", (a.index() + 1) + ""});
+                    stn.setInputFormat(data);
+                    data = Filter.useFilter(data, stn);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return data;
+
     }
 
     public static class RegressionResultsObject {
