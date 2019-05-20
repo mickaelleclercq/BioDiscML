@@ -209,6 +209,9 @@ public class utils {
         return s.substring(0, s.length() - 1);
     }
 
+    /**
+     * Table Object to manipulate table
+     */
     public static class TableObject {
 
         public HashMap<String, ArrayList<String>> hmData = new HashMap<>();//<ColName,Values>
