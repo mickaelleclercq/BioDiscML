@@ -1028,7 +1028,7 @@ public class Weka_module {
             weka.attributeSelection.Ranker rank = new weka.attributeSelection.Ranker();
             rank.setOptions(
                     weka.core.Utils.splitOptions(
-                            "-T 0.001 -N -1"));
+                            "-T -1 -N -1"));
             attrsel.setEvaluator(eval);
             attrsel.setSearch(rank);
 
@@ -2206,7 +2206,8 @@ public class Weka_module {
             index++;
             while (!s[index].startsWith("Selected")) {
                 if (!s[index].contains(Main.mergingID) && !s[index].isEmpty()) {
-                    String out = s[index].substring(1); //remove first space
+                    //String out = s[index].substring(1); //remove first space
+                    String out = s[index].trim(); //remove first space
                     out = out.replaceAll(" +", "\t");
                     String output = out.split("\t")[0] + "\t";
                     for (int i = 2; i < out.split("\t").length; i++) {
