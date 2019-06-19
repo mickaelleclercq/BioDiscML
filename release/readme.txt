@@ -25,13 +25,15 @@ https://github.com/mickaelleclercq/BioDiscML/
 REQUIRES JAVA 8
 
 ## Program usage
-### Config file
+BioDiscML can be started either by creating a config file or using command line
+
+### By config file
 Before executing BioDiscML, a config file must be created. Use the template to 
 create your own. Everything is detailled in the config.conf file. Examples are 
 available in the Test_datasets at: 
 https://github.com/mickaelleclercq/BioDiscML/tree/master/release/Test_datasets
 
-### Train a new model
+#### Train a new model
 ```Bash
 java -jar biodiscml.jar -config config.conf -train
 ```
@@ -50,7 +52,7 @@ numberOfBestModels=1
 numberOfBestModelsSortingMetric=TRAIN_TEST_RH_MCC
 ```
 
-### Choose best model(s)
+#### Choose best model(s)
 ```Bash
 java -jar biodiscml.jar -config config_example.conf -bestmodel 
 ```
@@ -65,7 +67,19 @@ the command. Example:
 java -jar biodiscml.jar -config config.conf -bestmodel modelID_1 modelID_2
 ```
 
-### Output files
+### By command line
+The same parameters from config file can be used to be inputed in a command line.
+Example: 
+time java -jar biodiscml.jar -train -project=myProject -excluded=excludedColumn 
+-doClassification=true -classificationClassName=class -trainFile=data.csv 
+-debug=true -bootstrapFolds=10 -loocv=false -cpus=10 -computeBestModel=false 
+-classificationFastWay=true -ccmd=bayes.AveragedNDependenceEstimators.A1DE -F 1 -M 1.0 -W
+
+Note that the option -ccmd must stay at the end of the command line when classifier
+parameters follows it. 
+
+
+## Output files
 Note: {project_name} is set in the config.conf file
 
 - {project_name}_a.*  
