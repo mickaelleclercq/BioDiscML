@@ -1,7 +1,9 @@
+package biodiscml;
+
 /*
  * Retrieve correlated genes
  */
-package biodiscml;
+
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -12,150 +14,12 @@ import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
 import utils.utils.TableObject;
 import static utils.utils.convertStringListToDoubles;
 import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
-import static utils.utils.readTable;
 
 /**
  *
  * @author Mickael
  */
 public class RetreiveCorrelatedGenes {
-
-    public static void main(String[] args) {
-        Main m = new Main();
-        m.configFile = "E:\\cloud\\Data/TCGA_PRAD/datamining/config.conf";
-        m.setConfiguration();
-        m.wd = "E:\\cloud\\Data/TCGA_PRAD/datamining/";
-        String ALL_FEATURES_FILE = m.wd + m.project + "a.classification.data_to_train.csv"; //output of AdaptDatasetToWeka()
-        String BEST_FEATURES_FILE = m.wd + m.project + "b.featureSelection.infoGain.csv";
-        String SIGNATURE_FILE = m.wd + m.project + "d.classification.model_features.csv"; // final model features
-        correlation(SIGNATURE_FILE, ALL_FEATURES_FILE, BEST_FEATURES_FILE);
-    }
 
     public static void correlation(String signatureFile, String allFeaturesFile, String bestFeatures) {
         DecimalFormat df = new DecimalFormat();
