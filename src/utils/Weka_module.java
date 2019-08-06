@@ -196,6 +196,7 @@ public class Weka_module {
             String separator = utils.detectSeparator(CSVFile.toString());
             csv.setFieldSeparator(separator);
             Instances data = csv.getDataSet();
+            data = convertStringsToNominal(data);
 
             //change numeric to nominal class
             if (classification) {
@@ -1549,6 +1550,9 @@ public class Weka_module {
                     cpt++;
                 }
             }
+            //convert strings to nominal
+            TestData = convertStringsToNominal(TestData);
+            TrainData = convertStringsToNominal(TrainData);
             //save to csv and arff
             if (!useRange) {
                 ///test set to csv
