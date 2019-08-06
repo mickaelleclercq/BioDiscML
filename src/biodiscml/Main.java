@@ -53,6 +53,7 @@ public class Main {
     public static ArrayList<String> classificationFastWayCommands = new ArrayList<>(); //classifier, optimizer
     public static ArrayList<String> classificationBruteForceCommands = new ArrayList<>(); //classifier, optimizer
     public static String classificationOptimizers = "AUC, MCC, FDR, BER, ACC";
+    public static String searchmodes = "F,FB,B,BF,top1,top5,top10,top15,top20,top30,top40,top50,top75,top100";
     public static Boolean metaCostSensitiveClassifier = false;
     public static Boolean regressionFastWay = false;
     public static String regressionOptimizers = "CC, RMSE";
@@ -94,7 +95,7 @@ public class Main {
 
         if (!configFile.isEmpty() && needConfigFile) {
             setConfiguration();
-        } 
+        }
 
         //set number of max cpus to use
         if (!cpus.equals("max")) {
@@ -236,7 +237,7 @@ public class Main {
         //set options
         boolean prefixesDefined = false;
         for (String s : options) {
-            if (s.startsWith("help")) {
+            if (s.equals("help")) {
                 System.out.println("Check readme.md file or https://github.com/mickaelleclercq/BioDiscML");
                 System.exit(0);
             }
@@ -245,10 +246,10 @@ public class Main {
             }
             // get config
             if (s.startsWith("config") && configFile.isEmpty()) {
-                configFile = s.split(" ")[1].trim(); 
+                configFile = s.split(" ")[1].trim();
             }
             // training
-            if (s.startsWith("train")) {
+            if (s.trim().equals("train")) {
                 training = true;
             }
 
@@ -458,16 +459,30 @@ public class Main {
                 bestModelsSortingMetricThreshold = Double.valueOf(value.trim());
                 break;
             case "ccmd":
-                try {
-                    classificationFastWayCommands.add(value.split(",")[0].trim()
-                            + ":" + value.split(",")[1].trim().toLowerCase());
-                } catch (Exception e) {
-                    classificationFastWayCommands.add(value.trim()
-                            + ":ALL");
+                switch (value.split(",").length) {
+                    case 1:
+                        classificationFastWayCommands.add(value.trim()
+                                + ":allopt:allsearch");
+                        break;
+                    case 2:
+                        classificationFastWayCommands.add(value.split(",")[0].trim()
+                                + ":" + value.split(",")[1].trim().toLowerCase()+":allsearch");
+                        break;
+                    case 3:
+                        classificationFastWayCommands.add(value.split(",")[0].trim()
+                                + ":" + value.split(",")[1].trim().toLowerCase()
+                                + ":" + value.split(",")[2].trim().toLowerCase());
+                        break;
+                    default:
+                        break;
                 }
+
                 break;
             case "coptimizers":
                 classificationOptimizers = value.trim().toLowerCase();
+                break;
+                case "searchmodes":
+                searchmodes = value.trim().toLowerCase();
                 break;
             case "doRegression":
                 doRegression = Boolean.valueOf(value.trim());

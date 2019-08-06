@@ -224,7 +224,7 @@ public class AdaptDatasetToTraining {
                         int idIndex = tbo.hmIDsList.get(id);
                         for (String s : tbo.getSortedHmDataKeyset()) {
                             if (!Main.hmExcludedFeatures.containsKey(s)) { //if it is not a rejected feature
-                                // print values and replace , per .
+                                // print values and replace , by .
                                 String out = tbo.hmData.get(s).get(idIndex).replace(",", ".");
                                 if (out.isEmpty() || out.equals("NA") || out.equals("na")
                                         || out.equals("N/A") || out.equals("n/a")) {

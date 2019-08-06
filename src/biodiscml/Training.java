@@ -172,24 +172,29 @@ public class Training {
 
                 for (String cmd : Main.classificationFastWayCommands) {
                     String optimizer = cmd.split(":")[1];
+                    String searchmode = cmd.split(":")[2];
                     String classifier = cmd.split(":")[0].split(" ")[0];
                     String options = cmd.split(":")[0].replace(classifier, "");
-                    if (optimizer.equals("ALL")) {
-                        addClassifierToQueue(classifier, options);
+                    //case where optimizer AND search modes are empty
+                    if (optimizer.equals("allopt") && searchmode.equals("allsearch")) {
+                        for (String allOptimizers : Main.classificationOptimizers.split(",")) {
+                            for (String allSearchModes : Main.searchmodes.split(",")) {
+                                alClassifiers.add(new String[]{classifier, options, allOptimizers.trim(), allSearchModes.trim()});
+                            }
+                        }
+                        //Case where only searchmode is empty
+                    } else if (!optimizer.equals("allopt") && searchmode.equals("allsearch")) {
+                        for (String allSearchModes : Main.searchmodes.split(",")) {
+                            alClassifiers.add(new String[]{classifier, options, optimizer.trim(), allSearchModes.trim()});
+                        }
+                        //case where only optimizer is empty
+                    } else if (optimizer.equals("allopt") && !searchmode.equals("allsearch")) {
+                        for (String allOptimizers : Main.classificationOptimizers.split(",")) {
+                            alClassifiers.add(new String[]{classifier, options, allOptimizers.trim(), searchmode.trim()});
+                        }
+                        //case where optimizer and searchmode are provided
                     } else {
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "top5"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "top10"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "top15"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "top20"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "top30"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "top40"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "top50"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "top75"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "top100"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "F"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "FB"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "B"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "BF"});
+                        alClassifiers.add(new String[]{classifier, options, optimizer, searchmode});
                     }
 
                 }
@@ -198,7 +203,7 @@ public class Training {
                 for (String cmd : Main.classificationBruteForceCommands) {
                     String classifier = cmd.split(" ")[0];
                     String options = cmd.replace(classifier, "");
-                    addClassifierToQueue(classifier, options);
+                    addClassificationToQueue(classifier, options);
                 }
             }
 
@@ -285,24 +290,30 @@ public class Training {
 
                 for (String cmd : Main.regressionFastWayCommands) {
                     String optimizer = cmd.split(":")[1];
+                    String searchmode = cmd.split(":")[2];
                     String classifier = cmd.split(":")[0].split(" ")[0];
                     String options = cmd.split(":")[0].replace(classifier, "");
-                    if (optimizer.equals("ALL")) {
-                        addRegressionToQueue(classifier, options);
+
+                    //case where optimizer AND search modes are empty
+                    if (optimizer.equals("allopt") && searchmode.equals("allsearch")) {
+                        for (String allOptimizers : Main.regressionOptimizers.split(",")) {
+                            for (String allSearchModes : Main.searchmodes.split(",")) {
+                                alClassifiers.add(new String[]{classifier, options, allOptimizers.trim(), allSearchModes.trim()});
+                            }
+                        }
+                        //Case where only searchmode is empty
+                    } else if (!optimizer.equals("allopt") && searchmode.equals("allsearch")) {
+                        for (String allSearchModes : Main.searchmodes.split(",")) {
+                            alClassifiers.add(new String[]{classifier, options, optimizer.trim(), allSearchModes.trim()});
+                        }
+                        //case where only optimizer is empty
+                    } else if (optimizer.equals("allopt") && !searchmode.equals("allsearch")) {
+                        for (String allOptimizers : Main.regressionOptimizers.split(",")) {
+                            alClassifiers.add(new String[]{classifier, options, allOptimizers.trim(), searchmode.trim()});
+                        }
+                        //case where optimizer and searchmode are provided
                     } else {
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "top5"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "top10"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "top15"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "top20"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "top30"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "top40"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "top50"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "top75"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "top100"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "F"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "FB"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "B"});
-                        alClassifiers.add(new String[]{classifier, options, optimizer, "BF"});
+                        alClassifiers.add(new String[]{classifier, options, optimizer, searchmode});
                     }
                 }
             } else {
@@ -463,9 +474,9 @@ public class Training {
             }
 
             //FORWARD AND FORWARD-BACKWARD search AND BACKWARD AND BACKWARD-FORWARD search
-            if (searchMethod.startsWith("F") || searchMethod.startsWith("B")) {
-                boolean doForwardBackward_OR_BackwardForward = searchMethod.equals("FB") || searchMethod.equals("BF");
-                boolean StartBackwardInsteadForward = searchMethod.startsWith("B");
+            if (searchMethod.startsWith("f") || searchMethod.startsWith("b")) {
+                boolean doForwardBackward_OR_BackwardForward = searchMethod.equals("fb") || searchMethod.equals("bf");
+                boolean StartBackwardInsteadForward = searchMethod.startsWith("b");
                 if (StartBackwardInsteadForward) {
                     Collections.reverse(ao.alAttributes);
                 }
@@ -1163,30 +1174,19 @@ public class Training {
      * @param options
      * @param costSensitive
      */
-    private static void addClassifierToQueue(String classifier, String options) {
-        String valuesToMaximize[] = Main.classificationOptimizers.split(",");
+    private static void addClassificationToQueue(String classifier, String options) {
+        String optimizers[] = Main.classificationOptimizers.split(",");
+        String searchmodes[] = Main.searchmodes.split(",");
 
-        for (String value : valuesToMaximize) {
+        for (String optimizer : optimizers) {
             //AUC, ACC, SEN, SPE, MCC, TP+FN, kappa
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "F"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "FB"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "B"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "BF"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top1"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top5"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top10"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top15"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top20"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top25"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top30"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top40"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top50"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top75"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top100"});
+            for (String searchmode : searchmodes) {
+                alClassifiers.add(new String[]{classifier, options, optimizer.trim(), searchmode.trim()});
+            }
         }
         if (Main.metaCostSensitiveClassifier) {
             options = "-cost-matrix \"[0.0 ratio; 100.0 0.0]\" -S 1 -W weka.classifiers." + classifier + " -- " + options;
-            for (String value : valuesToMaximize) {
+            for (String value : optimizers) {
                 alClassifiers.add(new String[]{"meta.CostSensitiveClassifier", options, value.trim(), "F"});
                 alClassifiers.add(new String[]{"meta.CostSensitiveClassifier", options, value.trim(), "BF"});
             }
@@ -1195,27 +1195,18 @@ public class Training {
 
     private static void addRegressionToQueue(String classifier, String options) {
         //String valuesToMaximizeOrMinimize[] = new String[]{"CC", "MAE", "RMSE", "RAE", "RRSE"};
-        String valuesToMaximizeOrMinimize[] = Main.regressionOptimizers.split(",");
-        for (String value : valuesToMaximizeOrMinimize) {//only CC is maximized here
-            alClassifiers.add(new String[]{classifier, options, value, "F"});
-            alClassifiers.add(new String[]{classifier, options, value, "FB"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "B"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "BF"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top1"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top5"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top10"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top15"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top20"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top25"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top30"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top40"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top50"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top75"});
-            alClassifiers.add(new String[]{classifier, options, value.trim(), "top100"});
+        String optimizers[] = Main.regressionOptimizers.split(",");
+        String searchmodes[] = Main.searchmodes.split(",");
+
+        for (String optimizer : optimizers) {//only CC is maximized here
+            for (String searchmode : searchmodes) {
+                alClassifiers.add(new String[]{classifier, options, optimizer.trim(), searchmode.trim()});
+            }
+
         }
         if (Main.metaAdditiveRegression) {
             options = "-S 1.0 -I 10 -W weka.classifiers." + classifier + " -- " + options;
-            for (String value : valuesToMaximizeOrMinimize) {
+            for (String value : optimizers) {
                 alClassifiers.add(new String[]{"meta.AdditiveRegression", options, value, "F"});
                 alClassifiers.add(new String[]{"meta.AdditiveRegression", options, value, "FB"});
             }
