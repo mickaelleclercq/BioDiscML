@@ -802,19 +802,25 @@ public class BestModelSelectionAndReport {
                     }
                     String lines[] = ranking.split("\n");
                     HashMap<String, ArrayList<RankerObject>> hmRanks = new HashMap();
-                    for (String s : lines) {
-                        s = s.replaceAll(" +", " ");
-                        if (!s.startsWith("\t") && !s.trim().isEmpty() && s.trim().split(" ").length == 3) {
-                            RankerObject rankero = new RankerObject(s.trim());
-                            if (hmRanks.containsKey(rankero.roundedScore)) {
-                                ArrayList<RankerObject> alRankero = hmRanks.get(rankero.roundedScore);
-                                alRankero.add(rankero);
-                                hmRanks.put(rankero.roundedScore, alRankero);
-                            } else {
-                                ArrayList<RankerObject> alRankero = new ArrayList<>();
-                                alRankero.add(rankero);
-                                hmRanks.put(rankero.roundedScore, alRankero);
+                    try {
+                        for (String s : lines) {
+                            s = s.replaceAll(" +", " ");
+                            if (!s.startsWith("\t") && !s.trim().isEmpty() && s.trim().split(" ").length == 3) {
+                                RankerObject rankero = new RankerObject(s.trim());
+                                if (hmRanks.containsKey(rankero.roundedScore)) {
+                                    ArrayList<RankerObject> alRankero = hmRanks.get(rankero.roundedScore);
+                                    alRankero.add(rankero);
+                                    hmRanks.put(rankero.roundedScore, alRankero);
+                                } else {
+                                    ArrayList<RankerObject> alRankero = new ArrayList<>();
+                                    alRankero.add(rankero);
+                                    hmRanks.put(rankero.roundedScore, alRankero);
+                                }
                             }
+                        }
+                    } catch (Exception e) {
+                        if (Main.debug) {
+                            e.printStackTrace();
                         }
                     }
 
