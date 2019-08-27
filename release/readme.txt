@@ -70,11 +70,12 @@ java -jar biodiscml.jar -config config.conf -bestmodel modelID_1 modelID_2
 ### By command line
 The same parameters from config file can be used to be inputed in a command line.
 Example: 
+```Bash
 time java -jar biodiscml.jar -train -project=myProject -excluded=excludedColumn 
 -doClassification=true -classificationClassName=class -trainFile=data.csv 
 -debug=true -bootstrapFolds=10 -loocv=false -cpus=10 -computeBestModel=false 
 -classificationFastWay=true -ccmd=bayes.AveragedNDependenceEstimators.A1DE -F 1 -M 1.0 -W
-
+```
 Note that the option -ccmd must stay at the end of the command line when classifier
 parameters follows it. 
 
