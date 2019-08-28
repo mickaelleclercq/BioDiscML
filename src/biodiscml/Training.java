@@ -1187,8 +1187,8 @@ public class Training {
         if (Main.metaCostSensitiveClassifier) {
             options = "-cost-matrix \"[0.0 ratio; 100.0 0.0]\" -S 1 -W weka.classifiers." + classifier + " -- " + options;
             for (String value : optimizers) {
-                alClassifiers.add(new String[]{"meta.CostSensitiveClassifier", options, value.trim(), "F"});
-                alClassifiers.add(new String[]{"meta.CostSensitiveClassifier", options, value.trim(), "BF"});
+                alClassifiers.add(new String[]{"meta.CostSensitiveClassifier", options, value.trim(), "f"});
+                alClassifiers.add(new String[]{"meta.CostSensitiveClassifier", options, value.trim(), "bf"});
             }
         }
     }

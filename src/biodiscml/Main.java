@@ -52,8 +52,8 @@ public class Main {
     public static Integer numberOfBestModels = 1;
     public static ArrayList<String> classificationFastWayCommands = new ArrayList<>(); //classifier, optimizer
     public static ArrayList<String> classificationBruteForceCommands = new ArrayList<>(); //classifier, optimizer
-    public static String classificationOptimizers = "AUC, MCC, FDR, BER, ACC";
-    public static String searchmodes = "F,FB,B,BF,top1,top5,top10,top15,top20,top30,top40,top50,top75,top100";
+    public static String classificationOptimizers = "auc, mcc, fdr, ber, acc";
+    public static String searchmodes = "f,fb,b,bf,top1,top5,top10,top15,top20,top30,top40,top50,top75,top100";
     public static Boolean metaCostSensitiveClassifier = false;
     public static Boolean regressionFastWay = false;
     public static String regressionOptimizers = "CC, RMSE";
@@ -466,7 +466,7 @@ public class Main {
                         break;
                     case 2:
                         classificationFastWayCommands.add(value.split(",")[0].trim()
-                                + ":" + value.split(",")[1].trim().toLowerCase()+":allsearch");
+                                + ":" + value.split(",")[1].trim().toLowerCase() + ":allsearch");
                         break;
                     case 3:
                         classificationFastWayCommands.add(value.split(",")[0].trim()
@@ -481,7 +481,7 @@ public class Main {
             case "coptimizers":
                 classificationOptimizers = value.trim().toLowerCase();
                 break;
-                case "searchmodes":
+            case "searchmodes":
                 searchmodes = value.trim().toLowerCase();
                 break;
             case "doRegression":
