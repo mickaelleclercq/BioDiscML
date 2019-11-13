@@ -446,6 +446,9 @@ public class Training {
                 }
                 return "ERROR";
             }
+            if (Main.debug) {
+                System.out.println("\tGoing to Stepwise evaluations");
+            }
 
             //TOP X features search
             if (searchMethod.startsWith("top")) {

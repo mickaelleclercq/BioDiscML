@@ -35,7 +35,6 @@ public class BestModelSelectionAndReport {
 
     public static String wd = Main.wd;
     public static Weka_module weka = new Weka_module();
-    public static boolean retrieveCorrelatedGenes = true;
     public static HashMap<String, Integer> hmResultsHeaderNames = new HashMap<>();
     public static HashMap< Integer, String> hmResultsHeaderIndexes = new HashMap<>();
     static DecimalFormat df = new DecimalFormat();
@@ -761,7 +760,7 @@ public class BestModelSelectionAndReport {
                 pw.flush();
 
                 //retrieve correlated genes
-                if (retrieveCorrelatedGenes) {
+                if (Main.retrieveCorrelatedGenes) {
                     if (new File(trainFileName).exists()) {
                         System.out.print("Search correlated features (spearman)...");
                         pw.println("\n# Correlated features (Spearman)");

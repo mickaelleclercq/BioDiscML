@@ -349,14 +349,20 @@ public class Weka_module {
 
             //evaluation
             if (Main.debug) {
-                System.out.println("\tShort test of model of 10% of data...");
+                System.out.print("\tShort test of model of 10% of data...");
             }
 
             //build model to save it
             model.buildClassifier(data);
+            if (Main.debug) {
+                System.out.println("PASSED");
+            }
             return model;
 
         } catch (Exception e) {
+            if (Main.debug) {
+                System.out.println("FAILED");
+            }
             String message = "[model error] " + classifier + " " + classifier_options + " | " + e.getMessage();
             if (Main.debug) {
 //                if (!e.getMessage().contains("handle") && !e.getMessage().contains("supported")) {
@@ -1042,7 +1048,21 @@ public class Weka_module {
                 f.setOptions(weka.core.Utils.splitOptions((options)));
                 f.setInputFormat(data);
                 data = Filter.useFilter(data, f);
-                attrsel.SelectAttributes(data);
+                try {
+                    attrsel.SelectAttributes(data);
+                } catch (Exception ex) {
+                    //in case where one or more features are seen as nominal
+                    for (int i = 1; i < data.numAttributes() - 1; i++) {
+                        if (data.attribute(i).isString()) {
+                            f = new StringToNominal();
+                            options = "-R " + (i + 1);
+                            f.setOptions(weka.core.Utils.splitOptions((options)));
+                            f.setInputFormat(data);
+                            data = Filter.useFilter(data, f);
+                        }
+                    }
+                    attrsel.SelectAttributes(data);
+                }
             }
             return attrsel.toResultsString();
         } catch (Exception e) {
