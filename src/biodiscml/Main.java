@@ -18,10 +18,10 @@ import java.util.HashMap;
  * @author Mickael
  */
 public class Main {
-    
+
     public static boolean debug = false;
     public static boolean isClassification = true;
-    
+
     public static String wd = "";
     public static String project = "myProject";
     public static String CVfolder = "tmpCV"; //cross validation folder. Disabled
@@ -78,7 +78,7 @@ public class Main {
     public static String cpus = "max";
     public static boolean combineModels = false;
     public static boolean retrieveCorrelatedGenes = true;
-    
+
     public static String combinationRule = "AVG";
     public static double maxRankingScoreDifference = 0.005; //for correlated gene retreiving
     public static boolean loocv = true;
@@ -100,7 +100,7 @@ public class Main {
         if (!configFile.isEmpty() && needConfigFile) {
             setConfiguration();
         }
-        
+
         //set models
         if (!classificationFastWay && !regressionFastWay) {
             System.out.println("Model search mode: exhaustive");
@@ -191,14 +191,14 @@ public class Main {
                             "regression");
                 }
             }
-            
+
             if (!doClassification && !doRegression) {
                 System.err.println("[error] No prediction type has been set (classification or regression)."
                         + " Set doClassification or doRegression at true");
                 System.exit(0);
             }
         }
-        
+
         if (testing) {
             System.out.println("#### Starting testing...");
 
@@ -216,7 +216,7 @@ public class Main {
                 t.TestingAndMakePredictions(modelFile, TEST_FILE, TEST_RESULTS_FILE);
             }
         }
-        
+
         if (trainingBestModel) {
             System.out.println("#### Start best model selection...");
             if (doClassification) {
@@ -225,7 +225,7 @@ public class Main {
                 String FEATURE_SELECTION_FILE = wd + project + "b.featureSelection.infoGain.csv"; // output of Training(), feature selection result
                 BestModelSelectionAndReport b = new BestModelSelectionAndReport(CLASSIFICATION_FILE, FEATURE_SELECTION_FILE, TRAINING_RESULTS_FILE,
                         "classification");
-                
+
             } else {
                 String REGRESSION_FILE = wd + project + "a.regression.data_to_train.csv";
                 String TRAINING_RESULTS_FILE = wd + project + "c.regression.results.csv"; // output of Training(), models performances
@@ -241,7 +241,7 @@ public class Main {
         //System.out.println("##Finished with success !");
         //System.exit(0);
     }
-    
+
     public static void Main() {
         setConfiguration();
     }
@@ -274,7 +274,7 @@ public class Main {
                     }
                 }
             }
-            
+
         }
 
         //set options
@@ -312,7 +312,7 @@ public class Main {
                 testing = true;
                 needConfigFile = false;
             }
-            
+
         }
 
         //if no config file is provided for training, check if we have enough
@@ -322,13 +322,13 @@ public class Main {
                 needConfigFile = false;
             }
         }
-        
+
         if (!prefixesDefined) {
             for (String file : hmTrainFiles.keySet()) {
                 hmTrainFiles.put(file, "");
             }
         }
-        
+
         if (testing) {
             System.out.println("#### Mode: testing");
             System.out.println("Merging ID: " + mergingID);
@@ -348,7 +348,7 @@ public class Main {
         }
 
         //export config file when executing command line options
-        if (configFile.isEmpty()) {            
+        if (configFile.isEmpty()) {
             try {
                 PrintWriter pw = new PrintWriter(new FileWriter(project + ".config"));
                 for (String option : options) {
@@ -360,9 +360,9 @@ public class Main {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            
+
         }
-        
+
     }
 
     /**
@@ -390,16 +390,15 @@ public class Main {
                 }
             }
             CVfolder = wd + CVfolder;
-            
+
         } catch (Exception e) {
             System.err.println("Parsing error in config file at line " + line);
             e.printStackTrace();
             System.exit(0);
         }
-        
-        
+
     }
-    
+
     private static void setOption(String option, String value) {
         switch (option) {
             case "config":
@@ -426,19 +425,19 @@ public class Main {
                 break;
             case "trainFile":
                 try {
-                hmTrainFiles.put(wd + value.split(",")[0].trim(), value.split(",")[1].trim()); //filename,prefix
-            } catch (Exception e) {
-                hmTrainFiles.put(wd + value.replace(",", "").trim(), ""); //filename
-            }
-            break;
+                    hmTrainFiles.put(wd + value.split(",")[0].trim(), value.split(",")[1].trim()); //filename,prefix
+                } catch (Exception e) {
+                    hmTrainFiles.put(wd + value.replace(",", "").trim(), ""); //filename
+                }
+                break;
             //for testing mode, we reuse the "hmTrainFiles" variable
             case "testFile":
                 try {
-                hmTrainFiles.put(wd + value.split(",")[0].trim(), value.split(",")[1].trim()); //filename,prefix
-            } catch (Exception e) {
-                hmTrainFiles.put(wd + value.replace(",", "").trim(), ""); //filename
-            }
-            break;
+                    hmTrainFiles.put(wd + value.split(",")[0].trim(), value.split(",")[1].trim()); //filename,prefix
+                } catch (Exception e) {
+                    hmTrainFiles.put(wd + value.replace(",", "").trim(), ""); //filename
+                }
+                break;
             case "excluded":
                 String excluded[] = value.split(",");
                 for (String ex : excluded) {
@@ -461,11 +460,11 @@ public class Main {
             case "regression":
                 isClassification = false;
                 break;
-            
+
             case "doClassification":
                 doClassification = Boolean.valueOf(value.trim());
                 break;
-            
+
             case "classificationClassName":
                 classificationClassName = value.trim();
                 if (doClassification) {
@@ -502,7 +501,7 @@ public class Main {
                     default:
                         break;
                 }
-                
+
                 break;
             case "coptimizers":
                 classificationOptimizers = value.trim().toLowerCase();
@@ -521,13 +520,13 @@ public class Main {
                 break;
             case "rcmd":
                 try {
-                regressionFastWayCommands.add(value.split(",")[0].trim()
-                        + ":" + value.split(",")[1].trim().toLowerCase());
-            } catch (Exception e) {
-                regressionFastWayCommands.add(value.trim()
-                        + ":ALL");
-            }
-            break;
+                    regressionFastWayCommands.add(value.split(",")[0].trim()
+                            + ":" + value.split(",")[1].trim().toLowerCase());
+                } catch (Exception e) {
+                    regressionFastWayCommands.add(value.trim()
+                            + ":ALL");
+                }
+                break;
             case "roptimizers":
                 regressionOptimizers = value.trim().toLowerCase();
                 break;
@@ -562,8 +561,8 @@ public class Main {
                 combineModels = Boolean.valueOf(value.trim());
                 break;
             case "retrieveCorrelatedGenes":
-                combineModels = Boolean.valueOf(value.trim());
-                break;            
+                retrieveCorrelatedGenes = Boolean.valueOf(value.trim());
+                break;
             case "combinationRule":
                 combinationRule = value.trim().toUpperCase();
                 break;
@@ -581,11 +580,11 @@ public class Main {
                 break;
             case "testSamplingFile":
                 try {
-                hmTestFiles.put(wd + value.split(",")[0].trim(), value.split(",")[1].trim()); //filename,prefix
-            } catch (Exception e) {
-                hmTestFiles.put(wd + value.replace(",", "").trim(), ""); //filename
-            }
-            break;
+                    hmTestFiles.put(wd + value.split(",")[0].trim(), value.split(",")[1].trim()); //filename,prefix
+                } catch (Exception e) {
+                    hmTestFiles.put(wd + value.replace(",", "").trim(), ""); //filename
+                }
+                break;
             case "cpus":
                 cpus = value.trim();
                 break;
@@ -597,8 +596,8 @@ public class Main {
             case "model":
                 modelFile = value.split(" ")[1].trim();
                 break;
-            
+
         }
     }
-    
+
 }

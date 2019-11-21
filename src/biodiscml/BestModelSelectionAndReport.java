@@ -342,7 +342,7 @@ public class BestModelSelectionAndReport {
                 if (classification) {
                     System.out.println("Repeated Holdout evaluation on TRAIN set of " + co.classifier + " " + co.options
                             + " optimized by " + co.optimizer + "...");
-                    pw.println("#Repeated Holdout evaluation performance on TRAIN set, "
+                    pw.println("\n#Repeated Holdout evaluation performance on TRAIN set, "
                             + Main.bootstrapAndRepeatedHoldoutFolds + " times weighted average (and standard deviation) on random seeds");
                     for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                         Weka_module.ClassificationResultsObject cro
