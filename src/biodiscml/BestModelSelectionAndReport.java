@@ -839,9 +839,10 @@ public class BestModelSelectionAndReport {
                             String featureSignIGrounded = df.format(Double.valueOf(featureSignIG));
                             if (hmRanks.containsKey(featureSignIGrounded)) {
                                 for (RankerObject alio : hmRanks.get(featureSignIGrounded)) {
-                                    if (!featureSign.contains(alio.feature)) {
+                                    if (!featureSign.contains(alio.feature)&&!alio.feature.equals("Instance")) {
                                         //max difference between infogains: 0.005
-                                        if (Math.abs(Double.parseDouble(featureSignIG) - Double.parseDouble(alio.infogain)) <= Main.maxRankingScoreDifference) {
+                                        if (Math.abs(Double.parseDouble(featureSignIG) - Double.parseDouble(alio.infogain)) 
+                                                <= Main.maxRankingScoreDifference) {
                                             pw.println(featureSign.split("\t")[1] + "\t"
                                                     + featureSignIG + "\t"
                                                     + alio.feature + "\t"
