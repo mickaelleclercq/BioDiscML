@@ -523,7 +523,7 @@ public class BestModelSelectionAndReport {
                         } else {
                             Weka_module.RegressionResultsObject rr2
                                     = (Weka_module.RegressionResultsObject) weka2.testClassifierFromFileSource(new File(weka2.ARFFfile),
-                                            modelFilename + ".model", classification);
+                                            modelFilename + ".model", Main.isClassification);
                             System.out.println("[score_testing] Average CC: " + rr2.CC);
                             System.out.println("[score_testing] Average RMSE: " + rr2.RMSE);
                             //
@@ -839,9 +839,9 @@ public class BestModelSelectionAndReport {
                             String featureSignIGrounded = df.format(Double.valueOf(featureSignIG));
                             if (hmRanks.containsKey(featureSignIGrounded)) {
                                 for (RankerObject alio : hmRanks.get(featureSignIGrounded)) {
-                                    if (!featureSign.contains(alio.feature)&&!alio.feature.equals("Instance")) {
+                                    if (!featureSign.contains(alio.feature) && !alio.feature.equals("Instance")) {
                                         //max difference between infogains: 0.005
-                                        if (Math.abs(Double.parseDouble(featureSignIG) - Double.parseDouble(alio.infogain)) 
+                                        if (Math.abs(Double.parseDouble(featureSignIG) - Double.parseDouble(alio.infogain))
                                                 <= Main.maxRankingScoreDifference) {
                                             pw.println(featureSign.split("\t")[1] + "\t"
                                                     + featureSignIG + "\t"
