@@ -874,13 +874,14 @@ public class Weka_module {
             //store IDs
             List<String> alIDs = new ArrayList<>();
             Enumeration en = filteredData.enumerateInstances();
+
             while (en.hasMoreElements()) {
-                alIDs.add(((Instance) en.nextElement()).stringValue(filteredData.attribute("Instance")));
+                alIDs.add(((Instance) en.nextElement()).stringValue(filteredData.attribute(Main.mergingID)));
             }
-            filteredData.deleteAttributeAt(filteredData.attribute("Instance").index());
+            filteredData.deleteAttributeAt(filteredData.attribute(Main.mergingID).index());
 
             //restore IDs
-            Attribute att = new Attribute("Instance", alIDs);
+            Attribute att = new Attribute(Main.mergingID, alIDs);
             filteredData.insertAttributeAt(att, 0);
             for (int i = 0; i < filteredData.numInstances(); i++) {
                 filteredData.instance(i).setValue(0, (String) alIDs.get(i));
@@ -1743,7 +1744,9 @@ public class Weka_module {
                 PrintWriter pw = new PrintWriter(new FileWriter(outfile));
                 while (br.ready()) {
                     String line = br.readLine();
-                    if (line.startsWith("@attribute") && !line.endsWith(" numeric") && !line.contains("@attribute Instance")) {
+                    if (line.startsWith("@attribute") && !line.endsWith(" numeric")
+                            && !line.contains("@attribute Instance") 
+                            && !line.contains("@attribute " + Main.mergingID)) {
                         String attribute = line.replace("@attribute ", "").trim();
                         attribute = attribute.substring(0, attribute.indexOf("{"));
                         if (hm.get(attribute) != null) {
@@ -1921,8 +1924,8 @@ public class Weka_module {
                 CC = Utils.doubleToString(eval.correlationCoefficient(), 12, 4).trim();
                 MAE = Utils.doubleToString(eval.meanAbsoluteError(), 12, 4).trim();
                 RMSE = Utils.doubleToString(eval.rootMeanSquaredError(), 12, 4).trim();
-                RAE = Utils.doubleToString(eval.relativeAbsoluteError(), 12, 4).trim();
-                RRSE = Utils.doubleToString(eval.rootRelativeSquaredError(), 12, 4).trim();
+                RAE = Utils.doubleToString(eval.relativeAbsoluteError() / 100, 12, 4).trim();
+                RRSE = Utils.doubleToString(eval.rootRelativeSquaredError() / 100, 12, 4).trim();
             } catch (Exception exception) {
                 exception.printStackTrace();
             }

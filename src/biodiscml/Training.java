@@ -459,7 +459,7 @@ public class Training {
                         //add new attribute to the set of retainedAttributes
                         ao.addNewAttributeToRetainedAttributes(i);
                     }
-                    //TRAIN
+                    //TRAIN 10CV
                     o = weka.trainClassifier(classifier, classifier_options,
                             ao.getRetainedAttributesIdClassInString(), isClassification, 10);
 
@@ -581,7 +581,6 @@ public class Training {
                             if (isClassification) {
                                 lastOutput = out
                                         + "\t" + cr.numberOfFeatures + "\t" + cr.toString() + "\t" + ao.getRetainedAttributesIdClassInString();
-                                //System.out.println(lastOutput);
 
                             } else {
                                 lastOutput = out
@@ -677,7 +676,8 @@ public class Training {
                     System.out.println("Bootstrapping on Train set " + Main.bootstrapAndRepeatedHoldoutFolds + " times");
                 }
                 double bootstrapTrain632plus = 1000;
-                Weka_module.evaluationPerformancesResultsObject eproBSTrain = new Weka_module.evaluationPerformancesResultsObject();
+                Weka_module.evaluationPerformancesResultsObject eproBSTrain
+                        = new Weka_module.evaluationPerformancesResultsObject();
                 if (isClassification) {
                     bootstrapTrain632plus = weka.trainClassifierBootstrap632plus(classifier, classifier_options,
                             ao.getRetainedAttributesIdClassInString());
@@ -765,9 +765,11 @@ public class Training {
 
                 //REPEATED HOLDOUT TRAIN_TEST
                 if (Main.debug) {
-                    System.out.println("Repeated Holdout on Train AND Test set " + Main.bootstrapAndRepeatedHoldoutFolds + " times");
+                    System.out.println("Repeated Holdout on Train AND Test set "
+                            + Main.bootstrapAndRepeatedHoldoutFolds + " times");
                 }
-                Weka_module.evaluationPerformancesResultsObject eproRHTrainTest = new Weka_module.evaluationPerformancesResultsObject();
+                Weka_module.evaluationPerformancesResultsObject eproRHTrainTest
+                        = new Weka_module.evaluationPerformancesResultsObject();
                 try {
                     if (Main.doSampling) {
                         Weka_module weka2 = new Weka_module();
@@ -794,7 +796,8 @@ public class Training {
                             weka2.myData = weka2.extractFeaturesFromDatasetBasedOnModel(rr.model, weka2.myData);
                             for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                                 Weka_module.RegressionResultsObject rro
-                                        = (Weka_module.RegressionResultsObject) weka2.trainClassifierHoldOutValidation(classifier, classifier_options,
+                                        = (Weka_module.RegressionResultsObject) weka2.trainClassifierHoldOutValidation(
+                                                classifier, classifier_options,
                                                 null, isClassification, i);
                                 eproRHTrainTest.alCCs.add(Double.valueOf(rro.CC));
                                 eproRHTrainTest.alMAEs.add(Double.valueOf(rro.MAE));
@@ -845,7 +848,8 @@ public class Training {
                             weka2.myData = weka2.extractFeaturesFromDatasetBasedOnModel(rr.model, weka2.myData);
                             for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                                 Weka_module.RegressionResultsObject rro
-                                        = (Weka_module.RegressionResultsObject) weka2.trainClassifierHoldOutValidation(classifier, classifier_options,
+                                        = (Weka_module.RegressionResultsObject) weka2.trainClassifierHoldOutValidation(
+                                                classifier, classifier_options,
                                                 null, isClassification, i);
                                 eproBSTrainTest.alCCs.add(Double.valueOf(rro.CC));
                                 eproBSTrainTest.alMAEs.add(Double.valueOf(rro.MAE));

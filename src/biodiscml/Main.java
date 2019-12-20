@@ -503,6 +503,24 @@ public class Main {
                 }
 
                 break;
+            case "rcmd":
+                switch (value.split(",").length) {
+                    case 1:
+                        regressionFastWayCommands.add(value.trim()
+                                + ":allopt:allsearch");
+                        break;
+                    case 2:
+                        regressionFastWayCommands.add(value.split(",")[0].trim()
+                                + ":" + value.split(",")[1].trim().toLowerCase() + ":allsearch");
+                        break;
+                    case 3:
+                        regressionFastWayCommands.add(value.split(",")[0].trim()
+                                + ":" + value.split(",")[1].trim().toLowerCase()
+                                + ":" + value.split(",")[2].trim().toLowerCase());
+                        break;
+                    default:
+                        break;
+                }
             case "coptimizers":
                 classificationOptimizers = value.trim().toLowerCase();
                 break;
@@ -518,15 +536,7 @@ public class Main {
             case "regressionFastWay":
                 regressionFastWay = Boolean.valueOf(value.trim());
                 break;
-            case "rcmd":
-                try {
-                    regressionFastWayCommands.add(value.split(",")[0].trim()
-                            + ":" + value.split(",")[1].trim().toLowerCase());
-                } catch (Exception e) {
-                    regressionFastWayCommands.add(value.trim()
-                            + ":ALL");
-                }
-                break;
+
             case "roptimizers":
                 regressionOptimizers = value.trim().toLowerCase();
                 break;

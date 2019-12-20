@@ -238,6 +238,7 @@ public class BestModelSelectionAndReport {
                     trainingOutput = weka.trainClassifier(ro.classifier, ro.options,
                             ro.featuresSeparatedByCommas, classification, 10);
                     rr = (Weka_module.RegressionResultsObject) trainingOutput;
+
                     classifierName = ro.classifier + "_" + ro.printOptions() + "_"
                             + ro.optimizer.toUpperCase().trim() + "_" + ro.mode;
                     //save feature file
@@ -839,7 +840,7 @@ public class BestModelSelectionAndReport {
                             String featureSignIGrounded = df.format(Double.valueOf(featureSignIG));
                             if (hmRanks.containsKey(featureSignIGrounded)) {
                                 for (RankerObject alio : hmRanks.get(featureSignIGrounded)) {
-                                    if (!featureSign.contains(alio.feature) && !alio.feature.equals("Instance")) {
+                                    if (!featureSign.contains(alio.feature) && !alio.feature.equals(Main.mergingID)) {
                                         //max difference between infogains: 0.005
                                         if (Math.abs(Double.parseDouble(featureSignIG) - Double.parseDouble(alio.infogain))
                                                 <= Main.maxRankingScoreDifference) {
