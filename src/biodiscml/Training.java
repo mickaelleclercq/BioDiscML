@@ -354,6 +354,7 @@ public class Training {
                         .map((s) -> {
                             if (!s.contains("ERROR")) {
                                 pw.println(s);
+                                pw.flush();
                             }
                             return s;
                         })
