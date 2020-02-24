@@ -933,7 +933,7 @@ public class Weka_module {
                 filteredData = Filter.useFilter(filteredData, select);
 
             } else if (filteredData.numAttributes() <= 10) {
-                //System.out.println("Not enough attributes, probably all non-informative. So keeping all and ranking them, but expect very low performances");
+                System.out.println("Not enough attributes, probably all non-informative. So keeping all and ranking them, but expect very low performances");
                 options = "-E \"weka.attributeSelection.InfoGainAttributeEval \" -S \"weka.attributeSelection.Ranker -T -1 -N -1\"";
                 select.setOptions(weka.core.Utils.splitOptions((options)));
                 select.setInputFormat(data);
@@ -1745,7 +1745,7 @@ public class Weka_module {
                 while (br.ready()) {
                     String line = br.readLine();
                     if (line.startsWith("@attribute") && !line.endsWith(" numeric")
-                            && !line.contains("@attribute Instance") 
+                            && !line.contains("@attribute Instance")
                             && !line.contains("@attribute " + Main.mergingID)) {
                         String attribute = line.replace("@attribute ", "").trim();
                         attribute = attribute.substring(0, attribute.indexOf("{"));
