@@ -350,7 +350,10 @@ public class Main {
         //export config file when executing command line options
         if (configFile.isEmpty()) {
             try {
-                PrintWriter pw = new PrintWriter(new FileWriter(project + ".config"));
+                if (debug) {
+                    System.out.println("Export config file in " + wd + project + ".config");
+                }
+                PrintWriter pw = new PrintWriter(new FileWriter(wd + project + ".config"));
                 for (String option : options) {
                     if (option.contains("=")) {
                         pw.println(option);
