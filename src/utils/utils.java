@@ -272,7 +272,9 @@ public class utils {
         if (!al.isEmpty()) {
             double d[] = new double[al.size()];
             for (int i = 0; i < al.size(); i++) {
-                d[i] = (double) al.get(i);
+                if (!al.get(i).isNaN()) {
+                    d[i] = (double) al.get(i);
+                }
             }
 
             Mean m = new Mean();
