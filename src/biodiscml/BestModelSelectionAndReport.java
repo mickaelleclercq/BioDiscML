@@ -778,7 +778,7 @@ public class BestModelSelectionAndReport {
 
                         System.out.print("Search correlated features (pearson)...");
                         pw.println("\n# Correlated features (Pearson)");
-                        pw.println("FeatureInSignature\tSpearmanCorrelationScore\tCorrelatedFeature");
+                        pw.println("FeatureInSignature\tPearsonCorrelationScore\tCorrelatedFeature");
                         TreeMap<String, Double> tmpCorrelatedgenes
                                 = RetreiveCorrelatedGenes.pearsonCorrelation(modelFilename + ".train_features.csv", trainFileName);
                         for (String correlation : tmpCorrelatedgenes.keySet()) {
