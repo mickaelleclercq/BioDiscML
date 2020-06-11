@@ -393,6 +393,10 @@ public class Training {
             if (Main.debug) {
                 e.printStackTrace();
             }
+        } catch (Error err) {
+            if (Main.debug) {
+                err.printStackTrace();
+            }
         }
     }
 
