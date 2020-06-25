@@ -22,14 +22,17 @@ machine learning steps, including data pre-processing, feature selection, model
 selection, and performance evaluation. 
 https://github.com/mickaelleclercq/BioDiscML/
 
-REQUIRES JAVA 8
+Full manuscript: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6532608/
+
+## Requirements
+JAVA 8 (https://www.java.com/en/download/)
 
 ## Program usage
 BioDiscML can be started either by creating a config file or using command line
 
 ### By config file
 Before executing BioDiscML, a config file must be created. Use the template to 
-create your own. Everything is detailled in the config.conf file. Examples are 
+create your own. Everything is detailed in the config.conf file. Examples are 
 available in the Test_datasets at: 
 https://github.com/mickaelleclercq/BioDiscML/tree/master/release/Test_datasets
 
@@ -42,6 +45,7 @@ This configuration takes as input a file (myData.csv) and name it myProjectName.
 A sampling (default 2/3 for training and 1/3 for testing) is performed before 
 classification procedure to predict the myOutcome class. One best model will 
 be selected based on Repated Holdout performance MCC on the train set. 
+config.conf file example: 
 ```
 project=myProjectName
 trainFile=myData.csv
@@ -54,7 +58,7 @@ numberOfBestModelsSortingMetric=TRAIN_TEST_RH_MCC
 
 #### Choose best model(s)
 ```Bash
-java -jar biodiscml.jar -config config_example.conf -bestmodel 
+java -jar biodiscml.jar -config config.conf -bestmodel 
 ```
 When training completed, stopped or still in execution, best model 
 selection can be executed. This command reads the results file. Best 
@@ -65,6 +69,25 @@ filters. Each model has an identifier (modelID) you can provide to
 the command. Example:
 ```Bash
 java -jar biodiscml.jar -config config.conf -bestmodel modelID_1 modelID_2
+```
+
+#### Predict new data
+```Bash
+java -jar biodiscml.jar -config config.conf -predict 
+```
+Once the best model obtained, you can predict new data or a test a blind test set 
+put aside by yourself before training. The file should be of same format and structure 
+as the training input files. This file must contain at least all features of the 
+selected best model signature. Features present in the newData file but absent from 
+the signature of the model will simply be ignored during the prediction. If a 
+class to predict column is present, BioDiscML will return errors statistics.
+config.conf file example: 
+```
+project=myProjectName
+newDataFile=myNewData.csv
+doClassification=true
+classificationClassName=class
+modelFile=myBestModel.model
 ```
 
 ### By command line

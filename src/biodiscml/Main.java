@@ -30,7 +30,7 @@ public class Main {
     public static String configFile = ""; //config file
     public static boolean needConfigFile = true;
     public static boolean training = false;
-    public static boolean testing = false;
+    public static boolean predictNewData = false;
     public static boolean trainingBestModel = false;
     public static HashMap<String, String> hmTrainingBestModelList = new HashMap<>();//modelID, identifier prefix
 
@@ -42,7 +42,7 @@ public class Main {
 
     //source files
     public static HashMap<String, String> hmTrainFiles = new HashMap<>();//filename, identifier prefix
-    public static HashMap<String, String> hmTestFiles = new HashMap<>();//filename, identifier prefix
+    public static HashMap<String, String> hmNewDataFiles = new HashMap<>();//filename, identifier prefix
 
     //options
     public static Boolean doClassification = false;
@@ -103,7 +103,6 @@ public class Main {
 
         //set models
         if (!classificationFastWay && !regressionFastWay) {
-            System.out.println("Model search mode: exhaustive");
             try {
                 String line = "";
                 File classifiers = new File("classifiers.conf");
@@ -199,22 +198,32 @@ public class Main {
             }
         }
 
-        if (testing) {
-            System.out.println("#### Starting testing...");
+        if (predictNewData) {
+            System.out.println("#### Starting predicting new data...");
+            if (modelFile.isEmpty()) {
+                System.err.println("[error] No model file have been provided (Set a modelFile in config file)");
+                System.exit(0);
+            }
+            if (hmNewDataFiles.isEmpty()) {
+                System.err.println("[error] No new data file have been provided (Set a newDataFile in config file)");
+                System.exit(0);
+            }
 
             //put data together in the same file for ML
-            String TEST_FILE = wd + project + ".data_to_test.csv"; //output of AdaptDatasetToWeka()
-            AdaptDatasetToTesting c = new AdaptDatasetToTesting(classificationClassName, hmTrainFiles,
-                    TEST_FILE, separator, modelFile);
+            String NEWDATA_FILE = wd + project + ".data_to_predict.csv"; //output of AdaptDatasetToWeka()
+            AdaptDatasetToTesting c = null;
+            if (doClassification) {
+                c = new AdaptDatasetToTesting(classificationClassName, hmNewDataFiles,
+                        NEWDATA_FILE, separator, wd + modelFile);
+            } else {
+                c = new AdaptDatasetToTesting(regressionClassName, hmNewDataFiles,
+                        NEWDATA_FILE, separator, wd + modelFile);
+            }
 
             //execute feature selection and training
-            String TEST_RESULTS_FILE = wd + project + ".testing.results.txt"; // output of Training(), models performances
+            String PREDICTIONS_RESULTS_FILE = wd + project + modelFile + "_" + ".prediction.results.txt"; // output of Testing
             TestingAndEvaluate t = new TestingAndEvaluate();
-            if (!c.isMissingClass()) {
-                t.TestingAndEvaluate(modelFile, TEST_FILE, TEST_RESULTS_FILE);
-            } else {
-                t.TestingAndMakePredictions(modelFile, TEST_FILE, TEST_RESULTS_FILE);
-            }
+            t.TestingAndEvaluate(wd + modelFile, NEWDATA_FILE, PREDICTIONS_RESULTS_FILE, c.isMissingClass());
         }
 
         if (trainingBestModel) {
@@ -307,10 +316,9 @@ public class Main {
                 }
             }
 
-            //testing: provide a set of parameters
-            if (s.startsWith("test")) {
-                testing = true;
-                needConfigFile = false;
+            //Predict new data
+            if (s.startsWith("predict")) {
+                predictNewData = true;
             }
 
         }
@@ -329,8 +337,8 @@ public class Main {
             }
         }
 
-        if (testing) {
-            System.out.println("#### Mode: testing");
+        if (predictNewData) {
+            System.out.println("#### Mode: Prediction");
             System.out.println("Merging ID: " + mergingID);
             System.out.println("Configuration file: " + configFile);
             if (isClassification) {
@@ -343,8 +351,8 @@ public class Main {
         } else if (trainingBestModel) {
             System.out.println("#### Mode: Best model");
         } else {
-            System.err.println("[error] No mode selected (train or test). "
-                    + "Add -train or -test or -bestmodel to your command line");
+            System.err.println("[error] No mode selected (train, bestmodel or predict). "
+                    + "Add -train or -bestmodel or -predict to your command line");
         }
 
         //export config file when executing command line options
@@ -433,12 +441,11 @@ public class Main {
                     hmTrainFiles.put(wd + value.replace(",", "").trim(), ""); //filename
                 }
                 break;
-            //for testing mode, we reuse the "hmTrainFiles" variable
-            case "testFile":
+            case "newDataFile":
                 try {
-                    hmTrainFiles.put(wd + value.split(",")[0].trim(), value.split(",")[1].trim()); //filename,prefix
+                    hmNewDataFiles.put(wd + value.split(",")[0].trim(), value.split(",")[1].trim()); //filename,prefix
                 } catch (Exception e) {
-                    hmTrainFiles.put(wd + value.replace(",", "").trim(), ""); //filename
+                    hmNewDataFiles.put(wd + value.replace(",", "").trim(), ""); //filename
                 }
                 break;
             case "excluded":
@@ -456,7 +463,6 @@ public class Main {
             case "separator":
                 separator = value.trim();
                 break;
-            //when testing mode
             case "classification":
                 isClassification = true;
                 break;
@@ -591,23 +597,14 @@ public class Main {
             case "samplingFold":
                 samplingFold = Integer.valueOf(value.trim());
                 break;
-            case "testSamplingFile":
-                try {
-                    hmTestFiles.put(wd + value.split(",")[0].trim(), value.split(",")[1].trim()); //filename,prefix
-                } catch (Exception e) {
-                    hmTestFiles.put(wd + value.replace(",", "").trim(), ""); //filename
-                }
-                break;
             case "cpus":
                 cpus = value.trim();
                 break;
             case "computeBestModel":
                 computeBestModel = Boolean.valueOf(value.trim());
                 break;
-
-            //model when testing
-            case "model":
-                modelFile = value.split(" ")[1].trim();
+            case "modelFile":
+                modelFile = value.trim();
                 break;
 
         }
