@@ -199,7 +199,7 @@ public class Main {
         }
 
         if (predictNewData) {
-            System.out.println("#### Starting predicting new data...");
+            System.out.println("#### Start predicting new data...");
             if (modelFile.isEmpty()) {
                 System.err.println("[error] No model file have been provided (Set a modelFile in config file)");
                 System.exit(0);

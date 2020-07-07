@@ -51,16 +51,16 @@ public class TestingAndEvaluate {
                 cr = (Weka_module.ClassificationResultsObject) weka.testClassifierFromFileSource(new File(weka.ARFFfile), modelFile, Main.isClassification);
                 System.out.println("instance\tactual\tpredicted\terror\t" + cr.classes + "\n" + cr.predictions);
                 pw.println("instance\tactual\tpredicted\terror\t" + cr.classes + "\n" + cr.predictions);
-                System.out.println(cr.toStringDetailsTesting());
                 if (!missingClass) {
+                    System.out.println(cr.toStringDetailsTesting());
                     pw.println(cr.toStringDetailsTesting());
                 }
             } else {
                 rr = (Weka_module.RegressionResultsObject) weka.testClassifierFromFileSource(new File(weka.ARFFfile), modelFile, Main.isClassification);
                 System.out.println("instance\tactual\tpredicted\terror\t" + cr.classes + "\n" + rr.predictions);
                 pw.println("instance\tactual\tpredicted\terror\t" + cr.classes + "\n" + rr.predictions);
-                System.out.println(rr.toStringDetails());
-                if (missingClass) {
+                if (!missingClass) {
+                    System.out.println(rr.toStringDetails());
                     pw.println(rr.toStringDetails());
                 }
             }

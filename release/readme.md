@@ -75,7 +75,7 @@ java -jar biodiscml.jar -config config.conf -bestmodel modelID_1 modelID_2
 ```Bash
 java -jar biodiscml.jar -config config.conf -predict 
 ```
-Once the best model obtained, you can predict new data or a test a blind test set 
+Once the best model obtained, you can predict new data or test a blind test set 
 put aside by yourself before training. The file should be of same format and structure 
 as the training input files. This file must contain at least all features of the 
 selected best model signature. Features present in the newData file but absent from 
