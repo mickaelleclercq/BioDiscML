@@ -92,8 +92,8 @@
         </zip>
         <delete file="${store.dir}/temp_final.jar"/>
         <copy file="config.conf" tofile="${store.dir}/config.conf"/>
-        <copy file="readme.txt" tofile="${store.dir}/readme.txt"/>
-        <copy file="readme.txt" tofile="${store.dir}/LICENSE.txt"/>
+        <copy file="readme.md" tofile="${store.dir}/readme.md"/>
+        <copy file="LICENSE.txt" tofile="${store.dir}/LICENSE.txt"/>
         <copy file="benchmark/Datasets_results.xlsx" tofile="${store.dir}/Test_datasets/Datasets_results.xlsx"/>
         <mkdir dir="${store.dir}/Test_datasets/"/>
         <copydir src="benchmark/CNS" dest="${datasets.dir}/CNS"/>
