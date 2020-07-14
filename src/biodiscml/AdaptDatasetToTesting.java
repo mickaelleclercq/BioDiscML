@@ -175,47 +175,35 @@ public class AdaptDatasetToTesting {
                 }
             }
             //PRINTING CONTENT IN THE RIGHT ORDER
-            if (!voteModel) {
-                //header
-                pw.print(Main.mergingID);
-                for (String feature : alModelFeatures) {
-                    pw.print("\t" + feature);
-                }
-                pw.println();
-                //content
-                for (int i = 0; i < hm_ids.size(); i++) {//for every instance
-                    pw.print(hmOutput.get(Main.mergingID).get(i));
-                    for (String feature : alModelFeatures) {
-                        pw.print("\t" + hmOutput.get(feature).get(i));
-                    }
-                    pw.println();
-                }
-                pw.close();
-                if (debug) {
-                    System.out.println("closing outfile " + outfile);
-                }
-                pw.close();
-            } else {
-                //header
-                pw.print(Main.mergingID);
+            if (voteModel) {
+                //ensure class is at the end of the list
+                alModelFeatures = new ArrayList<>();
                 for (String feature : hmModelFeatures.keySet()) {
-                    pw.print("\t" + feature);
+                    if (!feature.equals("class")) {
+                        alModelFeatures.add(feature);
+                    }
+                }
+                alModelFeatures.add("class");
+            }
+            //header
+            pw.print(Main.mergingID);
+            for (String feature : alModelFeatures) {
+                pw.print("\t" + feature);
+            }
+            pw.println();
+            //content
+            for (int i = 0; i < hm_ids.size(); i++) {//for every instance
+                pw.print(hmOutput.get(Main.mergingID).get(i));
+                for (String feature : alModelFeatures) {
+                    pw.print("\t" + hmOutput.get(feature).get(i));
                 }
                 pw.println();
-                //content
-                for (int i = 0; i < hm_ids.size(); i++) {//for every instance
-                    pw.print(hmOutput.get(Main.mergingID).get(i));
-                    for (String feature : hmModelFeatures.keySet()) {
-                        pw.print("\t" + hmOutput.get(feature).get(i));
-                    }
-                    pw.println();
-                }
-                pw.close();
-                if (debug) {
-                    System.out.println("closing outfile " + outfile);
-                }
-                pw.close();
             }
+            pw.close();
+            if (debug) {
+                System.out.println("closing outfile " + outfile);
+            }
+            pw.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
