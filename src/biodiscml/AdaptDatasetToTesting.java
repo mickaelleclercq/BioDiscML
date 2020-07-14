@@ -42,10 +42,17 @@ public class AdaptDatasetToTesting {
         ArrayList<String> alModelFeatures = weka.getFeaturesFromClassifier(model); //features in the right order
         HashMap<String, String> hmModelFeatures = new HashMap<>();//indexed hashed features
         System.out.println("# Model features: ");
+        Boolean voteModel = alModelFeatures.get(0).startsWith("Model") && model.contains("_COMB_");
+        if (voteModel) {
+            System.out.println("    Combined Vote model");
+        }
         for (String f : alModelFeatures) {
-            hmModelFeatures.put(f, f);
+            if (!f.startsWith("Model") && !f.startsWith("class")) {
+                hmModelFeatures.put(f, f);
+            }
             System.out.println("\t" + f);
         }
+        hmModelFeatures.put("class", "class");
 
         //convert hashmap to list
         String[] files = new String[infiles.size()];
@@ -89,32 +96,6 @@ public class AdaptDatasetToTesting {
             missingClass = true;
         }
 
-        //remove useless features having 100% the same value
-//        try {
-//            for (TableObject tbo : al_tables) {
-//                for (String s : tbo.getSortedHmDataKeyset()) {
-//                    HashMap<String, String> hm = new HashMap<>();
-//                    for (String value : tbo.hmData.get(s)) {
-//                        hm.put(value, value);
-//                    }
-//                    if (hm.size() == 1) {
-//                        tbo.hmData.remove(s);
-//                        if (hm.keySet().toArray()[0].equals("?")) {
-//                            System.out.println("Removing feature " + s + " "
-//                                    + "because 100% of values are missing");
-//                        } else {
-//                            System.out.println("Removing feature " + s + " "
-//                                    + "because 100% of values have the same value "
-//                                    + "{" + hm.keySet().toArray()[0] + "}");
-//                        }
-//                    }
-//
-//                }
-//                cpt++;
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
         //remove feature that are not needed by the model
         //create outfile
         System.out.println("create outfile " + outfile);
@@ -153,7 +134,7 @@ public class AdaptDatasetToTesting {
                 System.out.println("Total number of instances between files:" + hm_ids.size());
             }
 
-            ///////PRINT CONTENT
+            ///////PREPARE CONTENT FOR PRINTING
             TreeMap<String, Integer> tm = new TreeMap<>();
             tm.putAll(al_tables.get(0).hmIDsList);
             for (String id : tm.keySet()) {
@@ -193,26 +174,48 @@ public class AdaptDatasetToTesting {
                     //pw.println();
                 }
             }
-            //print in the right order
-            //header
-            pw.print(Main.mergingID);
-            for (String feature : alModelFeatures) {
-                pw.print("\t" + feature);
-            }
-            pw.println();
-            //content
-            for (int i = 0; i < hm_ids.size(); i++) {//for every instance
-                pw.print(hmOutput.get(Main.mergingID).get(i));
+            //PRINTING CONTENT IN THE RIGHT ORDER
+            if (!voteModel) {
+                //header
+                pw.print(Main.mergingID);
                 for (String feature : alModelFeatures) {
-                    pw.print("\t" + hmOutput.get(feature).get(i));
+                    pw.print("\t" + feature);
                 }
                 pw.println();
+                //content
+                for (int i = 0; i < hm_ids.size(); i++) {//for every instance
+                    pw.print(hmOutput.get(Main.mergingID).get(i));
+                    for (String feature : alModelFeatures) {
+                        pw.print("\t" + hmOutput.get(feature).get(i));
+                    }
+                    pw.println();
+                }
+                pw.close();
+                if (debug) {
+                    System.out.println("closing outfile " + outfile);
+                }
+                pw.close();
+            } else {
+                //header
+                pw.print(Main.mergingID);
+                for (String feature : hmModelFeatures.keySet()) {
+                    pw.print("\t" + feature);
+                }
+                pw.println();
+                //content
+                for (int i = 0; i < hm_ids.size(); i++) {//for every instance
+                    pw.print(hmOutput.get(Main.mergingID).get(i));
+                    for (String feature : hmModelFeatures.keySet()) {
+                        pw.print("\t" + hmOutput.get(feature).get(i));
+                    }
+                    pw.println();
+                }
+                pw.close();
+                if (debug) {
+                    System.out.println("closing outfile " + outfile);
+                }
+                pw.close();
             }
-            pw.close();
-            if (debug) {
-                System.out.println("closing outfile " + outfile);
-            }
-            pw.close();
         } catch (Exception e) {
             e.printStackTrace();
         }

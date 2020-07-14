@@ -14,6 +14,7 @@ import java.text.DecimalFormatSymbols;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -32,10 +33,12 @@ import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.evaluation.ThresholdCurve;
 import weka.classifiers.evaluation.output.prediction.PlainText;
+import weka.classifiers.meta.FilteredClassifier;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Range;
+import weka.core.SerializationHelper;
 import weka.core.UnsupportedAttributeTypeException;
 import weka.core.Utils;
 import weka.core.converters.ArffLoader;
@@ -45,6 +48,8 @@ import weka.core.converters.CSVSaver;
 import weka.core.converters.ConverterUtils;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.StratifiedRemoveFolds;
+import weka.filters.unsupervised.attribute.Add;
+import weka.filters.unsupervised.attribute.Remove;
 import weka.filters.unsupervised.attribute.Reorder;
 import weka.filters.unsupervised.attribute.StringToNominal;
 import weka.filters.unsupervised.instance.RemoveRange;
@@ -1185,13 +1190,100 @@ public class Weka_module {
             //load model
             Classifier model = (Classifier) weka.core.SerializationHelper.read(classifier);
 
-            // evaluate dataset on the model
-            Evaluation eval = new Evaluation(data);
-            PlainText pt = new PlainText();
-            pt.setBuffer(sb);
+            Evaluation eval = null;
+            PlainText pt = null;
 
-            //eval.evaluateModel(model, data, pt, new Range("first,last"), true);
-            eval.evaluateModel(model, data);
+            //if vote model, we need to simulate features index
+            if (model.getClass().toString().endsWith("Vote")) {
+                HashMap<String, String> hmNewDataFeaturesIndex = new HashMap<>();
+                //get models inside vote
+                weka.classifiers.meta.Vote m = (weka.classifiers.meta.Vote) model;
+                Classifier[] modelClassifiers = m.getClassifiers();
+
+                //for each classifier, get features indexes of the signature
+                int classIndex = 0;
+                for (int i = 0; i < modelClassifiers.length; i++) {
+                    //get model
+                    FilteredClassifier filteredClassifier = (FilteredClassifier) modelClassifiers[i];
+                    //get features of the model in the right order
+                    ArrayList<String> alFeatures = getFeaturesFromClassifier(filteredClassifier);
+                    //get remove filter
+                    Remove rf = (Remove) filteredClassifier.getFilter();
+                    //get index of the remove filter
+                    String indexes[] = rf.getAttributeIndices().split(",");
+                    //set class index
+                    classIndex = Integer.valueOf(indexes[indexes.length - 1]);
+                    //store features index with feature name
+                    for (int j = 0; j < alFeatures.size(); j++) {
+                        hmNewDataFeaturesIndex.put(indexes[j], alFeatures.get(j));
+                    }
+                }
+                //insert missing data
+                for (int i = 0; i < classIndex; i++) {
+                    //if attribute do not exist in current data
+                    if (!hmNewDataFeaturesIndex.containsKey((i + 1) + "")) {
+                        //create an empty one with missing data
+                        data.insertAttributeAt(new Attribute("Att_" + i + 1), i + 1);
+                    }
+                }
+            }
+
+//            //if vote model, we need to change the index of the features
+//NOT WORKING
+//            if (model.getClass().toString().endsWith("Vote")) {
+//                //get features indexes in the prepared new data file
+//                HashMap<String, Integer> hmNewDataFeaturesIndex = new HashMap<>();
+//                Enumeration en = data.enumerateAttributes();
+//
+//                int cpt = 0;
+//                while (en.hasMoreElements()) {
+//                    cpt++;
+//                    Attribute a = (Attribute) en.nextElement();
+//                    hmNewDataFeaturesIndex.put(a.name(), cpt);
+//                }
+//                hmNewDataFeaturesIndex.put("class", cpt++);
+//
+//                //get models inside vote
+//                weka.classifiers.meta.Vote m = (weka.classifiers.meta.Vote) model;
+//                Classifier[] modelClassifiers = m.getClassifiers();
+//
+//                //for each classifier, get features indexes of the signature
+//                ArrayList<String> alFeaturesIndex = new ArrayList<>();
+//                for (int i = 0; i < modelClassifiers.length; i++) {
+//                    ArrayList<String> alFeatures = getFeaturesFromClassifier(modelClassifiers[i]);
+//                    String featureListFilter = "";
+//                    for (String feature : alFeatures) {
+//                        featureListFilter += hmNewDataFeaturesIndex.get(feature) + ",";
+//                    }
+//                    alFeaturesIndex.add(featureListFilter.substring(0, featureListFilter.length() - 1));
+//                }
+//
+//                //for each classifier, set features indexes of the signatures into the filter
+//                for (int i = 0; i < modelClassifiers.length; i++) {
+//                    FilteredClassifier filteredClassifier = (FilteredClassifier) modelClassifiers[i];
+//
+//                    Remove rf = (Remove) filteredClassifier.getFilter();
+//                    rf.setAttributeIndices(alFeaturesIndex.get(i));
+//                    filteredClassifier.setFilter(rf);
+//                    modelClassifiers[i] = filteredClassifier;
+//                }
+//                m.setClassifiers(modelClassifiers);
+//                model = m;
+//            }
+//            model.toString();
+//            SerializationHelper.write("E:\\cloud\\Projects\\bacteria\\test\\test.model", model);
+//            ArffSaver arff = new ArffSaver();
+//            arff.setInstances(data);
+//            arff.setFile(new File("E:\\cloud\\Projects\\bacteria\\test\\test.arff"));
+//            arff.writeBatch();
+            eval = new Evaluation(data);
+            pt = new PlainText();
+            pt.setHeader(data);
+            pt.setBuffer(sb);
+            pt.setOutputDistribution(true);
+            pt.setAttributes("first");
+
+            eval.evaluateModel(model, data, pt, new Range("first,last"), true);
 
             //return
             if (classification) {
@@ -1401,16 +1493,80 @@ public class Weka_module {
         try {
             //load model
             Classifier model = (Classifier) weka.core.SerializationHelper.read(classifier);
+            if (model.getClass().toString().contains("Vote")) {
+                String tab[] = model.toString().split("\n");
+                ArrayList<String> alModels = new ArrayList<>();
+                int i = 1;
+                while (!tab[i].startsWith("using")) {
+                    alModels.add(tab[i].replaceAll("^\t", ""));
+                    i++;
+                }
+                int j = 0;
+                for (i = i; i < tab.length; i++) {
+                    if (tab[i].startsWith("Filtered Header")) {
+                        al.add("Model: " + alModels.get(j));
+                        j++;
+                        i++;
+                        while (i < tab.length && !tab[i].startsWith("Filtered Header")) {
+                            if (tab[i].startsWith("@attribute")) {
+                                al.add(tab[i].replace("@attribute ", "").replaceAll(" \\w+$", ""));
+                            }
+                            i++;
+                        }
+                        i--;
+                    }
+                }
+
+            } else {
+                for (String s : model.toString().split("\n")) {
+                    if (s.startsWith("@attribute")) {
+                        if (s.split(" ")[1].equals("class")) {
+                            al.add("class");
+                        } else {
+                            al.add(s.replace("@attribute ", "").replaceAll(" \\w+$", ""));
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            if (Main.debug) {
+                e.printStackTrace();
+            }
+        }
+        return al;
+    }
+
+    /**
+     * get classes from classifier
+     *
+     * @param classifier
+     * @param toArrayList
+     * @return
+     */
+    public ArrayList<String> getClassesFromClassifier(String classifier, boolean toArrayList) {
+        ArrayList<String> al = new ArrayList<>();
+        String classes = "";
+        try {
+            //load model
+            Classifier model = (Classifier) weka.core.SerializationHelper.read(classifier);
             for (String s : model.toString().split("\n")) {
-                if (s.startsWith("@attribute")) {
-                    //hm.put(s.split(" ")[1], s.split(" ")[2]); //feature_name, feature_type
-                    al.add(s.split(" ")[1]);
+                if (s.startsWith("@attribute class")) {
+                    classes = s;
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return al;
+        if (toArrayList) {
+            classes = classes.replace("@attribute class ", "").replace("{", "").replace("}", "");
+            for (String s : classes.split(",")) {
+                al.add(s);
+            }
+            return al;
+        } else {
+            al.add(classes);
+            return al;
+        }
     }
 
     public ArrayList<String> getFeaturesFromClassifier(Classifier model) {
@@ -2054,6 +2210,7 @@ public class Weka_module {
         public String pAUC;
         public String BCR;
         public String BER;
+        public String classes = "";
 
         private ClassificationResultsObject() {
         }
@@ -2066,13 +2223,17 @@ public class Weka_module {
         private ClassificationResultsObject(Evaluation eval, StringBuffer sb, Instances data, Classifier classifier) {
             dataset = data;
             evaluation = eval;
+            model = classifier;
+            getFeaturesAndClasses(classifier);
+
             try {
                 parsePredictions(sb);
             } catch (Exception e) {
-            }
-            getFeatures(classifier);
+                if (Main.debug) {
+                    e.printStackTrace();
+                }
 
-            model = classifier;
+            }
 
             //measures
             ACC = Utils.doubleToString(eval.pctCorrect() / 100, 12, 4).trim();
@@ -2168,10 +2329,35 @@ public class Weka_module {
                     );
         }
 
+        public String toStringDetailsTesting() {
+            return ("[score_testing] ACC: " + ACC + "\n"
+                    + "[score_testing] AUC: " + AUC + "\n"
+                    + "[score_testing] AUPRC: " + AUPRC + "\n"
+                    + "[score_testing] TPR: " + TPR + "\n"
+                    + "[score_testing] TNR: " + TNR + "\n"
+                    + "[score_testing] MCC: " + MCC + "\n"
+                    + "[score_testing] BER: " + BER + "\n"
+                    + "[score_testing] FPR: " + FPR + "\n"
+                    + "[score_testing] FNR: " + FNR + "\n"
+                    + "[score_testing] PPV: " + precision + "\n"
+                    + "[score_testing] FDR: " + FDR + "\n"
+                    + "[score_testing] recall: " + recall + "\n"
+                    + "[score_testing] Fscore: " + Fscore + "\n"
+                    + "[score_testing] kappa: " + kappa + "\n"
+                    + "[score_testing] matrix: " + matrix // + "pAUC[" + Main.pAUC_lower + "-" + Main.pAUC_upper + pAUC + "]: \n"
+                    );
+        }
+
+        /**
+         * first attempt to retrieve predictions
+         *
+         * @param sb
+         */
         private void parsePredictions(StringBuffer sb) {
             String lines[] = sb.toString().split("\n");
 
-            for (int i = 1; i < lines.length; i++) {
+            //get predictions
+            for (int i = 0; i < lines.length; i++) {
                 String p = lines[i].replaceAll(" +", "\t");
                 String tab[] = p.split("\t");
                 String inst = tab[1];
@@ -2181,20 +2367,24 @@ public class Weka_module {
                 String prob;
                 String ID;
                 if (tab.length == 6) {
-                    error = "0";
+                    if (actual.contains("?")) {
+                        error = "?";
+                    } else {
+                        error = "No";
+                    };
                     prob = tab[4];
                     ID = tab[5];
                 } else {
-                    error = "1";
+                    error = "Yes";
                     prob = tab[5];
                     ID = tab[6];
                 }
-                predictions.append(ID.replace("(", "").replace(")", "") + "\t" + actual + "\t" + predicted + "\t" + error + "\t" + prob + "\n");
+                predictions.append(ID.replace("(", "").replace(")", "") + "\t" + actual + "\t" + predicted + "\t" + error + "\t" + prob.replace(",", "\t") + "\n");
             }
 
         }
 
-        private void getFeatures(Classifier model) {
+        private void getFeaturesAndClasses(Classifier model) {
             boolean voteClassifier = model.toString().split("\n")[0].contains("Vote");
             TreeMap<String, Integer> tm = new TreeMap<>();
             for (String s : model.toString().split("\n")) {
@@ -2208,6 +2398,9 @@ public class Weka_module {
                     } else {
                         tm.put(s.split(" ")[1], 1);
                     }
+                }
+                if (s.startsWith("@attribute class ")) {
+                    classes = s.replace("@attribute class {", "").replace("}", "").replace(",", "\t");
                 }
 
             }
