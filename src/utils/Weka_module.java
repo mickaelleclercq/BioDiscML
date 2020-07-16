@@ -35,6 +35,7 @@ import weka.classifiers.evaluation.ThresholdCurve;
 import weka.classifiers.evaluation.output.prediction.PlainText;
 import weka.classifiers.meta.FilteredClassifier;
 import weka.core.Attribute;
+import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Range;
@@ -1218,64 +1219,48 @@ public class Weka_module {
                         hmNewDataFeaturesIndex.put(indexes[j], alFeatures.get(j));
                     }
                 }
-                //insert missing data
-                for (int i = 0; i < classIndex; i++) {
-                    //if attribute do not exist in current data
-                    if (!hmNewDataFeaturesIndex.containsKey((i + 1) + "")) {
-                        //create an empty one with missing data
-                        data.insertAttributeAt(new Attribute("Att_" + i + 1), i + 1);
-                    }
+                //create new dataset
+                Instances newData = new Instances(data);
+                for (int i = newData.numAttributes() - 2; i >= 0; i--) {
+                    newData.deleteAttributeAt(i);
                 }
+                //insert data for each instance
+                for (int j = 0; j < data.numInstances(); j++) {
+                    //insert attribute "instance"
+                    newData.insertAttributeAt(data.attribute(0), 0);
+                    //sert instance name
+                    try {
+                        newData.instance(j).setValue(0, data.instance(j).stringValue(0));
+                    } catch (Exception e) {
+                        //if not string
+                        newData.instance(j).setValue(0, data.instance(j).value(0));
+                    }
+                    for (int i = 1; i < classIndex - 1; i++) {
+                        //if attribute do not exist in current data
+                        if (hmNewDataFeaturesIndex.containsKey((i + 1) + "")) {
+                            Attribute att = data.attribute(hmNewDataFeaturesIndex.get((i + 1) + ""));
+                            newData.insertAttributeAt(att, i);
+                            newData.instance(j).setValue(i, data.instance(j).value(att));
+
+                        } else {
+                            //create an empty one with missing data
+                            newData.insertAttributeAt(new Attribute("Att_" + i), i);
+                        }
+                    }
+
+                }
+                data = newData;
             }
 
-//            //if vote model, we need to change the index of the features
-//NOT WORKING
-//            if (model.getClass().toString().endsWith("Vote")) {
-//                //get features indexes in the prepared new data file
-//                HashMap<String, Integer> hmNewDataFeaturesIndex = new HashMap<>();
-//                Enumeration en = data.enumerateAttributes();
-//
-//                int cpt = 0;
-//                while (en.hasMoreElements()) {
-//                    cpt++;
-//                    Attribute a = (Attribute) en.nextElement();
-//                    hmNewDataFeaturesIndex.put(a.name(), cpt);
-//                }
-//                hmNewDataFeaturesIndex.put("class", cpt++);
-//
-//                //get models inside vote
-//                weka.classifiers.meta.Vote m = (weka.classifiers.meta.Vote) model;
-//                Classifier[] modelClassifiers = m.getClassifiers();
-//
-//                //for each classifier, get features indexes of the signature
-//                ArrayList<String> alFeaturesIndex = new ArrayList<>();
-//                for (int i = 0; i < modelClassifiers.length; i++) {
-//                    ArrayList<String> alFeatures = getFeaturesFromClassifier(modelClassifiers[i]);
-//                    String featureListFilter = "";
-//                    for (String feature : alFeatures) {
-//                        featureListFilter += hmNewDataFeaturesIndex.get(feature) + ",";
-//                    }
-//                    alFeaturesIndex.add(featureListFilter.substring(0, featureListFilter.length() - 1));
-//                }
-//
-//                //for each classifier, set features indexes of the signatures into the filter
-//                for (int i = 0; i < modelClassifiers.length; i++) {
-//                    FilteredClassifier filteredClassifier = (FilteredClassifier) modelClassifiers[i];
-//
-//                    Remove rf = (Remove) filteredClassifier.getFilter();
-//                    rf.setAttributeIndices(alFeaturesIndex.get(i));
-//                    filteredClassifier.setFilter(rf);
-//                    modelClassifiers[i] = filteredClassifier;
-//                }
-//                m.setClassifiers(modelClassifiers);
-//                model = m;
-//            }
-//            model.toString();
-//            SerializationHelper.write("E:\\cloud\\Projects\\bacteria\\test\\test.model", model);
-//            ArffSaver arff = new ArffSaver();
-//            arff.setInstances(data);
-//            arff.setFile(new File("E:\\cloud\\Projects\\bacteria\\test\\test.arff"));
-//            arff.writeBatch();
+            CSVSaver csv = new CSVSaver();
+            csv.setInstances(data);
+            csv.setFile(new File("E:\\cloud\\Projects\\bacteria\\test\\test.csv"));
+            csv.writeBatch();
+            ArffSaver arff = new ArffSaver();
+            arff.setInstances(data);
+            arff.setFile(new File("E:\\cloud\\Projects\\bacteria\\test\\test.arff"));
+            arff.writeBatch();
+
             eval = new Evaluation(data);
             pt = new PlainText();
             pt.setHeader(data);
