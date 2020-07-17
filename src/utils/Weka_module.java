@@ -1226,8 +1226,10 @@ public class Weka_module {
                 }
                 //insert data for each instance
                 for (int j = 0; j < data.numInstances(); j++) {
-                    //insert attribute "instance"
-                    newData.insertAttributeAt(data.attribute(0), 0);
+                    //insert attribute "instance" for 1st instance only
+                    if (j == 0) {
+                        newData.insertAttributeAt(data.attribute(0), 0);
+                    }
                     //sert instance name
                     try {
                         newData.instance(j).setValue(0, data.instance(j).stringValue(0));
@@ -1239,12 +1241,16 @@ public class Weka_module {
                         //if attribute do not exist in current data
                         if (hmNewDataFeaturesIndex.containsKey((i + 1) + "")) {
                             Attribute att = data.attribute(hmNewDataFeaturesIndex.get((i + 1) + ""));
-                            newData.insertAttributeAt(att, i);
+                            if (j == 0) {
+                                newData.insertAttributeAt(att, i);
+                            }
                             newData.instance(j).setValue(i, data.instance(j).value(att));
 
                         } else {
                             //create an empty one with missing data
-                            newData.insertAttributeAt(new Attribute("Att_" + i), i);
+                            if (j == 0) {
+                                newData.insertAttributeAt(new Attribute("Att_" + i), i);
+                            }
                         }
                     }
 
@@ -1252,15 +1258,14 @@ public class Weka_module {
                 data = newData;
             }
 
-            CSVSaver csv = new CSVSaver();
-            csv.setInstances(data);
-            csv.setFile(new File("E:\\cloud\\Projects\\bacteria\\test\\test.csv"));
-            csv.writeBatch();
-            ArffSaver arff = new ArffSaver();
-            arff.setInstances(data);
-            arff.setFile(new File("E:\\cloud\\Projects\\bacteria\\test\\test.arff"));
-            arff.writeBatch();
-
+//            CSVSaver csv = new CSVSaver();
+//            csv.setInstances(data);
+//            csv.setFile(new File("E:\\cloud\\Projects\\bacteria\\test\\test.csv"));
+//            csv.writeBatch();
+//            ArffSaver arff = new ArffSaver();
+//            arff.setInstances(data);
+//            arff.setFile(new File("E:\\cloud\\Projects\\bacteria\\test\\test.arff"));
+//            arff.writeBatch();
             eval = new Evaluation(data);
             pt = new PlainText();
             pt.setHeader(data);
