@@ -12,6 +12,8 @@ import java.util.TreeMap;
 import utils.Weka_module;
 import utils.utils.TableObject;
 import static utils.utils.readTable;
+import weka.classifiers.Classifier;
+import weka.core.SerializationHelper;
 
 /**
  *
@@ -42,7 +44,15 @@ public class AdaptDatasetToTesting {
         ArrayList<String> alModelFeatures = weka.getFeaturesFromClassifier(model); //features in the right order
         HashMap<String, String> hmModelFeatures = new HashMap<>();//indexed hashed features
         System.out.println("# Model features: ");
-        Boolean voteModel = alModelFeatures.get(0).startsWith("Model") && model.contains("_COMB_");
+
+        Boolean voteModel = false;
+        try {
+            voteModel = (((Classifier) SerializationHelper.read(model)).getClass().toString().contains("weka.classifiers.meta.Vote"));
+        } catch (Exception e) {
+            if (Main.debug) {
+                e.printStackTrace();
+            }
+        }
         if (voteModel) {
             System.out.println("    Combined Vote model");
         }
