@@ -233,7 +233,7 @@ public class AdaptDatasetToTesting {
             //get all ids, count how many times each one is seen
             for (TableObject table : al_tables) {
                 for (String s : table.hmIDsList.keySet()) {
-                    s = s.toLowerCase();
+                    //s = s.toLowerCase();
                     if (hm_counts.containsKey(s)) {
                         int tmp = hm_counts.get(s);
                         tmp++;
