@@ -1,7 +1,12 @@
 
 # BioDiscML
 
-Large-scale automatic feature selection for biomarker discovery in high-dimensional OMICs data
+Large-scale automatic feature selection for biomarker discovery in high-dimensional 
+OMICs data
+
+## Short description
+Automates the execution of many machine learning algorithms across various
+optimization and evaluation procedures to identify the best model and signature
 
 ## Description
 The identification of biomarker signatures in omics molecular profiling is an 
@@ -142,6 +147,7 @@ For each model, we perform various evaluations summarized in this table:
 | TRAIN_10CV_SEN | 10 fold cross validation Sensitivity on train set|
 | TRAIN_10CV_SPE |10 fold cross validation Specificity on train set |
 | TRAIN_10CV_MCC |10 fold cross validation Matthews Correlation Coefficient on train set |
+| TRAIN_10CV_MAE |10 fold cross validation Mean Absolute Error on train set |
 | TRAIN_10CV_BER | 10 fold cross validation Balanced Error Rate on train set|
 | TRAIN_10CV_FPR |10 fold cross validation False Positive Rate on train set |
 | TRAIN_10CV_FNR |10 fold cross validation False Negative Rate on train set |
@@ -156,6 +162,7 @@ For each model, we perform various evaluations summarized in this table:
 | TRAIN_LOOCV_SEN | Leave-One-Out Cross Validation Sensitivity on Train set|
 | TRAIN_LOOCV_SPE | Leave-One-Out Cross Validation Specificity on Train set |
 | TRAIN_LOOCV_MCC | Leave-One-Out Cross Validation Matthews Correlation Coefficient on Train set|
+| TRAIN_LOOCV_MAE | Leave-One-Out Cross Validation Mean Absolute Error on Train set|
 | TRAIN_LOOCV_BER | Leave-One-Out Cross Validation Balanced Error Rate on Train set|
 | TRAIN_RH_ACC | Repeated holdout Accuracy on Train set |
 | TRAIN_RH_AUC | Repeated holdout Area Under The Curve on Train set |
@@ -163,6 +170,7 @@ For each model, we perform various evaluations summarized in this table:
 | TRAIN_RH_SEN | Repeated holdout Sensitivity on Train set |
 | TRAIN_RH_SPE | Repeated holdout Specificity on Train set |
 | TRAIN_RH_MCC | Repeated holdout Matthews Correlation Coefficient on Train set |
+| TRAIN_RH_MAE | Repeated holdout Mean Absolute Error on Train set |
 | TRAIN_RH_BER | Repeated holdout Balanced Error Rate on Train set |
 | TRAIN_BS_ACC | Bootstrap Accuracy on Train set |
 | TRAIN_BS_AUC | Bootstrap Area Under The Curve on Train set |
@@ -170,6 +178,7 @@ For each model, we perform various evaluations summarized in this table:
 | TRAIN_BS_SEN | Bootstrap Sensitivity on Train set |
 | TRAIN_BS_SPE | Bootstrap Specificity on Train set |
 | TRAIN_BS_MCC | Bootstrap Matthews Correlation Coefficient on Train set |
+| TRAIN_BS_MAE | Bootstrap Mean Absolute Error on Train set |
 | TRAIN_BS_BER | Bootstrap Balanced Error Rate on Train set |
 | TRAIN_BS.632+ | Bootstrap .632+ rule |
 | TEST_ACC | Evaluation Accuracy on test set|
@@ -178,6 +187,7 @@ For each model, we perform various evaluations summarized in this table:
 | TEST_SEN |Evaluation Sensitivity on test set |
 | TEST_SPE | Evaluation Specificity on test set|
 | TEST_MCC | Evaluation Matthews Correlation Coefficient on test set|
+| TEST_MAE | Evaluation Mean Absolute Error on test set|
 | TEST_BER | Evaluation Balanced Error Rate on test set|
 | TRAIN_TEST_RH_ACC |Repeated holdout Accuracy on merged Train and Test sets |
 | TRAIN_TEST_RH_AUC | Repeated holdout  Area Under The Curve on merged Train and Test sets|
@@ -185,6 +195,7 @@ For each model, we perform various evaluations summarized in this table:
 | TRAIN_TEST_RH_SEN | Repeated holdout Sensitivity on merged Train and Test sets|
 | TRAIN_TEST_RH_SPE | Repeated holdout Specificity on merged Train and Test sets|
 | TRAIN_TEST_RH_MCC | Repeated holdout Matthews Correlation Coefficient on merged Train and Test sets|
+| TRAIN_TEST_RH_MAE | Repeated holdout Mean Absolute Error on merged Train and Test sets|
 | TRAIN_TEST_RH_BER | Repeated holdout Balanced Error Rate on merged Train and Test sets|
 | TRAIN_TEST_BS_ACC |Bootstrap Accuracy on merged Train and Test sets |
 | TRAIN_TEST_BS_AUC | Bootstrap  Area Under The Curve on merged Train and Test sets|
@@ -192,10 +203,13 @@ For each model, we perform various evaluations summarized in this table:
 | TRAIN_TEST_BS_SEN | Bootstrap Sensitivity on merged Train and Test sets|
 | TRAIN_TEST_BS_SPE | Bootstrap Specificity on merged Train and Test sets|
 | TRAIN_TEST_BS_MCC | Bootstrap Matthews Correlation Coefficient on merged Train and Test sets|
+| TRAIN_TEST_BS_MAE | Bootstrap Mean Absolute Error on merged Train and Test sets|
 | TRAIN_TEST_BS_BER | Bootstrap Balanced Error Rate on merged Train and Test sets|
 | TRAIN_TEST_BS_BER_BS.632+ | Bootstrap .632+ rule on merged Train and Test sets|
 | AVG_BER | Average of all calculated Balanced Error Rates |
 | STD_BER | Standard deviation of the calculated Balanced Error Rates|
+| AVG_MAE | Average of all calculated Mean Absolute Errors |
+| STD_MAE |Standard deviation of the calculated Mean Absolute Errors |
 | AVG_MCC | Average of all calculated Matthews Correlation Coefficients |
 | STD_MCC |Standard deviation of the calculated Matthews Correlation Coefficients |
 | AttributeList | Selected features. Use the option -bestmodel to generate a report and get the features' full names|
