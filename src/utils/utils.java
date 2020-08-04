@@ -224,7 +224,8 @@ public class utils {
             hmData = convertDataColumnsToHashMap(altable);
             int ID_index = getIdIndex(altable);
             for (int i = 1; i < altable.size(); i++) { //for each ID
-                hmIDsList.put(altable.get(i)[ID_index].toLowerCase(), i - 1);
+                //hmIDsList.put(altable.get(i)[ID_index].toLowerCase(), i - 1);
+                hmIDsList.put(altable.get(i)[ID_index], i - 1);
             }
         }
 

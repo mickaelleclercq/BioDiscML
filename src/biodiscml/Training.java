@@ -98,6 +98,7 @@ public class Training {
                     + "\tTRAIN_10CV_SEN"
                     + "\tTRAIN_10CV_SPE"
                     + "\tTRAIN_10CV_MCC"
+                    + "\tTRAIN_10CV_MAE"
                     + "\tTRAIN_10CV_BER"
                     + "\tTRAIN_10CV_FPR"
                     + "\tTRAIN_10CV_FNR"
@@ -113,6 +114,7 @@ public class Training {
                     + "\tTRAIN_LOOCV_SEN"
                     + "\tTRAIN_LOOCV_SPE"
                     + "\tTRAIN_LOOCV_MCC"
+                    + "\tTRAIN_LOOCV_MAE"
                     + "\tTRAIN_LOOCV_BER"
                     //Repeated Holdout TRAIN
                     + "\tTRAIN_RH_ACC"
@@ -121,6 +123,7 @@ public class Training {
                     + "\tTRAIN_RH_SEN"
                     + "\tTRAIN_RH_SPE"
                     + "\tTRAIN_RH_MCC"
+                    + "\tTRAIN_RH_MAE"
                     + "\tTRAIN_RH_BER"
                     //Bootstrap TRAIN
                     + "\tTRAIN_BS_ACC"
@@ -129,6 +132,7 @@ public class Training {
                     + "\tTRAIN_BS_SEN"
                     + "\tTRAIN_BS_SPE"
                     + "\tTRAIN_BS_MCC"
+                    + "\tTRAIN_BS_MAE"
                     + "\tTRAIN_BS_BER"
                     //Bootstrap .632+ TRAIN
                     + "\tTRAIN_BS.632+"
@@ -139,6 +143,7 @@ public class Training {
                     + "\tTEST_SEN"
                     + "\tTEST_SPE"
                     + "\tTEST_MCC"
+                    + "\tTEST_MAE"
                     + "\tTEST_BER"
                     //Repeated Holdout TRAIN_TEST
                     + "\tTRAIN_TEST_RH_ACC"
@@ -147,6 +152,7 @@ public class Training {
                     + "\tTRAIN_TEST_RH_SEN"
                     + "\tTRAIN_TEST_RH_SPE"
                     + "\tTRAIN_TEST_RH_MCC"
+                    + "\tTRAIN_TEST_RH_MAE"
                     + "\tTRAIN_TEST_RH_BER"
                     //Bootstrap TRAIN_TEST
                     + "\tTRAIN_TEST_BS_ACC"
@@ -155,12 +161,15 @@ public class Training {
                     + "\tTRAIN_TEST_BS_SEN"
                     + "\tTRAIN_TEST_BS_SPE"
                     + "\tTRAIN_TEST_BS_MCC"
+                    + "\tTRAIN_TEST_BS_MAE"
                     + "\tTRAIN_TEST_BS_BER"
                     //Bootstrap .632+ TRAIN
                     + "\tTRAIN_TEST_BS.632+"
                     //stats
                     + "\tAVG_BER"
                     + "\tSTD_BER"
+                    + "\tAVG_MAE"
+                    + "\tSTD_MAE"
                     + "\tAVG_MCC"
                     + "\tSTD_MCC"
                     + "\tAttributeList";
@@ -278,6 +287,8 @@ public class Training {
                     //stats
                     + "\tAVG_CC"
                     + "\tSTD_CC"
+                    + "\tAVG_MAE"
+                    + "\tSTD_MAE"
                     + "\tAVG_RMSE"
                     + "\tSTD_RMSE"
                     + "\tAttributeList";
@@ -658,6 +669,7 @@ public class Training {
                         eproRHTrain.alSEs.add(Double.valueOf(cro.TPR));
                         eproRHTrain.alSPs.add(Double.valueOf(cro.TNR));
                         eproRHTrain.alMCCs.add(Double.valueOf(cro.MCC));
+                        eproRHTrain.alMAEs.add(Double.valueOf(cro.MAE));
                         eproRHTrain.alBERs.add(Double.valueOf(cro.BER));
                     }
                 } else {
@@ -697,6 +709,7 @@ public class Training {
                         eproBSTrain.alSEs.add(Double.valueOf(cro.TPR));
                         eproBSTrain.alSPs.add(Double.valueOf(cro.TNR));
                         eproBSTrain.alMCCs.add(Double.valueOf(cro.MCC));
+                        eproBSTrain.alMAEs.add(Double.valueOf(cro.MAE));
                         eproBSTrain.alBERs.add(Double.valueOf(cro.BER));
                     }
                 } else {
@@ -746,6 +759,7 @@ public class Training {
                             tro.SE = cr2.TPR;
                             tro.SP = cr2.TNR;
                             tro.MCC = cr2.MCC;
+                            tro.MAE = cr2.MAE;
                             tro.BER = cr2.BER;
                             testResults = tro.toStringClassification();
 
@@ -795,6 +809,7 @@ public class Training {
                                 eproRHTrainTest.alSEs.add(Double.valueOf(cro.TPR));
                                 eproRHTrainTest.alSPs.add(Double.valueOf(cro.TNR));
                                 eproRHTrainTest.alMCCs.add(Double.valueOf(cro.MCC));
+                                eproRHTrainTest.alMAEs.add(Double.valueOf(cro.MAE));
                                 eproRHTrainTest.alBERs.add(Double.valueOf(cro.BER));
                             }
                         } else {
@@ -847,6 +862,7 @@ public class Training {
                                 eproBSTrainTest.alSEs.add(Double.valueOf(cro.TPR));
                                 eproBSTrainTest.alSPs.add(Double.valueOf(cro.TNR));
                                 eproBSTrainTest.alMCCs.add(Double.valueOf(cro.MCC));
+                                eproBSTrainTest.alMAEs.add(Double.valueOf(cro.MAE));
                                 eproBSTrainTest.alBERs.add(Double.valueOf(cro.BER));
                             }
                         } else {
@@ -913,6 +929,46 @@ public class Training {
                     m.setData(BERs);
                     double averageBER = m.evaluate();
 
+                    //average MAE
+                    double MAEs[] = null;
+                    if (Main.loocv) {
+                        MAEs = new double[]{Double.valueOf(cr.MAE),
+                            Double.valueOf(eproRHTrain.meanMAEs),
+                            Double.valueOf(eproBSTrain.meanMAEs),
+                            Double.valueOf(crLoocv.MAE)};
+                        if (Main.doSampling) {
+                            MAEs = new double[]{
+                                Double.valueOf(cr.MAE),
+                                Double.valueOf(crLoocv.MAE),
+                                Double.valueOf(eproRHTrain.meanMAEs),
+                                Double.valueOf(eproBSTrain.meanMAEs),
+                                Double.valueOf(tro.MAE),
+                                Double.valueOf(eproRHTrainTest.meanMAEs),
+                                Double.valueOf(eproBSTrainTest.meanMAEs)};
+                        }
+                    } else {
+                        MAEs = new double[]{Double.valueOf(cr.MAE),
+                            Double.valueOf(eproRHTrain.meanMAEs),
+                            Double.valueOf(eproBSTrain.meanMAEs)};
+                        if (Main.doSampling) {
+                            MAEs = new double[]{
+                                Double.valueOf(cr.MAE),
+                                Double.valueOf(eproRHTrain.meanMAEs),
+                                Double.valueOf(eproBSTrain.meanMAEs),
+                                Double.valueOf(tro.MAE),
+                                Double.valueOf(eproRHTrainTest.meanMAEs),
+                                Double.valueOf(eproBSTrainTest.meanMAEs)};
+                        }
+                    }
+
+                    std = new StandardDeviation();
+                    std.setData(MAEs);
+                    double StdMAE = std.evaluate();
+
+                    m = new Mean();
+                    m.setData(MAEs);
+                    double averageMAE = m.evaluate();
+
                     //average MCC
                     double[] MCCs;
                     if (Main.loocv) {
@@ -955,6 +1011,8 @@ public class Training {
 
                     String stats = df.format(averageBER) + "\t"
                             + df.format(StdBER) + "\t"
+                            + df.format(averageMAE) + "\t"
+                            + df.format(StdMAE) + "\t"
                             + df.format(averageMCC) + "\t"
                             + df.format(StdMCC);
 
@@ -982,6 +1040,8 @@ public class Training {
                             + "\t" + stats + "\t" + ao.getRetainedAttributesIdClassInString();
                 } else {
                     //statistics
+
+                    //average CC
                     double[] CCs;
                     if (Main.loocv) {
                         CCs = new double[]{
@@ -1022,6 +1082,50 @@ public class Training {
                     Mean m = new Mean();
                     m.setData(CCs);
                     double averageCC = m.evaluate();
+
+                    //average MAE
+                    double[] MAEs;
+                    if (Main.loocv) {
+                        MAEs = new double[]{
+                            Double.valueOf(rr.MAE),
+                            Double.valueOf(eproRHTrain.meanMAEs),
+                            Double.valueOf(eproBSTrain.meanMAEs),
+                            Double.valueOf(rrLoocv.MAE)};
+                        if (Main.doSampling) {
+                            MAEs = new double[]{
+                                Double.valueOf(rr.MAE),
+                                Double.valueOf(rrLoocv.MAE),
+                                Double.valueOf(eproRHTrain.meanMAEs),
+                                Double.valueOf(eproBSTrain.meanMAEs),
+                                Double.valueOf(tro.MAE),
+                                Double.valueOf(eproRHTrainTest.meanMAEs),
+                                Double.valueOf(eproBSTrainTest.meanMAEs)};
+                        }
+                    } else {
+                        MAEs = new double[]{
+                            Double.valueOf(rr.MAE),
+                            Double.valueOf(eproRHTrain.meanMAEs),
+                            Double.valueOf(eproBSTrain.meanMAEs)};
+                        if (Main.doSampling) {
+                            MAEs = new double[]{
+                                Double.valueOf(rr.MAE),
+                                Double.valueOf(eproRHTrain.meanMAEs),
+                                Double.valueOf(eproBSTrain.meanMAEs),
+                                Double.valueOf(tro.MAE),
+                                Double.valueOf(eproRHTrainTest.meanMAEs),
+                                Double.valueOf(eproBSTrainTest.meanMAEs)};
+                        }
+                    }
+
+                    std = new StandardDeviation();
+                    std.setData(MAEs);
+                    double StdMAE = std.evaluate();
+
+                    m = new Mean();
+                    m.setData(MAEs);
+                    double averageMAE = m.evaluate();
+
+                    //average RMSE
                     double[] RMSEs;
                     if (Main.loocv) {
                         RMSEs = new double[]{Double.valueOf(rr.RMSE),
@@ -1063,6 +1167,8 @@ public class Training {
 
                     String stats = df.format(averageCC) + "\t"
                             + df.format(StdCC) + "\t"
+                            + df.format(averageMAE) + "\t"
+                            + df.format(StdMAE) + "\t"
                             + df.format(averageRMSE) + "\t"
                             + df.format(StdRMSE);
                     lastOutput = out

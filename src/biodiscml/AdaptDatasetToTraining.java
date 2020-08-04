@@ -85,7 +85,7 @@ public class AdaptDatasetToTraining {
             //get all ids, count how many times each one is seen
             for (TableObject table : al_tables) {
                 for (String s : table.hmIDsList.keySet()) {
-                    //s = s.toLowerCase();
+                    s = s.toLowerCase();
                     if (hm_counts.containsKey(s)) {
                         int tmp = hm_counts.get(s);
                         tmp++;
@@ -218,8 +218,8 @@ public class AdaptDatasetToTraining {
             TreeMap<String, Integer> tm = new TreeMap<>();
             tm.putAll(al_tables.get(0).hmIDsList);
             for (String id : tm.keySet()) {
-                // if (hm_ids.containsKey(id) && !id.equals(Main.mergingID.toLowerCase())) {
-                if (hm_ids.containsKey(id) && !id.equals(Main.mergingID)) {
+                if (hm_ids.containsKey(id) && !id.equals(Main.mergingID.toLowerCase())) {
+                    // if (hm_ids.containsKey(id) && !id.equals(Main.mergingID)) {
                     pw.print(id);
                     for (TableObject tbo : al_tables) {
                         int idIndex = tbo.hmIDsList.get(id);

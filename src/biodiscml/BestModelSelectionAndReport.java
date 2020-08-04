@@ -56,6 +56,7 @@ public class BestModelSelectionAndReport {
         df.setDecimalFormatSymbols(dfs);
         String bestOrCombine = "Select best ";
         ArrayList<Double> alMCCs = new ArrayList<>();
+        ArrayList<Double> alMAEs = new ArrayList<>();
         ArrayList<Double> alCCs = new ArrayList<>();
         if (Main.combineModels) {
             bestOrCombine = "Combine ";
@@ -309,10 +310,12 @@ public class BestModelSelectionAndReport {
                 if (classification) {
                     System.out.println(cr.toStringDetails());
                     alMCCs.add(Double.valueOf(cr.MCC));
+                    alMAEs.add(Double.valueOf(cr.MAE));
                     pw.println(cr.toStringDetails().replace("[score_training] ", ""));
                 } else {
                     System.out.println(rr.toStringDetails());
                     alCCs.add(Double.valueOf(rr.CC));
+                    alMAEs.add(Double.valueOf(rr.MAE));
                     pw.println(rr.toStringDetails().replace("[score_training] ", ""));
                 }
                 pw.flush();
@@ -326,12 +329,14 @@ public class BestModelSelectionAndReport {
                                 co.featuresSeparatedByCommas, classification, weka.myData.numInstances());
                         System.out.println(cr2.toStringDetails());
                         alMCCs.add(Double.valueOf(cr2.MCC));
+                        alMAEs.add(Double.valueOf(cr2.MAE));
                         pw.println(cr2.toStringDetails().replace("[score_training] ", ""));
                     } else {
                         Weka_module.RegressionResultsObject rr2 = (Weka_module.RegressionResultsObject) weka.trainClassifier(ro.classifier, ro.options,
                                 ro.featuresSeparatedByCommas, classification, weka.myData.numInstances());
                         System.out.println(rr2.toStringDetails());
                         alCCs.add(Double.valueOf(rr2.CC));
+                        alMAEs.add(Double.valueOf(rr2.MAE));
                         pw.println(rr2.toStringDetails().replace("[score_training] ", ""));
                     }
                     pw.flush();
@@ -356,6 +361,7 @@ public class BestModelSelectionAndReport {
                         eproRHTrain.alSEs.add(Double.valueOf(cro.TPR));
                         eproRHTrain.alSPs.add(Double.valueOf(cro.TNR));
                         eproRHTrain.alMCCs.add(Double.valueOf(cro.MCC));
+                        eproRHTrain.alMAEs.add(Double.valueOf(cro.MAE));
                         eproRHTrain.alBERs.add(Double.valueOf(cro.BER));
                         alROCs.add(cro);
                         // System.out.println(i+"\t"+Double.valueOf(cro.AUC));
@@ -363,6 +369,7 @@ public class BestModelSelectionAndReport {
                     eproRHTrain.computeMeans();
                     System.out.println(eproRHTrain.toStringClassificationDetails());
                     alMCCs.add(Double.valueOf(eproRHTrain.meanMCCs));
+                    alMAEs.add(Double.valueOf(eproRHTrain.meanMAEs));
                     pw.println(eproRHTrain.toStringClassificationDetails().replace("[score_training] ", ""));
 
                     if (Main.ROCcurves) {
@@ -384,6 +391,7 @@ public class BestModelSelectionAndReport {
                     }
                     eproRHTrain.computeMeans();
                     alCCs.add(Double.valueOf(eproRHTrain.meanCCs));
+                    alMAEs.add(Double.valueOf(eproRHTrain.meanMAEs));
                     pw.println(eproRHTrain.toStringRegressionDetails().replace("[score_training] ", ""));
                 }
                 pw.flush();
@@ -407,12 +415,14 @@ public class BestModelSelectionAndReport {
                         eproBSTrain.alSEs.add(Double.valueOf(cro.TPR));
                         eproBSTrain.alSPs.add(Double.valueOf(cro.TNR));
                         eproBSTrain.alMCCs.add(Double.valueOf(cro.MCC));
+                        eproBSTrain.alMAEs.add(Double.valueOf(cro.MAE));
                         eproBSTrain.alBERs.add(Double.valueOf(cro.BER));
                         alROCs.add(cro);
                         // System.out.println(i+"\t"+Double.valueOf(cro.AUC));
                     }
                     eproBSTrain.computeMeans();
                     alMCCs.add(Double.valueOf(eproBSTrain.meanMCCs));
+                    alMAEs.add(Double.valueOf(eproBSTrain.meanMAEs));
                     System.out.println(eproBSTrain.toStringClassificationDetails());
                     pw.println(eproBSTrain.toStringClassificationDetails().replace("[score_training] ", ""));
 
@@ -447,6 +457,7 @@ public class BestModelSelectionAndReport {
                     }
                     eproBSTrain.computeMeans();
                     alCCs.add(Double.valueOf(eproBSTrain.meanCCs));
+                    alMAEs.add(Double.valueOf(eproBSTrain.meanMAEs));
                     pw.println(eproBSTrain.toStringRegressionDetails().replace("[score_training] ", ""));
                 }
                 pw.flush();
@@ -506,6 +517,7 @@ public class BestModelSelectionAndReport {
                             System.out.println("[score_testing] SEN: " + cr2.TPR);
                             System.out.println("[score_testing] SPE: " + cr2.TNR);
                             System.out.println("[score_testing] MCC: " + cr2.MCC);
+                            System.out.println("[score_testing] MAE: " + cr2.MAE);
                             System.out.println("[score_testing] BER: " + cr2.BER);
 
                             pw.println("AUC: " + cr2.AUC);
@@ -514,9 +526,11 @@ public class BestModelSelectionAndReport {
                             pw.println("SEN: " + cr2.TPR);
                             pw.println("SPE: " + cr2.TNR);
                             pw.println("MCC: " + cr2.MCC);
+                            pw.println("MAE: " + cr2.MAE);
                             pw.println("BER: " + cr2.BER);
 
                             alMCCs.add(Double.valueOf(cr2.MCC));
+                            alMAEs.add(Double.valueOf(cr2.MAE));
 
                             if (Main.ROCcurves) {
                                 rocCurveGraphs.createRocCurvesWithConfidence(alROCs, classification, modelFilename, ".roc_test.png");
@@ -532,6 +546,7 @@ public class BestModelSelectionAndReport {
                             pw.println("Average RMSE: " + rr2.RMSE);
 
                             alCCs.add(Double.valueOf(rr2.CC));
+                            alMAEs.add(Double.valueOf(rr2.MAE));
                         }
                         new File(arffTestFileWithExtractedModelFeatures).delete();
 
@@ -579,11 +594,13 @@ public class BestModelSelectionAndReport {
                                     eproRHTrainTest.alSEs.add(Double.valueOf(cro.TPR));
                                     eproRHTrainTest.alSPs.add(Double.valueOf(cro.TNR));
                                     eproRHTrainTest.alMCCs.add(Double.valueOf(cro.MCC));
+                                    eproRHTrainTest.alMAEs.add(Double.valueOf(cro.MAE));
                                     eproRHTrainTest.alBERs.add(Double.valueOf(cro.BER));
                                     alROCs.add(cro);
                                 }
                                 eproRHTrainTest.computeMeans();
                                 alMCCs.add(Double.valueOf(eproRHTrainTest.meanMCCs));
+                                alMAEs.add(Double.valueOf(eproRHTrainTest.meanMAEs));
                                 System.out.println(eproRHTrainTest.toStringClassificationDetails());
                                 pw.println(eproRHTrainTest.toStringClassificationDetails().replace("[score_training] ", ""));
                                 if (Main.ROCcurves) {
@@ -610,6 +627,7 @@ public class BestModelSelectionAndReport {
                                 }
                                 eproRHTrainTest.computeMeans();
                                 alCCs.add(Double.valueOf(eproRHTrainTest.meanCCs));
+                                alMAEs.add(Double.valueOf(eproRHTrainTest.meanMAEs));
                                 System.out.println(eproRHTrainTest.toStringRegressionDetails());
                                 pw.println(eproRHTrainTest.toStringRegressionDetails().replace("[score_training] ", ""));
                             }
@@ -664,11 +682,13 @@ public class BestModelSelectionAndReport {
                                     eproBSTrainTest.alSEs.add(Double.valueOf(cro.TPR));
                                     eproBSTrainTest.alSPs.add(Double.valueOf(cro.TNR));
                                     eproBSTrainTest.alMCCs.add(Double.valueOf(cro.MCC));
+                                    eproBSTrainTest.alMAEs.add(Double.valueOf(cro.MAE));
                                     eproBSTrainTest.alBERs.add(Double.valueOf(cro.BER));
                                     alROCs.add(cro);
                                 }
                                 eproBSTrainTest.computeMeans();
                                 alMCCs.add(Double.valueOf(eproBSTrainTest.meanMCCs));
+                                alMAEs.add(Double.valueOf(eproBSTrainTest.meanMAEs));
                                 System.out.println(eproBSTrainTest.toStringClassificationDetails());
                                 pw.println(eproBSTrainTest.toStringClassificationDetails().replace("[score_training] ", ""));
 
@@ -706,6 +726,7 @@ public class BestModelSelectionAndReport {
                                 }
                                 eproBSTrainTest.computeMeans();
                                 alCCs.add(Double.valueOf(eproBSTrainTest.meanCCs));
+                                alMAEs.add(Double.valueOf(eproBSTrainTest.meanMAEs));
                                 System.out.println(eproBSTrainTest.toStringRegressionDetails());
                                 pw.println(eproBSTrainTest.toStringRegressionDetails().replace("[score_training] ", ""));
                             }
@@ -730,9 +751,13 @@ public class BestModelSelectionAndReport {
                 if (classification) {
                     pw.println("\n# Average MCC: " + utils.utils.getMean(alMCCs));
                     System.out.println("\n# Average MCC: " + utils.utils.getMean(alMCCs));
+                    pw.println("# Average MAE: " + utils.utils.getMean(alMAEs));
+                    System.out.println("# Average MAE: " + utils.utils.getMean(alMAEs));
                 } else {
                     pw.println("\n# Average CC: " + utils.utils.getMean(alCCs));
                     System.out.println("\n# Average CC: " + utils.utils.getMean(alCCs));
+                    pw.println("# Average MAE: " + utils.utils.getMean(alMAEs));
+                    System.out.println("# Average MAE: " + utils.utils.getMean(alMAEs));
                 }
                 //output features
                 if (classification) {

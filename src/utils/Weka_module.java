@@ -2183,6 +2183,7 @@ public class Weka_module {
         public double TN;
         public double FP;
         public String kappa;
+        public String MAE;
         public StringBuilder predictions = new StringBuilder();
         public StringBuilder features = new StringBuilder();
         public int numberOfFeatures = 0; //number of features
@@ -2236,9 +2237,11 @@ public class Weka_module {
             AUPRC = Utils.doubleToString(eval.weightedAreaUnderPRC(), 12, 4).trim();
             Fscore = Utils.doubleToString(eval.weightedFMeasure(), 12, 4).trim();
             kappa = Utils.doubleToString(eval.kappa(), 12, 4).trim();
+            MAE = Utils.doubleToString(eval.meanAbsoluteError(), 12, 4).trim();
             precision = Utils.doubleToString(eval.weightedPrecision(), 12, 4).trim();
             FDR = Utils.doubleToString(1 - eval.weightedPrecision(), 12, 4).trim();
             recall = Utils.doubleToString(eval.weightedRecall(), 12, 4).trim();
+
             double[][] m = eval.confusionMatrix();
             matrix = "";
             for (int i = 0; i < m.length; i++) {
@@ -2280,6 +2283,7 @@ public class Weka_module {
                     + TPR + "\t" //SEN == recall
                     + TNR + "\t" //SPE
                     + MCC + "\t"
+                    + MAE + "\t"
                     + BER + "\t"
                     + FPR + "\t"
                     + FNR + "\t"
@@ -2297,6 +2301,7 @@ public class Weka_module {
                     + TPR + "\t" //SEN == recall
                     + TNR + "\t" //SPE
                     + MCC + "\t"
+                    + MAE + "\t"
                     + BER);
         }
 
@@ -2307,6 +2312,7 @@ public class Weka_module {
                     + "[score_training] TPR: " + TPR + "\n"
                     + "[score_training] TNR: " + TNR + "\n"
                     + "[score_training] MCC: " + MCC + "\n"
+                    + "[score_training] MAE: " + MAE + "\n"
                     + "[score_training] BER: " + BER + "\n"
                     + "[score_training] FPR: " + FPR + "\n"
                     + "[score_training] FNR: " + FNR + "\n"
@@ -2326,6 +2332,7 @@ public class Weka_module {
                     + "[score_testing] TPR: " + TPR + "\n"
                     + "[score_testing] TNR: " + TNR + "\n"
                     + "[score_testing] MCC: " + MCC + "\n"
+                    + "[score_testing] MAE: " + MAE + "\n"
                     + "[score_testing] BER: " + BER + "\n"
                     + "[score_testing] FPR: " + FPR + "\n"
                     + "[score_testing] FNR: " + FNR + "\n"
@@ -2547,6 +2554,7 @@ public class Weka_module {
                         + meanSENs + "\t"
                         + meanSPEs + "\t"
                         + meanMCCs + "\t"
+                        + meanMAEs + "\t"
                         + meanBERs;
             }
         }
@@ -2558,6 +2566,7 @@ public class Weka_module {
                     + "[score_training] Average weighted SEN: " + meanSENs + "\n"
                     + "[score_training] Average weighted SPE: " + meanSPEs + "\n"
                     + "[score_training] Average weighted MCC: " + meanMCCs + "\n"
+                    + "[score_training] Average weighted MAE: " + meanMAEs + "\n"
                     + "[score_training] Average weighted BER: " + meanBERs;
         }
 
@@ -2622,6 +2631,7 @@ public class Weka_module {
                     + SE + "\t"
                     + SP + "\t"
                     + MCC + "\t"
+                    + MAE + "\t"
                     + BER;
         }
 
