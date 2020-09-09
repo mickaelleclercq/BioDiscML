@@ -946,10 +946,23 @@ public class Weka_module {
                 filteredData = Filter.useFilter(data, select);
             }
             //add identifier if it has been lost after information gain
-            if (!filteredData.attribute(0).equals(data.attribute(0))) {
-                filteredData.insertAttributeAt(data.attribute(0), 0);
+            if (filteredData.attribute(id.name()) == null) {
+                filteredData.insertAttributeAt(id, 0);
             }
-            filteredData.attribute(0);
+            //move identifier to index 0
+            if (filteredData.attribute(id.name()) != null && !filteredData.attribute(0).equals(id)) {
+                //find index of ID
+                int idIndex = 0;
+                for (int i = 0; i < filteredData.size(); i++) {
+                    if (filteredData.attribute(i).equals(id)) {
+                        idIndex = i;
+                    }
+                }
+                //delete ID
+                filteredData.deleteAttributeAt(idIndex);
+                //reinsert ID
+                filteredData.insertAttributeAt(id, 0);
+            }
 
             //save data as csv
             CSVSaver csv = new CSVSaver();

@@ -218,7 +218,7 @@ public class AdaptDatasetToTraining {
             TreeMap<String, Integer> tm = new TreeMap<>();
             tm.putAll(al_tables.get(0).hmIDsList);
             for (String id : tm.keySet()) {
-                if (hm_ids.containsKey(id) && !id.equals(Main.mergingID.toLowerCase())) {
+                if (hm_ids.containsKey(id.toLowerCase()) && !id.equals(Main.mergingID.toLowerCase())) {
                     // if (hm_ids.containsKey(id) && !id.equals(Main.mergingID)) {
                     pw.print(id);
                     for (TableObject tbo : al_tables) {
