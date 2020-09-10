@@ -448,6 +448,13 @@ public class Main {
                     hmNewDataFiles.put(wd + value.replace(",", "").trim(), ""); //filename
                 }
                 break;
+            case "validationFile":
+                try {
+                    hmNewDataFiles.put(wd + value.split(",")[0].trim(), value.split(",")[1].trim()); //filename,prefix
+                } catch (Exception e) {
+                    hmNewDataFiles.put(wd + value.replace(",", "").trim(), ""); //filename
+                }
+                break;
             case "excluded":
                 String excluded[] = value.split(",");
                 for (String ex : excluded) {
