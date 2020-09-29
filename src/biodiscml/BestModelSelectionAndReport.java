@@ -25,6 +25,7 @@ import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import utils.UpSetR;
 import utils.Weka_module;
+import utils.utils;
 import weka.core.SerializationHelper;
 
 /**
@@ -300,7 +301,7 @@ public class BestModelSelectionAndReport {
 
                 //UpSetR
                 if (Main.UpSetR) {
-                    utils.UpSetR up = new UpSetR();
+                    UpSetR up = new UpSetR();
                     up.creatUpSetRDatasetFromSignature(co, featureSelectionFile, predictionsResultsFile);
                 }
 
@@ -749,15 +750,19 @@ public class BestModelSelectionAndReport {
 
                 // show average metrics and standard deviation
                 if (classification) {
-                    pw.println("\n# Average MCC: " + utils.utils.getMean(alMCCs));
-                    System.out.println("\n# Average MCC: " + utils.utils.getMean(alMCCs));
-                    pw.println("# Average MAE: " + utils.utils.getMean(alMAEs));
-                    System.out.println("# Average MAE: " + utils.utils.getMean(alMAEs));
+                    pw.println("\n# Average MCC: " + utils.getMean(alMCCs));
+                    System.out.println("\n# Average MCC: " + utils.getMean(alMCCs)
+                            + "\t(" + utils.getStandardDeviation(alMCCs) + ")");
+                    pw.println("# Average MAE: " + utils.getMean(alMAEs)
+                            + "\t(" + utils.getStandardDeviation(alMAEs) + ")");
+                    System.out.println("# Average MAE: " + utils.getMean(alMAEs));
                 } else {
-                    pw.println("\n# Average CC: " + utils.utils.getMean(alCCs));
-                    System.out.println("\n# Average CC: " + utils.utils.getMean(alCCs));
-                    pw.println("# Average MAE: " + utils.utils.getMean(alMAEs));
-                    System.out.println("# Average MAE: " + utils.utils.getMean(alMAEs));
+                    pw.println("\n# Average CC: " + utils.getMean(alCCs)
+                            + "\t(" + utils.getStandardDeviation(alCCs) + ")");
+                    System.out.println("\n# Average CC: " + utils.getMean(alCCs));
+                    pw.println("# Average MAE: " + utils.getMean(alMAEs)
+                            + "\t(" + utils.getStandardDeviation(alMAEs) + ")");
+                    System.out.println("# Average MAE: " + utils.getMean(alMAEs));
                 }
                 //output features
                 if (classification) {
@@ -986,7 +991,7 @@ public class BestModelSelectionAndReport {
         try {
             BufferedReader br = new BufferedReader(new FileReader(originFile));
             String header = br.readLine();
-            String features[] = header.split(utils.utils.detectSeparator(originFile));
+            String features[] = header.split(utils.detectSeparator(originFile));
             for (int i = 0; i < features.length; i++) {
                 String feature = features[i];
                 if (lhm.containsKey(feature)) {

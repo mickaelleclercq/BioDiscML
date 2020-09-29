@@ -209,6 +209,23 @@ public class utils {
         return s.substring(0, s.length() - 1);
     }
 
+    public static double[] arrayToDouble(ArrayList<Double> al) {
+        return al.stream().mapToDouble(Double::doubleValue).toArray();
+    }
+
+    public static String getStandardDeviation(ArrayList<Double> al) {
+        DecimalFormat df = new DecimalFormat();
+        df.setMaximumFractionDigits(3);
+        DecimalFormatSymbols dfs = new DecimalFormatSymbols();
+        dfs.setDecimalSeparator('.');
+        df.setDecimalFormatSymbols(dfs);
+
+        StandardDeviation s = new StandardDeviation();
+        s.setData(utils.arrayToDouble(al));
+
+        return df.format(s.evaluate());
+    }
+
     /**
      * Table Object to manipulate table
      */
