@@ -750,9 +750,9 @@ public class BestModelSelectionAndReport {
 
                 // show average metrics and standard deviation
                 if (classification) {
-                    pw.println("\n# Average MCC: " + utils.getMean(alMCCs));
-                    System.out.println("\n# Average MCC: " + utils.getMean(alMCCs)
+                    pw.println("\n# Average MCC: " + utils.getMean(alMCCs)
                             + "\t(" + utils.getStandardDeviation(alMCCs) + ")");
+                    System.out.println("\n# Average MCC: " + utils.getMean(alMCCs));
                     pw.println("# Average MAE: " + utils.getMean(alMAEs)
                             + "\t(" + utils.getStandardDeviation(alMAEs) + ")");
                     System.out.println("# Average MAE: " + utils.getMean(alMAEs));
