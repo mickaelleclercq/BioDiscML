@@ -27,6 +27,7 @@ import org.apache.commons.math3.analysis.integration.TrapezoidIntegrator;
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 import org.apache.commons.math3.analysis.interpolation.UnivariateInterpolator;
 import org.apache.commons.math3.exception.MaxCountExceededException;
+import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import static utils.utils.getMean;
 import weka.attributeSelection.AttributeSelection;
 import weka.classifiers.Classifier;
@@ -1512,7 +1513,9 @@ public class Weka_module {
                         i++;
                         while (i < tab.length && !tab[i].startsWith("Filtered Header")) {
                             if (tab[i].startsWith("@attribute")) {
-                                al.add(tab[i].replace("@attribute ", "").replaceAll(" \\w+$", ""));
+                                al.add(tab[i].replace("@attribute ", "")
+                                        .replaceAll(" \\w+$", "")
+                                        .replaceAll(" \\{.*$", ""));
                             }
                             i++;
                         }
@@ -1526,7 +1529,9 @@ public class Weka_module {
                         if (s.split(" ")[1].equals("class")) {
                             al.add("class");
                         } else {
-                            al.add(s.replace("@attribute ", "").replaceAll(" \\w+$", ""));
+                            al.add(s.replace("@attribute ", "")
+                                    .replaceAll(" \\w+$", "")
+                                    .replaceAll(" \\{.*$", ""));
                         }
                     }
                 }
@@ -2573,14 +2578,22 @@ public class Weka_module {
         }
 
         public String toStringClassificationDetails() {
-            return "[score_training] Average weighted ACC: " + meanACCs + "\n"
-                    + "[score_training] Average weighted AUC: " + meanAUCs + "\n"
-                    + "[score_training] Average weighted AUPRC: " + meanAUPRCs + "\n"
-                    + "[score_training] Average weighted SEN: " + meanSENs + "\n"
-                    + "[score_training] Average weighted SPE: " + meanSPEs + "\n"
-                    + "[score_training] Average weighted MCC: " + meanMCCs + "\n"
-                    + "[score_training] Average weighted MAE: " + meanMAEs + "\n"
-                    + "[score_training] Average weighted BER: " + meanBERs;
+            return "[score_training] Average weighted ACC: " + meanACCs
+                    + "\t(" + utils.getStandardDeviation(alACCs) + ")\n"
+                    + "[score_training] Average weighted AUC: " + meanAUCs
+                    + "\t(" + utils.getStandardDeviation(alAUCs) + ")\n"
+                    + "[score_training] Average weighted AUPRC: " + meanAUPRCs
+                    + "\t(" + utils.getStandardDeviation(alAUPRCs) + ")\n"
+                    + "[score_training] Average weighted SEN: " + meanSENs
+                    + "\t(" + utils.getStandardDeviation(alSEs) + ")\n"
+                    + "[score_training] Average weighted SPE: " + meanSPEs
+                    + "\t(" + utils.getStandardDeviation(alSPs) + ")\n"
+                    + "[score_training] Average weighted MCC: " + meanMCCs
+                    + "\t(" + utils.getStandardDeviation(alMCCs) + ")\n"
+                    + "[score_training] Average weighted MAE: " + meanMAEs
+                    + "\t(" + utils.getStandardDeviation(alMAEs) + ")\n"
+                    + "[score_training] Average weighted BER: " + meanBERs
+                    + "\t(" + utils.getStandardDeviation(alBERs) + ")";
         }
 
         public String toStringRegression() {
@@ -2596,11 +2609,16 @@ public class Weka_module {
         }
 
         public String toStringRegressionDetails() {
-            return "[score_training] Average weighted CC: " + meanCCs + "\n"
-                    + "[score_training] Average weighted MAE: " + meanMAEs + "\n"
-                    + "[score_training] Average weighted RMSE: " + meanRMSEs + "\n"
-                    + "[score_training] Average weighted RAE: " + meanRAEs + "\n"
-                    + "[score_training] Average weighted RRSE: " + meanRRSEs;
+            return "[score_training] Average weighted CC: " + meanCCs
+                    + "\t(" + utils.getStandardDeviation(alCCs) + ")\n"
+                    + "[score_training] Average weighted MAE: " + meanMAEs
+                    + "\t(" + utils.getStandardDeviation(alMAEs) + ")\n"
+                    + "[score_training] Average weighted RMSE: " + meanRMSEs
+                    + "\t(" + utils.getStandardDeviation(alRMSEs) + ")\n"
+                    + "[score_training] Average weighted RAE: " + meanRAEs
+                    + "\t(" + utils.getStandardDeviation(alRAEs) + ")\n"
+                    + "[score_training] Average weighted RRSE: " + meanRRSEs
+                    + "\t(" + utils.getStandardDeviation(alRRSEs) + ")";
         }
 
         public void computeMeans() {
