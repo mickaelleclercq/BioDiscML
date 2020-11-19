@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.jar.Attributes;
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.analysis.integration.TrapezoidIntegrator;
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
@@ -249,6 +250,11 @@ public class Weka_module {
             // load data
             ConverterUtils.DataSource source = new ConverterUtils.DataSource(ARFFfile);
             Instances data = source.getDataSet();
+            int numberOfFolds = 10;
+            //reduc numberOfFolds if needed
+            if (data.numInstances() < numberOfFolds) {
+                numberOfFolds = data.numInstances();
+            }
 
             //set last attribute as index
             if (data.classIndex() == -1) {
@@ -267,7 +273,7 @@ public class Weka_module {
 
             // cross validation 10 times on the model
             Evaluation eval = new Evaluation(data);
-            eval.crossValidateModel(model, data, 10, new Random(1));
+            eval.crossValidateModel(model, data, numberOfFolds, new Random(1));
 
             //output classification results
             //System.out.println(eval.toSummaryString());
@@ -577,6 +583,7 @@ public class Weka_module {
                 long s = Duration.between(start, finish).toMillis();
                 System.out.println(" in " + s + "ms");
             }
+
             //return
             if (classification) {
                 return new ClassificationResultsObject(eval, sb, data, model);
@@ -1583,9 +1590,15 @@ public class Weka_module {
         try {
             //load model
             for (String s : model.toString().split("\n")) {
-                if (s.startsWith("@attribute")) {
+                if (s.startsWith("@attribute '")) {
+                    s = s.replace("@attribute '", "").trim();
+                    s = s.substring(0, s.lastIndexOf("' {"));
+                    al.add(s);
+                } else if (s.startsWith("@attribute")) {
                     //hm.put(s.split(" ")[1], s.split(" ")[2]); //feature_name, feature_type
-                    al.add(s.split(" ")[1]);
+                    s = s.replace("@attribute ", "").trim();
+                    s = s.substring(0, s.lastIndexOf(" {"));
+                    al.add(s);
                 }
             }
         } catch (Exception e) {
@@ -2075,9 +2088,11 @@ public class Weka_module {
             dataset = data;
             evaluation = eval;
 
-            try {
-                parsePredictions(sb);
-            } catch (Exception e) {
+            if (!sb.toString().isEmpty()) {
+                try {
+                    parsePredictions(sb);
+                } catch (Exception e) {
+                }
             }
             //getFeatures(data);
             getFeatures(classifier);
@@ -2235,13 +2250,20 @@ public class Weka_module {
             model = classifier;
             getFeaturesAndClasses(classifier);
 
-            try {
-                parsePredictions(sb);
-            } catch (Exception e) {
-                if (Main.debug) {
-                    e.printStackTrace();
-                }
+            if (!sb.toString().isEmpty()) {
+                try {
+                    parsePredictions(sb);
+                } catch (Exception e) {
+                    try {
+                        parsePredictions2(sb);
+                    } catch (Exception e2) {
+                        if (Main.debug) {
+                            e.printStackTrace();
+                            e2.printStackTrace();
+                        }
+                    }
 
+                }
             }
 
             //measures
@@ -2395,6 +2417,54 @@ public class Weka_module {
                     ID = tab[6];
                 }
                 predictions.append(ID.replace("(", "").replace(")", "") + "\t" + actual + "\t" + predicted + "\t" + error + "\t" + prob.replace(",", "\t") + "\n");
+            }
+
+        }
+
+        // in case of different format
+        private void parsePredictions2(StringBuffer sb) {
+            String lines[] = sb.toString().split("\n");
+
+            //skip header
+            int a = 0;
+            if (lines[0].trim().startsWith("inst#")) {
+                a = 1;
+            }
+
+            //get predictions
+            for (int i = a; i < lines.length; i++) {
+                String p = lines[i].trim().replaceAll(" +", "\t");
+                String tab[] = p.split("\t");
+                String inst = tab[0];
+                String actual = tab[1].split(":")[1];
+                String predicted = tab[2].split(":")[1];
+                String error;
+                String prob;
+                String ID;
+                if (tab.length == 4) {
+                    if (actual.contains("?")) {
+                        error = "?";
+                    } else {
+                        error = "No";
+                    }
+                    prob = tab[3];
+                    try {
+                        ID = tab[4];
+                    } catch (Exception e) {
+                        ID = "";
+                    }
+                } else {
+                    error = "Yes";
+                    prob = tab[4];
+                    try {
+                        ID = tab[5];
+                    } catch (Exception e) {
+                        ID = "";
+                    }
+                }
+                predictions.append(ID.replace("(", "").replace(")", "") + "\t"
+                        + actual + "\t" + predicted + "\t" + error + "\t" + prob.replace(",", "\t") + "\n");
+
             }
 
         }
