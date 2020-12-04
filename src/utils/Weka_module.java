@@ -2396,27 +2396,33 @@ public class Weka_module {
             //get predictions
             for (int i = 0; i < lines.length; i++) {
                 String p = lines[i].replaceAll(" +", "\t");
-                String tab[] = p.split("\t");
-                String inst = tab[1];
-                String actual = tab[2].split(":")[1];
-                String predicted = tab[3].split(":")[1];
-                String error;
-                String prob;
-                String ID;
-                if (tab.length == 6) {
-                    if (actual.contains("?")) {
-                        error = "?";
-                    } else {
-                        error = "No";
-                    };
-                    prob = tab[4];
-                    ID = tab[5];
-                } else {
-                    error = "Yes";
-                    prob = tab[5];
-                    ID = tab[6];
+                if (!p.trim().startsWith("inst#")) {
+                    String tab[] = p.split("\t");
+                    String inst = tab[1];
+                    try {
+                        String actual = tab[2].split(":")[1];
+                        String predicted = tab[3].split(":")[1];
+                        String error;
+                        String prob;
+                        String ID;
+                        if (tab.length == 6) {
+                            if (actual.contains("?")) {
+                                error = "?";
+                            } else {
+                                error = "No";
+                            };
+                            prob = tab[4];
+                            ID = tab[5];
+                        } else {
+                            error = "Yes";
+                            prob = tab[5];
+                            ID = tab[6];
+                        }
+                        predictions.append(ID.replace("(", "").replace(")", "") + "\t" + actual + "\t" + predicted + "\t" + error + "\t" + prob.replace(",", "\t") + "\n");
+                    } catch (Exception e) {
+                        //e.printStackTrace();
+                    }
                 }
-                predictions.append(ID.replace("(", "").replace(")", "") + "\t" + actual + "\t" + predicted + "\t" + error + "\t" + prob.replace(",", "\t") + "\n");
             }
 
         }
@@ -2433,37 +2439,42 @@ public class Weka_module {
 
             //get predictions
             for (int i = a; i < lines.length; i++) {
+
                 String p = lines[i].trim().replaceAll(" +", "\t");
                 String tab[] = p.split("\t");
-                String inst = tab[0];
-                String actual = tab[1].split(":")[1];
-                String predicted = tab[2].split(":")[1];
-                String error;
-                String prob;
-                String ID;
-                if (tab.length == 4) {
-                    if (actual.contains("?")) {
-                        error = "?";
+                try {
+                    String inst = tab[0];
+                    String actual = tab[1].split(":")[1];
+                    String predicted = tab[2].split(":")[1];
+                    String error;
+                    String prob;
+                    String ID;
+                    if (tab.length == 4) {
+                        if (actual.contains("?")) {
+                            error = "?";
+                        } else {
+                            error = "No";
+                        }
+                        prob = tab[3];
+                        try {
+                            ID = tab[4];
+                        } catch (Exception e) {
+                            ID = "";
+                        }
                     } else {
-                        error = "No";
+                        error = "Yes";
+                        prob = tab[4];
+                        try {
+                            ID = tab[5];
+                        } catch (Exception e) {
+                            ID = "";
+                        }
                     }
-                    prob = tab[3];
-                    try {
-                        ID = tab[4];
-                    } catch (Exception e) {
-                        ID = "";
-                    }
-                } else {
-                    error = "Yes";
-                    prob = tab[4];
-                    try {
-                        ID = tab[5];
-                    } catch (Exception e) {
-                        ID = "";
-                    }
+                    predictions.append(ID.replace("(", "").replace(")", "") + "\t"
+                            + actual + "\t" + predicted + "\t" + error + "\t" + prob.replace(",", "\t") + "\n");
+                } catch (Exception e) {
+                    //e.printStackTrace();
                 }
-                predictions.append(ID.replace("(", "").replace(")", "") + "\t"
-                        + actual + "\t" + predicted + "\t" + error + "\t" + prob.replace(",", "\t") + "\n");
 
             }
 
