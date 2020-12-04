@@ -217,6 +217,7 @@ public class AdaptDatasetToTraining {
             ///////PRINT CONTENT
             TreeMap<String, Integer> tm = new TreeMap<>();
             tm.putAll(al_tables.get(0).hmIDsList);
+            int existing_spaces = 0;
             for (String id : tm.keySet()) {
                 if (hm_ids.containsKey(id.toLowerCase()) && !id.equals(Main.mergingID.toLowerCase())) {
                     // if (hm_ids.containsKey(id) && !id.equals(Main.mergingID)) {
@@ -235,10 +236,18 @@ public class AdaptDatasetToTraining {
                             }
                         }
                     }
-                    pw.print("\t" + myClass.get(al_tables.get(classIndex).hmIDsList.get(id)));
+                    String classe = myClass.get(al_tables.get(classIndex).hmIDsList.get(id));
+                    if (classe.contains(" ")) {
+                        existing_spaces++;
+                    }
+                    classe = classe.replace(" ", "_");
+                    pw.print("\t" + classe);
                     //pw.print("\t" + myClass.get(idIndex).replace("1", "true").replace("0", "false"));
                     pw.println();
                 }
+            }
+            if (existing_spaces > 0) {
+                System.out.println("Spaces detected in class label. They were replaced by _");
             }
             pw.flush();
 
