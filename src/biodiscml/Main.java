@@ -20,6 +20,7 @@ import java.util.HashMap;
 public class Main {
 
     public static boolean debug = false;
+    public static boolean debug2 = false;
     public static boolean isClassification = true;
 
     public static String wd = "";
