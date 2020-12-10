@@ -620,7 +620,7 @@ public class Training {
                 String loocvOut = "";
                 if (Main.loocv) {
                     if (Main.debug) {
-                        System.out.println("LOOCV Train set " + Main.bootstrapAndRepeatedHoldoutFolds + " times");
+                        System.out.println("\tLOOCV Train set " + Main.bootstrapAndRepeatedHoldoutFolds + " times");
                     }
                     Object oLoocv;
                     if (isClassification) {
@@ -647,7 +647,7 @@ public class Training {
 
                 } else {
                     if (isClassification) {
-                        loocvOut = "\t" + "\t" + "\t" + "\t" + "\t" + "\t";
+                        loocvOut = "\t" + "\t" + "\t" + "\t" + "\t" + "\t" + "\t";
                     } else {
                         loocvOut = "\t" + "\t" + "\t" + "\t";
                     }
@@ -655,7 +655,7 @@ public class Training {
                 //Repeated Holdout
                 Weka_module.evaluationPerformancesResultsObject eproRHTrain = new Weka_module.evaluationPerformancesResultsObject();
                 if (Main.debug) {
-                    System.out.println("Repeated Holdout on Train set " + Main.bootstrapAndRepeatedHoldoutFolds + " times");
+                    System.out.println("\tRepeated Holdout on Train set " + Main.bootstrapAndRepeatedHoldoutFolds + " times");
                 }
                 if (isClassification) {
                     for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
@@ -690,7 +690,7 @@ public class Training {
 
                 //BOOTSTRAP AND BOOTSTRAP .632+ rule TRAIN
                 if (Main.debug) {
-                    System.out.println("Bootstrapping on Train set " + Main.bootstrapAndRepeatedHoldoutFolds + " times");
+                    System.out.println("\tBootstrapping on Train set " + Main.bootstrapAndRepeatedHoldoutFolds + " times");
                 }
                 double bootstrapTrain632plus = 1000;
                 Weka_module.evaluationPerformancesResultsObject eproBSTrain
@@ -729,12 +729,12 @@ public class Training {
 
                 // TEST SET
                 if (Main.debug) {
-                    System.out.println("Evalutation on Test set ");
+                    System.out.println("\tEvalutation on Test set ");
                 }
                 Weka_module.testResultsObject tro = new Weka_module.testResultsObject();
                 String testResults = null;
                 if (isClassification) {
-                    testResults = "\t" + "\t" + "\t" + "\t" + "\t" + "\t";
+                    testResults = "\t" + "\t" + "\t" + "\t" + "\t" + "\t" + "\t";
                 } else {
                     testResults = "\t" + "\t" + "\t" + "\t";
                 }
@@ -784,7 +784,7 @@ public class Training {
 
                 //REPEATED HOLDOUT TRAIN_TEST
                 if (Main.debug) {
-                    System.out.println("Repeated Holdout on Train AND Test set "
+                    System.out.println("\tRepeated Holdout on Train AND Test set "
                             + Main.bootstrapAndRepeatedHoldoutFolds + " times");
                 }
                 Weka_module.evaluationPerformancesResultsObject eproRHTrainTest
@@ -836,7 +836,7 @@ public class Training {
 
                 //BOOTSTRAP TRAIN_TEST AND BOOTSTRAP .632+ rule TRAIN_TEST
                 if (Main.debug) {
-                    System.out.println("Bootstrapping on Train AND Test set " + Main.bootstrapAndRepeatedHoldoutFolds + " times");
+                    System.out.println("\tBootstrapping on Train AND Test set " + Main.bootstrapAndRepeatedHoldoutFolds + " times");
                 }
                 double bootstrapTrainTest632plus = 1000;
                 Weka_module.evaluationPerformancesResultsObject eproBSTrainTest = new Weka_module.evaluationPerformancesResultsObject();
