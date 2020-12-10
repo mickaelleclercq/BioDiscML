@@ -458,7 +458,7 @@ public class Weka_module {
 
             //evaluation
             Instant start = null;
-            if (Main.debug) {
+            if (Main.debug2) {
                 System.out.print("\tEvaluation of model with 10CV...");
                 start = Instant.now();
             }
@@ -471,7 +471,7 @@ public class Weka_module {
             //10 fold cross validation
             eval.crossValidateModel(model, data, numberOfFolds, new Random(1), pt, new Range("first,last"), true);
 
-            if (Main.debug) {
+            if (Main.debug2) {
                 Instant finish = Instant.now();
                 long s = Duration.between(start, finish).toMillis();
                 System.out.println(" in " + s + "ms");
@@ -570,7 +570,7 @@ public class Weka_module {
 
             //evaluation
             Instant start = null;
-            if (Main.debug) {
+            if (Main.debug2) {
                 System.out.print("\tEvaluation of model [" + seed + "]...");
                 start = Instant.now();
             }
@@ -578,7 +578,7 @@ public class Weka_module {
             Evaluation eval = new Evaluation(test);
             eval.evaluateModel(model, test);
 
-            if (Main.debug) {
+            if (Main.debug2) {
                 Instant finish = Instant.now();
                 long s = Duration.between(start, finish).toMillis();
                 System.out.println(" in " + s + "ms");
@@ -648,7 +648,7 @@ public class Weka_module {
 
             //evaluation
             Instant start = null;
-            if (Main.debug) {
+            if (Main.debug2) {
                 System.out.print("\tEvaluation of model [" + seed + "]...");
                 start = Instant.now();
             }
@@ -674,7 +674,7 @@ public class Weka_module {
             Evaluation eval = new Evaluation(data);
             eval.evaluateModel(model, testSet);
 
-            if (Main.debug) {
+            if (Main.debug2) {
                 Instant finish = Instant.now();
                 long s = Duration.between(start, finish).toMillis();
                 double d = s / 1000;
@@ -1597,7 +1597,12 @@ public class Weka_module {
                 } else if (s.startsWith("@attribute")) {
                     //hm.put(s.split(" ")[1], s.split(" ")[2]); //feature_name, feature_type
                     s = s.replace("@attribute ", "").trim();
-                    s = s.substring(0, s.lastIndexOf(" {"));
+                    try {
+                        s = s.substring(0, s.lastIndexOf(" {"));
+                    } catch (Exception e) {
+                        s = s.substring(0, s.lastIndexOf(" "));
+                    }
+
                     al.add(s);
                 }
             }
@@ -2645,7 +2650,7 @@ public class Weka_module {
 
         public String toStringClassification() {
             if (meanACCs == null) {
-                return "\t\t\t\t\t\t";
+                return "\t\t\t\t\t\t\t";
             } else {
                 return meanACCs + "\t"
                         + meanAUCs + "\t"
