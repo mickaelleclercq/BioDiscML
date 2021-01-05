@@ -21,11 +21,11 @@ public class Main {
 
     public static boolean debug = false;
     public static boolean debug2 = false;
+    public static boolean printFailedModels = false; //print errors of failed models
     public static boolean isClassification = true;
 
     public static String wd = "";
     public static String project = "myProject";
-    public static String CVfolder = "tmpCV"; //cross validation folder. Disabled
 
     //program functions
     public static String configFile = ""; //config file
@@ -401,7 +401,6 @@ public class Main {
                     setOption(option, value);
                 }
             }
-            CVfolder = wd + CVfolder;
 
         } catch (Exception e) {
             System.err.println("Parsing error in config file at line " + line);
@@ -419,6 +418,9 @@ public class Main {
             case "debug":
                 debug = Boolean.valueOf(value.trim());
                 break;
+            case "debug2":
+                debug2 = Boolean.valueOf(value.trim());
+                break;
             case "wd":
                 wd = value.trim();
                 if (!wd.endsWith(File.separator)) {
@@ -428,12 +430,6 @@ public class Main {
             case "project":
                 project = value.trim() + "_";
                 System.out.println("Project name: " + project);
-                break;
-            case "cvfolder":
-                CVfolder = value.trim();
-//                            if (!trainingBestModel) {
-//                                System.out.println("Cross validation folder:" + CVfolder);
-//                            }
                 break;
             case "trainFile":
                 try {
@@ -518,7 +514,6 @@ public class Main {
                     default:
                         break;
                 }
-
                 break;
             case "rcmd":
                 switch (value.split(",").length) {
@@ -538,6 +533,7 @@ public class Main {
                     default:
                         break;
                 }
+                break;
             case "coptimizers":
                 classificationOptimizers = value.trim().toLowerCase();
                 break;

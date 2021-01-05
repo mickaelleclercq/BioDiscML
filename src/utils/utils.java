@@ -18,7 +18,6 @@ import java.nio.channels.FileChannel;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.TreeMap;
@@ -53,11 +52,16 @@ public class utils {
             separator = detectSeparator(file);
         }
         ArrayList<String[]> altable = new ArrayList<>();
+        int cpt = 1;
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
             while (br.ready()) {
+                if (Main.debug2) {
+                    System.out.println("Reading line " + cpt++);
+                }
                 altable.add(br.readLine().split(separator));
             }
+            br.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -116,8 +120,7 @@ public class utils {
     public static String detectSeparator(String infile) {
         if (Main.debug) {
             //System.out.println("Delimiter not specified, auto-detection 10 first lines among these delimiters: \"\\t\" \" \" \";\" \",\" \"~\" \":\" \"/\" \"\\|\"");
-            System.out.println("Delimiter not specified, auto-detection in the 10 first lines...");
-
+            System.out.print("Delimiter not specified, auto-detection in the 10 first lines...");
         }
         String delimiter = "";
         String potentialDelimiters[] = {"\\t", " ", ";", ",", "~", ":", "/", "\\|"};
@@ -151,7 +154,7 @@ public class utils {
             }
         }
         if (delimiter.isEmpty()) {
-            System.err.println("[error] CSV separator not detected. Guessing there is just one column. "
+            System.err.print("[error] CSV separator not detected. Guessing there is just one column. "
                     + "If not, change your CSV separator to a standard one (ex: tabulation or comma), or check the file consistency");
             delimiter = " ";
         }

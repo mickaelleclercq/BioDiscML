@@ -211,7 +211,7 @@ public class Training {
                 //brute force classification, try everything in the provided classifiers and optimizers
                 for (String cmd : Main.classificationBruteForceCommands) {
                     String classifier = cmd.split(" ")[0];
-                    String options = cmd.replace(classifier, "");
+                    String options = cmd.replace(classifier, "").trim();
                     addClassificationToQueue(classifier, options);
                 }
             }
@@ -366,6 +366,9 @@ public class Training {
                             if (!s.contains("ERROR")) {
                                 pw.println(s);
                                 pw.flush();
+                            } else if (Main.printFailedModels) {
+                                pw.println(s);
+                                pw.flush();
                             }
                             return s;
                         })
@@ -387,6 +390,8 @@ public class Training {
                 alClassifiers.stream().map((classif) -> {
                     String s = StepWiseFeatureSelectionTraining(classif[0], classif[1], classif[2], classif[3]);
                     if (!s.contains("ERROR")) {
+                        pw.println(s);
+                    } else if (Main.printFailedModels) {
                         pw.println(s);
                     }
                     return classif;
@@ -460,7 +465,7 @@ public class Training {
                 if (Main.debug) {
                     System.out.println("SHORT TEST FAILED");
                 }
-                return "ERROR";
+                return "ERROR\t" + o.toString();
             }
             if (Main.debug) {
                 System.out.println("\tGoing to Stepwise evaluations");
@@ -1209,10 +1214,13 @@ public class Training {
                 if (Main.debug) {
                     System.err.println(o);
                 }
+                if (o.toString().equals("null")) {
+                    out += "\t " + classifier + " " + classifier_options + " | " + searchMethod + " | Error probably because of number of features inferior to topX";
+                }
             }
 
         } catch (Exception e) {
-            out = "ERROR";
+            out = "ERROR\t" + e.getMessage();
             cptFailed++;
             if (Main.debug) {
                 e.printStackTrace();

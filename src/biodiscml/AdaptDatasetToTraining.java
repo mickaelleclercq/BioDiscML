@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.TreeMap;
 import utils.Weka_module;
 import utils.utils.TableObject;
-import static utils.utils.readTable;
+import static utils.utils.*;
 
 /**
  *
@@ -169,11 +169,10 @@ public class AdaptDatasetToTraining {
                                     + "because 100% of values are missing");
                         } else {
                             System.out.println("Removing feature " + s + " "
-                                    + "because 100% of values have the same value "
+                                    + "because 100% of values are the same "
                                     + "{" + hm.keySet().toArray()[0] + "}");
                         }
                     }
-
                 }
                 cpt++;
             }
