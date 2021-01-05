@@ -610,6 +610,9 @@ public class Main {
             case "modelFile":
                 modelFile = value.trim();
                 break;
+            case "printFailedModels":
+                printFailedModels = Boolean.valueOf(value.trim());
+                break;
 
         }
     }
