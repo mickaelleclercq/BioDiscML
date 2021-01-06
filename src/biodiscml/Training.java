@@ -1220,7 +1220,7 @@ public class Training {
             }
 
         } catch (Exception e) {
-            out = "ERROR\t" + e.getMessage();
+            out = "ERROR\t" + classifier + " " + classifier_options + " | " + searchMethod + " | " + e.getMessage();
             cptFailed++;
             if (Main.debug) {
                 e.printStackTrace();
