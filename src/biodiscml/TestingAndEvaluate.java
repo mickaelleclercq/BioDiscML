@@ -32,12 +32,8 @@ public class TestingAndEvaluate {
         Weka_module weka = new Weka_module();
         weka.setCSVFile(new File(TEST_FILE));
 
-        if (missingClass) {
-            weka.csvToArff(Main.isClassification);
-            getClassesFromModel(modelFile, weka);
-        } else {
-            weka.csvToArff(Main.isClassification);
-        }
+        weka.csvToArff(Main.isClassification);
+        getClassesFromModel(modelFile, weka);
         weka.setDataFromArff();
 
         Weka_module.ClassificationResultsObject cr = null;
