@@ -1163,7 +1163,7 @@ public class BestModelSelectionAndReport {
         public regressionObject() {
         }
 
-        private regressionObject(String line) {
+        public regressionObject(String line) {
             identifier = line.split("\t")[hmResultsHeaderNames.get("ID")];
             classifier = line.split("\t")[hmResultsHeaderNames.get("classifier")];
             options = line.split("\t")[hmResultsHeaderNames.get("Options")];

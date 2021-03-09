@@ -309,7 +309,7 @@ public class Weka_module {
             data.randomize(new Random());
 
             //// Percent split
-            int trainSize = (int) Math.round(data.numInstances() * 90 / 100);
+            int trainSize = (int) Math.round(data.numInstances() * 95 / 100);
             int testSize = data.numInstances() - trainSize;
             data = new Instances(data, trainSize, testSize);
 
@@ -1274,7 +1274,6 @@ public class Weka_module {
                             }
                         }
                     }
-
                 }
                 data = newData;
             }

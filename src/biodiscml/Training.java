@@ -4,7 +4,9 @@
  */
 package biodiscml;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
@@ -13,6 +15,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Random;
 import org.apache.commons.math3.stat.descriptive.moment.*;
 import utils.Weka_module;
@@ -217,19 +220,23 @@ public class Training {
             }
 
             System.out.print("Feature selection and ranking...");
-            //ATTRIBUTE SELECTION for classification
-            weka.attributeSelectionByInfoGainRankingAndSaveToCSV(featureSelectionFile);
-            //get the rank of attributes
-            ranking = weka.featureRankingForClassification();
-            System.out.println("[done]");
+            if (new File(featureSelectionFile).exists() && !Main.resumeTraining) {
+                //ATTRIBUTE SELECTION for classification
+                weka.attributeSelectionByInfoGainRankingAndSaveToCSV(featureSelectionFile);
+                //get the rank of attributes
+                ranking = weka.featureRankingForClassification();
+                System.out.println("[done]");
 
-            //reset arff and keep compatible header
-            weka.setCSVFile(new File(featureSelectionFile));
-            weka.csvToArff(isClassification);
-            weka.makeCompatibleARFFheaders(dataToTrainModel.replace("data_to_train.csv", "data_to_train.arff"),
-                    featureSelectionFile.replace("infoGain.csv", "infoGain.arff"));
-            weka.setARFFfile(featureSelectionFile.replace("infoGain.csv", "infoGain.arff"));
-            weka.setDataFromArff();
+                //reset arff and keep compatible header
+                weka.setCSVFile(new File(featureSelectionFile));
+                weka.csvToArff(isClassification);
+                weka.makeCompatibleARFFheaders(dataToTrainModel.replace("data_to_train.csv", "data_to_train.arff"),
+                        featureSelectionFile.replace("infoGain.csv", "infoGain.arff"));
+                weka.setARFFfile(featureSelectionFile.replace("infoGain.csv", "infoGain.arff"));
+                weka.setDataFromArff();
+            } else {
+                System.out.print("\nFeature selection and ranking already done... skipped by resumeTraining");
+            }
 
         } else {
             //REGRESSION
@@ -338,22 +345,76 @@ public class Training {
 
             //ATTRIBUTE SELECTION for regression
             System.out.print("Selecting attributes and ranking by RelieFF...");
-            weka.attributeSelectionByRelieFFAndSaveToCSV(featureSelectionFile);
-            System.out.println("[done]");
+            if (new File(featureSelectionFile).exists() && !Main.resumeTraining) {
+                weka.attributeSelectionByRelieFFAndSaveToCSV(featureSelectionFile);
+                System.out.println("[done]");
 
-            //reset arff and keep compatible header
-            weka.setCSVFile(new File(featureSelectionFile));
-            weka.csvToArff(isClassification);
-            weka.makeCompatibleARFFheaders(dataToTrainModel.replace("data_to_train.csv", "data_to_train.arff"),
-                    featureSelectionFile.replace("RELIEFF.csv", "RELIEFF.arff"));
-            weka.setARFFfile(featureSelectionFile.replace("RELIEFF.csv", "RELIEFF.arff"));
-            weka.setDataFromArff();
+                //reset arff and keep compatible header
+                weka.setCSVFile(new File(featureSelectionFile));
+                weka.csvToArff(isClassification);
+                weka.makeCompatibleARFFheaders(dataToTrainModel.replace("data_to_train.csv", "data_to_train.arff"),
+                        featureSelectionFile.replace("RELIEFF.csv", "RELIEFF.arff"));
+                weka.setARFFfile(featureSelectionFile.replace("RELIEFF.csv", "RELIEFF.arff"));
+                weka.setDataFromArff();
+            } else {
+                System.out.print("Selecting attributes and ranking by RelieFF already done... skipped by resumeTraining");
+            }
+
+        }
+        //resume training, remove from alClassifier all classifiers already trained
+        if (Main.resumeTraining) {
+            HashMap<String, String> hm = new HashMap<>();
+            //get data
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(resultsFile));
+                br.readLine(); //skip header
+                while (br.ready()) {
+                    String line[] = br.readLine().split("\t");
+                    if (!line[0].startsWith("ERROR")) {
+                        String s[] = new String[4];
+                        s[0] = line[1];
+                        s[1] = line[2];
+                        s[2] = line[3].toLowerCase();
+                        s[3] = line[4].toLowerCase();
+                        hm.put(line[1] + "\t" + line[2] + "\t" + line[3].toLowerCase() + "\t" + line[4].toLowerCase(), "");
+                    }
+
+                }
+            } catch (Exception e) {
+                if (Main.debug) {
+                    e.printStackTrace();
+                }
+            }
+            //remove from alClassifiers
+            int alClassifiersBeforeRemoval = alClassifiers.size();
+            for (int i = 0; i < alClassifiers.size(); i++) {
+                String s = alClassifiers.get(i)[0] + "\t" + alClassifiers.get(i)[1] + "\t" + alClassifiers.get(i)[2] + "\t" + alClassifiers.get(i)[3];
+                if (hm.containsKey(s)) {
+                    alClassifiers.remove(i);
+                }
+            }
+            int alClassifiersAfterRemoval = alClassifiers.size();
+            int totalRemoved = alClassifiersBeforeRemoval - alClassifiersAfterRemoval;
+            if (Main.debug) {
+                System.out.println("Total removed from alClassifier after resumeTraining = " + totalRemoved);
+            }
+
+            System.out.println("ResumeTraining: Remains " + alClassifiersAfterRemoval
+                    + "classifiers to train on the " + alClassifiersBeforeRemoval);
+
         }
 
         try {
             //PREPARE OUTPUT
-            PrintWriter pw = new PrintWriter(new FileWriter(resultsFile));
-            pw.println(resultsSummaryHeader);
+            PrintWriter pw;
+            if (Main.resumeTraining) {
+                pw = new PrintWriter(new FileWriter(resultsFile, true));
+                pw.println("Resumed here");
+                pw.flush();
+            } else {
+                pw = new PrintWriter(new FileWriter(resultsFile));
+                pw.println(resultsSummaryHeader);
+            }
 
             //EXECUTE IN PARRALLEL
             System.out.println("total classifiers to test: " + alClassifiers.size());

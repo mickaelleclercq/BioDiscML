@@ -84,6 +84,8 @@ public class Main {
     public static double maxRankingScoreDifference = 0.005; //for correlated gene retreiving
     public static boolean loocv = true;
     public static boolean computeBestModel = true;
+
+    public static boolean resumeTraining = false;
     //benchmark
     public static String bench_AUC = "";
 
@@ -154,8 +156,11 @@ public class Main {
                 //put data together in the same file for ML
                 System.out.println("## Preprocessing of the input file(s)");
                 String CLASSIFICATION_FILE = wd + project + "a.classification.data_to_train.csv"; //output of AdaptDatasetToWeka()
-                AdaptDatasetToTraining c = new AdaptDatasetToTraining(CLASSIFICATION_FILE);
-
+                if (new File(CLASSIFICATION_FILE).exists() && !resumeTraining) {
+                    AdaptDatasetToTraining c = new AdaptDatasetToTraining(CLASSIFICATION_FILE);
+                } else {
+                    System.out.println("Preprocessing of the input file(s) already done... skipped by resumeTraining");
+                }
                 //execute feature selection and training
                 System.out.println("## Feature selection and training");
                 String FEATURE_SELECTION_FILE = wd + project + "b.featureSelection.infoGain.csv"; // output of Training(), feature selection result
@@ -176,7 +181,11 @@ public class Main {
                 //put data together in the same file for ML
                 System.out.println("## Preprocessing of the input file(s)");
                 String REGRESSION_FILE = wd + project + "a.regression.data_to_train.csv";
-                AdaptDatasetToTraining c = new AdaptDatasetToTraining(REGRESSION_FILE);
+                if (new File(REGRESSION_FILE).exists() && !resumeTraining) {
+                    AdaptDatasetToTraining c = new AdaptDatasetToTraining(REGRESSION_FILE);
+                } else {
+                    System.out.println("Preprocessing of the input file(s) already done... skipped by resumeTraining");
+                }
 
                 //execute training
                 System.out.println("## Feature selection and training");
@@ -291,7 +300,7 @@ public class Main {
         boolean prefixesDefined = false;
         for (String s : options) {
             if (s.equals("help")) {
-                System.out.println("Check readme.md file or https://github.com/mickaelleclercq/BioDiscML");
+                System.out.println("Read readme.md file or https://github.com/mickaelleclercq/BioDiscML");
                 System.exit(0);
             }
             if (s.contains("=")) {
@@ -612,6 +621,9 @@ public class Main {
                 break;
             case "printFailedModels":
                 printFailedModels = Boolean.valueOf(value.trim());
+                break;
+            case "resumeTraining":
+                resumeTraining = Boolean.valueOf(value.trim());
                 break;
 
         }
