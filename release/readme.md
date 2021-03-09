@@ -61,6 +61,12 @@ numberOfBestModels=1
 numberOfBestModelsSortingMetric=TRAIN_TEST_RH_MCC
 ```
 
+#### Resume an execution
+Just add -resumeTraining=true in the command
+```Bash
+java -jar biodiscml.jar -config config.conf -train -resumeTraining=true
+```
+
 #### Choose best model(s)
 ```Bash
 java -jar biodiscml.jar -config config.conf -bestmodel 
