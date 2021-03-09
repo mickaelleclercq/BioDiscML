@@ -159,6 +159,7 @@ public class Main {
                 if (new File(CLASSIFICATION_FILE).exists() && resumeTraining) {
                     System.out.println("Preprocessing of the input file(s) already done... skipped by resumeTraining");
                 } else {
+
                     AdaptDatasetToTraining c = new AdaptDatasetToTraining(CLASSIFICATION_FILE);
                 }
                 //execute feature selection and training
