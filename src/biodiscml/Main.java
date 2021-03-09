@@ -156,10 +156,10 @@ public class Main {
                 //put data together in the same file for ML
                 System.out.println("## Preprocessing of the input file(s)");
                 String CLASSIFICATION_FILE = wd + project + "a.classification.data_to_train.csv"; //output of AdaptDatasetToWeka()
-                if (new File(CLASSIFICATION_FILE).exists() && !resumeTraining) {
-                    AdaptDatasetToTraining c = new AdaptDatasetToTraining(CLASSIFICATION_FILE);
-                } else {
+                if (new File(CLASSIFICATION_FILE).exists() && resumeTraining) {
                     System.out.println("Preprocessing of the input file(s) already done... skipped by resumeTraining");
+                } else {
+                    AdaptDatasetToTraining c = new AdaptDatasetToTraining(CLASSIFICATION_FILE);
                 }
                 //execute feature selection and training
                 System.out.println("## Feature selection and training");
@@ -181,10 +181,10 @@ public class Main {
                 //put data together in the same file for ML
                 System.out.println("## Preprocessing of the input file(s)");
                 String REGRESSION_FILE = wd + project + "a.regression.data_to_train.csv";
-                if (new File(REGRESSION_FILE).exists() && !resumeTraining) {
-                    AdaptDatasetToTraining c = new AdaptDatasetToTraining(REGRESSION_FILE);
-                } else {
+                if (new File(REGRESSION_FILE).exists() && resumeTraining) {
                     System.out.println("Preprocessing of the input file(s) already done... skipped by resumeTraining");
+                } else {
+                    AdaptDatasetToTraining c = new AdaptDatasetToTraining(REGRESSION_FILE);
                 }
 
                 //execute training
