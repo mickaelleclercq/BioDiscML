@@ -220,7 +220,9 @@ public class Training {
             }
 
             System.out.print("Feature selection and ranking...");
-            if (new File(featureSelectionFile).exists() && !Main.resumeTraining) {
+            if (new File(featureSelectionFile).exists() && Main.resumeTraining) {
+                System.out.print("\nFeature selection and ranking already done... skipped by resumeTraining");
+            } else {
                 //ATTRIBUTE SELECTION for classification
                 weka.attributeSelectionByInfoGainRankingAndSaveToCSV(featureSelectionFile);
                 //get the rank of attributes
@@ -234,8 +236,6 @@ public class Training {
                         featureSelectionFile.replace("infoGain.csv", "infoGain.arff"));
                 weka.setARFFfile(featureSelectionFile.replace("infoGain.csv", "infoGain.arff"));
                 weka.setDataFromArff();
-            } else {
-                System.out.print("\nFeature selection and ranking already done... skipped by resumeTraining");
             }
 
         } else {
@@ -345,7 +345,9 @@ public class Training {
 
             //ATTRIBUTE SELECTION for regression
             System.out.print("Selecting attributes and ranking by RelieFF...");
-            if (new File(featureSelectionFile).exists() && !Main.resumeTraining) {
+            if (new File(featureSelectionFile).exists() && Main.resumeTraining) {
+                System.out.print("Selecting attributes and ranking by RelieFF already done... skipped by resumeTraining");
+            } else {
                 weka.attributeSelectionByRelieFFAndSaveToCSV(featureSelectionFile);
                 System.out.println("[done]");
 
@@ -356,8 +358,6 @@ public class Training {
                         featureSelectionFile.replace("RELIEFF.csv", "RELIEFF.arff"));
                 weka.setARFFfile(featureSelectionFile.replace("RELIEFF.csv", "RELIEFF.arff"));
                 weka.setDataFromArff();
-            } else {
-                System.out.print("Selecting attributes and ranking by RelieFF already done... skipped by resumeTraining");
             }
 
         }
