@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import utils.Weka_module;
 
 /**
@@ -33,7 +34,7 @@ public class TestingAndEvaluate {
         weka.setCSVFile(new File(TEST_FILE));
 
         weka.csvToArff(Main.isClassification);
-        getClassesFromModel(modelFile, weka);
+        getClassesAndFeaturesFromModel(modelFile, weka);
         weka.setDataFromArff();
 
         Weka_module.ClassificationResultsObject cr = null;
@@ -74,9 +75,10 @@ public class TestingAndEvaluate {
      * @param TEST_FILE
      * @param TEST_RESULTS_FILE
      */
-    public void getClassesFromModel(String modelFile, Weka_module weka) {
+    public void getClassesAndFeaturesFromModel(String modelFile, Weka_module weka) {
         //get classes from model
         String classes = weka.getClassesFromClassifier(modelFile, false).get(0);
+        HashMap<String, String> hmFeatures = weka.getFullFeaturesFromClassifier(modelFile);
 
         //load model
         File arffFile = new File(weka.ARFFfile);
@@ -90,7 +92,14 @@ public class TestingAndEvaluate {
                 if (line.contains("@attribute class {")) {
                     pw.println(classes);
                 } else {
-                    pw.println(line);
+                    if (line.startsWith("@attribute Instance ")) {
+                        pw.println(line);
+                    } else if (line.startsWith("@attribute ") && line.contains("{") && line.contains("}")) {
+                        String featureName = line.replaceAll("\\{.*", "").replace(("@attribute"), "").trim();
+                        pw.println("@attribute " + featureName + " " + hmFeatures.get(featureName));
+                    } else {
+                        pw.println(line);
+                    }
                 }
             }
             pw.close();
