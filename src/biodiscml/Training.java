@@ -36,7 +36,7 @@ public class Training {
     public static String resultsSummaryHeader = "";
     public static int cptPassed = 0;
     public static int cptFailed = 0;
-    public boolean parrallel = true;
+    public boolean parrallel = false;
     public static String trainFileName = "";
     public static DecimalFormat df = new DecimalFormat();
 
@@ -378,7 +378,6 @@ public class Training {
                         s[3] = line[4].toLowerCase();
                         hm.put(line[1] + "\t" + line[2] + "\t" + line[3].toLowerCase() + "\t" + line[4].toLowerCase(), "");
                     }
-
                 }
             } catch (Exception e) {
                 if (Main.debug) {
@@ -532,6 +531,27 @@ public class Training {
                 System.out.println("\tGoing to Stepwise evaluations");
             }
 
+            //all features search
+            if (searchMethod.startsWith("all")) {
+                int top = ao.alAttributes.size();
+                //Create attribute list
+                for (int i = 0; i < top; i++) { //from ID to class (excluded)
+                    //add new attribute to the set of retainedAttributes
+                    ao.addNewAttributeToRetainedAttributes(i);
+                }
+                //TRAIN 10CV
+                o = weka.trainClassifier(classifier, classifier_options,
+                        ao.getRetainedAttributesIdClassInString(), isClassification, 10);
+
+                if (!(o instanceof String) || o == null) {
+                    if (isClassification) {
+                        cr = (Weka_module.ClassificationResultsObject) o;
+                    } else {
+                        rr = (Weka_module.RegressionResultsObject) o;
+                    }
+                }
+            }
+
             //TOP X features search
             if (searchMethod.startsWith("top")) {
                 int top = Integer.valueOf(searchMethod.replace("top", ""));
@@ -555,7 +575,6 @@ public class Training {
                 } else {
                     o = null;
                 }
-
             }
 
             //FORWARD AND FORWARD-BACKWARD search AND BACKWARD AND BACKWARD-FORWARD search
