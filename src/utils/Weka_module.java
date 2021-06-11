@@ -1611,6 +1611,39 @@ public class Weka_module {
         return al;
     }
 
+    public HashMap<String, String> getFullFeaturesFromClassifier(String modelFile) {
+        //HashMap<String, String> hm = new HashMap<>();
+        HashMap<String, String> hm = new HashMap<>();
+        try {
+            Classifier model = (Classifier) weka.core.SerializationHelper.read(modelFile);
+
+            //load model
+            for (String s : model.toString().split("\n")) {
+                if (s.startsWith("@attribute '")) {
+                    s = s.replace("@attribute '", "").trim();
+                    String attributeName = s.substring(0, s.lastIndexOf("' {")).trim();
+                    String attributeType = s.substring(s.indexOf("' {")).trim();
+                    hm.put("'"+attributeName+"'", attributeType);
+                } else if (s.startsWith("@attribute")) {
+                    //hm.put(s.split(" ")[1], s.split(" ")[2]); //feature_name, feature_type
+                    s = s.replace("@attribute ", "").trim();
+                    try {
+                        String attributeName = s.substring(0, s.lastIndexOf(" {")).trim();
+                        String attributeType = s.substring(s.indexOf(" {")).trim();
+                        hm.put(attributeName, attributeType);
+                    } catch (Exception e) {
+                        String attributeName = s.substring(0, s.lastIndexOf(" ")).trim();
+                        String attributeType = s.substring(s.indexOf(" ")).trim();
+                        hm.put(attributeName, attributeType);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return hm;
+    }
+
     public void saveFilteredDataToArff(String attributesToUse, boolean classification, String outfile) {
         try {
             // load data
