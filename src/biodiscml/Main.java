@@ -159,7 +159,6 @@ public class Main {
                 if (new File(CLASSIFICATION_FILE).exists() && resumeTraining) {
                     System.out.println("Preprocessing of the input file(s) already done... skipped by resumeTraining");
                 } else {
-
                     AdaptDatasetToTraining c = new AdaptDatasetToTraining(CLASSIFICATION_FILE);
                 }
                 //execute feature selection and training
@@ -626,7 +625,9 @@ public class Main {
             case "resumeTraining":
                 resumeTraining = Boolean.valueOf(value.trim());
                 break;
-
+            case "upsetr":
+                UpSetR = Boolean.valueOf(value.trim());
+                break;
         }
     }
 
