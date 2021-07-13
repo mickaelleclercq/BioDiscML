@@ -36,7 +36,7 @@ public class Training {
     public static String resultsSummaryHeader = "";
     public static int cptPassed = 0;
     public static int cptFailed = 0;
-    public boolean parrallel = false;
+    public boolean parrallel = true;
     public static String trainFileName = "";
     public static DecimalFormat df = new DecimalFormat();
 
