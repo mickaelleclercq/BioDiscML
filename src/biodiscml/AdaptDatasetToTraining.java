@@ -169,7 +169,7 @@ public class AdaptDatasetToTraining {
                                     + "because 100% of values are missing");
                         } else {
                             System.out.println("Removing feature " + s + " "
-                                    + "because 100% of values are the same "
+                                    + "because 100% of values are identical "
                                     + "{" + hm.keySet().toArray()[0] + "}");
                         }
                     }
