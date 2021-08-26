@@ -72,6 +72,7 @@ public class TestingAndEvaluate {
      *
      *
      * @param modelFile
+     * @param weka
      * @param TEST_FILE
      * @param TEST_RESULTS_FILE
      */
@@ -96,7 +97,11 @@ public class TestingAndEvaluate {
                         pw.println(line);
                     } else if (line.startsWith("@attribute ") && line.contains("{") && line.contains("}")) {
                         String featureName = line.replaceAll("\\{.*", "").replace(("@attribute"), "").trim();
-                        pw.println("@attribute " + featureName + " " + hmFeatures.get(featureName));
+                        if (hmFeatures.get(featureName) != null) {
+                            pw.println("@attribute " + featureName + " " + hmFeatures.get(featureName));
+                        } else {
+                            pw.println(line);
+                        }
                     } else {
                         pw.println(line);
                     }
