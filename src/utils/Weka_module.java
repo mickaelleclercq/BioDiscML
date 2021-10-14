@@ -1589,7 +1589,11 @@ public class Weka_module {
         try {
             //load model
             for (String s : model.toString().split("\n")) {
-                if (s.startsWith("@attribute '")) {
+                if (s.startsWith("@attribute '") && s.endsWith("numeric")){
+                    s = s.replace("@attribute '", "").trim();
+                    s = s.substring(0, s.lastIndexOf("'"));
+                    al.add(s);
+                }else if (s.startsWith("@attribute '")) {
                     s = s.replace("@attribute '", "").trim();
                     s = s.substring(0, s.lastIndexOf("' {"));
                     al.add(s);
