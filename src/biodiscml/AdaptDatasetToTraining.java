@@ -226,7 +226,7 @@ public class AdaptDatasetToTraining {
                         for (String s : tbo.getSortedHmDataKeyset()) {
                             if (!Main.hmExcludedFeatures.containsKey(s)) { //if it is not a rejected feature
                                 // print values and replace , by .
-                                String out = tbo.hmData.get(s).get(idIndex).replace(",", ".");
+                                String out = tbo.hmData.get(s).get(idIndex).replace(",", ".").trim();
                                 if (out.isEmpty() || out.equals("NA") || out.equals("na")
                                         || out.equals("N/A") || out.equals("n/a")) {
                                     out = "?";

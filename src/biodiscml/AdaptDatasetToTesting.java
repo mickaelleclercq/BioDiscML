@@ -164,7 +164,7 @@ public class AdaptDatasetToTesting {
                             if (hmModelFeatures.containsKey(feature)) {
                                 //pw.print("\t" + tbo.hmData.get(s).get(idIndex));
                                 // print values and replace , per .
-                                String out = tbo.hmData.get(s).get(idIndex).replace(",", ".");;
+                                String out = tbo.hmData.get(s).get(idIndex).replace(",", ".").trim();
                                 if (out.isEmpty()) {
                                     out = "?";
                                 }
