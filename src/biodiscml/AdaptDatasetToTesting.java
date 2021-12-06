@@ -92,7 +92,7 @@ public class AdaptDatasetToTesting {
             al_tables.add(tbo);
         }
 
-        //extract class
+        //extract class 
         ArrayList<String> myClass = new ArrayList<>();
 
         try {
@@ -104,6 +104,12 @@ public class AdaptDatasetToTesting {
             }
             System.out.println("Class " + theClass + " not found in " + f + ". Class values are filled by ?");
             missingClass = true;
+        }
+        
+        // replace spaces by _ in class
+        for (int i = 0; i < myClass.size(); i++) {
+            String c=myClass.get(i).replace(" ", "_");
+            myClass.set(i, c);
         }
 
         //remove feature that are not needed by the model
