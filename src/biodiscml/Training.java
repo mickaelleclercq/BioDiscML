@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 import org.apache.commons.math3.stat.descriptive.moment.*;
 import utils.Weka_module;
@@ -739,39 +740,39 @@ public class Training {
                 }
                 //Repeated Holdout
                 Weka_module.evaluationPerformancesResultsObject eproRHTrain = new Weka_module.evaluationPerformancesResultsObject();
-                if (Main.debug) {
-                    System.out.println("\tRepeated Holdout on Train set " + Main.bootstrapAndRepeatedHoldoutFolds + " times");
-                }
-                if (isClassification) {
-                    for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
-                        Weka_module.ClassificationResultsObject cro
-                                = (Weka_module.ClassificationResultsObject) weka.trainClassifierHoldOutValidation(classifier, classifier_options,
-                                        ao.getRetainedAttributesIdClassInString(), isClassification, i);
-                        eproRHTrain.alAUCs.add(Double.valueOf(cro.AUC));
-                        eproRHTrain.alpAUCs.add(Double.valueOf(cro.pAUC));
-                        eproRHTrain.alAUPRCs.add(Double.valueOf(cro.AUPRC));
-                        eproRHTrain.alACCs.add(Double.valueOf(cro.ACC));
-                        eproRHTrain.alSEs.add(Double.valueOf(cro.TPR));
-                        eproRHTrain.alSPs.add(Double.valueOf(cro.TNR));
-                        eproRHTrain.alMCCs.add(Double.valueOf(cro.MCC));
-                        eproRHTrain.alMAEs.add(Double.valueOf(cro.MAE));
-                        eproRHTrain.alBERs.add(Double.valueOf(cro.BER));
+                if (Main.repeatedHoldoutTrain) {
+                    if (Main.debug) {
+                        System.out.println("\tRepeated Holdout on Train set " + Main.bootstrapAndRepeatedHoldoutFolds + " times");
                     }
-                } else {
-                    for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
-                        Weka_module.RegressionResultsObject rro
-                                = (Weka_module.RegressionResultsObject) weka.trainClassifierHoldOutValidation(classifier, classifier_options,
-                                        ao.getRetainedAttributesIdClassInString(), isClassification, i);
-
-                        eproRHTrain.alCCs.add(Double.valueOf(rro.CC));
-                        eproRHTrain.alMAEs.add(Double.valueOf(rro.MAE));
-                        eproRHTrain.alRMSEs.add(Double.valueOf(rro.RMSE));
-                        eproRHTrain.alRAEs.add(Double.valueOf(rro.RAE));
-                        eproRHTrain.alRRSEs.add(Double.valueOf(rro.RRSE));
-
+                    if (isClassification) {
+                        for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
+                            Weka_module.ClassificationResultsObject cro
+                                    = (Weka_module.ClassificationResultsObject) weka.trainClassifierHoldOutValidation(classifier, classifier_options,
+                                            ao.getRetainedAttributesIdClassInString(), isClassification, i);
+                            eproRHTrain.alAUCs.add(Double.valueOf(cro.AUC));
+                            eproRHTrain.alpAUCs.add(Double.valueOf(cro.pAUC));
+                            eproRHTrain.alAUPRCs.add(Double.valueOf(cro.AUPRC));
+                            eproRHTrain.alACCs.add(Double.valueOf(cro.ACC));
+                            eproRHTrain.alSEs.add(Double.valueOf(cro.TPR));
+                            eproRHTrain.alSPs.add(Double.valueOf(cro.TNR));
+                            eproRHTrain.alMCCs.add(Double.valueOf(cro.MCC));
+                            eproRHTrain.alMAEs.add(Double.valueOf(cro.MAE));
+                            eproRHTrain.alBERs.add(Double.valueOf(cro.BER));
+                        }
+                    } else {
+                        for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
+                            Weka_module.RegressionResultsObject rro
+                                    = (Weka_module.RegressionResultsObject) weka.trainClassifierHoldOutValidation(classifier, classifier_options,
+                                            ao.getRetainedAttributesIdClassInString(), isClassification, i);
+                            eproRHTrain.alCCs.add(Double.valueOf(rro.CC));
+                            eproRHTrain.alMAEs.add(Double.valueOf(rro.MAE));
+                            eproRHTrain.alRMSEs.add(Double.valueOf(rro.RMSE));
+                            eproRHTrain.alRAEs.add(Double.valueOf(rro.RAE));
+                            eproRHTrain.alRRSEs.add(Double.valueOf(rro.RRSE));
+                        }
                     }
-                }
-                eproRHTrain.computeMeans();
+                    eproRHTrain.computeMeans();
+                } 
 
                 //BOOTSTRAP AND BOOTSTRAP .632+ rule TRAIN
                 if (Main.debug) {
@@ -780,37 +781,39 @@ public class Training {
                 double bootstrapTrain632plus = 1000;
                 Weka_module.evaluationPerformancesResultsObject eproBSTrain
                         = new Weka_module.evaluationPerformancesResultsObject();
-                if (isClassification) {
-                    bootstrapTrain632plus = weka.trainClassifierBootstrap632plus(classifier, classifier_options,
-                            ao.getRetainedAttributesIdClassInString());
-                    for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
-                        Weka_module.ClassificationResultsObject cro
-                                = (Weka_module.ClassificationResultsObject) weka.trainClassifierBootstrap(classifier, classifier_options,
-                                        ao.getRetainedAttributesIdClassInString(), isClassification, i);
-                        eproBSTrain.alAUCs.add(Double.valueOf(cro.AUC));
-                        eproBSTrain.alpAUCs.add(Double.valueOf(cro.pAUC));
-                        eproBSTrain.alAUPRCs.add(Double.valueOf(cro.AUPRC));
-                        eproBSTrain.alACCs.add(Double.valueOf(cro.ACC));
-                        eproBSTrain.alSEs.add(Double.valueOf(cro.TPR));
-                        eproBSTrain.alSPs.add(Double.valueOf(cro.TNR));
-                        eproBSTrain.alMCCs.add(Double.valueOf(cro.MCC));
-                        eproBSTrain.alMAEs.add(Double.valueOf(cro.MAE));
-                        eproBSTrain.alBERs.add(Double.valueOf(cro.BER));
+                if (Main.bootstrap) {
+                    if (isClassification) {
+                        bootstrapTrain632plus = weka.trainClassifierBootstrap632plus(classifier, classifier_options,
+                                ao.getRetainedAttributesIdClassInString());
+                        for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
+                            Weka_module.ClassificationResultsObject cro
+                                    = (Weka_module.ClassificationResultsObject) weka.trainClassifierBootstrap(classifier, classifier_options,
+                                            ao.getRetainedAttributesIdClassInString(), isClassification, i);
+                            eproBSTrain.alAUCs.add(Double.valueOf(cro.AUC));
+                            eproBSTrain.alpAUCs.add(Double.valueOf(cro.pAUC));
+                            eproBSTrain.alAUPRCs.add(Double.valueOf(cro.AUPRC));
+                            eproBSTrain.alACCs.add(Double.valueOf(cro.ACC));
+                            eproBSTrain.alSEs.add(Double.valueOf(cro.TPR));
+                            eproBSTrain.alSPs.add(Double.valueOf(cro.TNR));
+                            eproBSTrain.alMCCs.add(Double.valueOf(cro.MCC));
+                            eproBSTrain.alMAEs.add(Double.valueOf(cro.MAE));
+                            eproBSTrain.alBERs.add(Double.valueOf(cro.BER));
+                        }
+                    } else {
+                        for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
+                            Weka_module.RegressionResultsObject rro
+                                    = (Weka_module.RegressionResultsObject) weka.trainClassifierBootstrap(classifier, classifier_options,
+                                            ao.getRetainedAttributesIdClassInString(), isClassification, i);
+                            
+                            eproBSTrain.alCCs.add(Double.valueOf(rro.CC));
+                            eproBSTrain.alMAEs.add(Double.valueOf(rro.MAE));
+                            eproBSTrain.alRMSEs.add(Double.valueOf(rro.RMSE));
+                            eproBSTrain.alRAEs.add(Double.valueOf(rro.RAE));
+                            eproBSTrain.alRRSEs.add(Double.valueOf(rro.RRSE));
+                        }
                     }
-                } else {
-                    for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
-                        Weka_module.RegressionResultsObject rro
-                                = (Weka_module.RegressionResultsObject) weka.trainClassifierBootstrap(classifier, classifier_options,
-                                        ao.getRetainedAttributesIdClassInString(), isClassification, i);
-
-                        eproBSTrain.alCCs.add(Double.valueOf(rro.CC));
-                        eproBSTrain.alMAEs.add(Double.valueOf(rro.MAE));
-                        eproBSTrain.alRMSEs.add(Double.valueOf(rro.RMSE));
-                        eproBSTrain.alRAEs.add(Double.valueOf(rro.RAE));
-                        eproBSTrain.alRRSEs.add(Double.valueOf(rro.RRSE));
-                    }
+                    eproBSTrain.computeMeans();
                 }
-                eproBSTrain.computeMeans();
 
                 // TEST SET
                 if (Main.debug) {
@@ -975,36 +978,37 @@ public class Training {
                 //STATISTICS AND OUTPUT
                 if (isClassification) {
                     //average BER
-                    double BERs[] = null;
-                    if (Main.loocv) {
-                        BERs = new double[]{Double.valueOf(cr.BER),
-                            Double.valueOf(eproRHTrain.meanBERs),
-                            Double.valueOf(eproBSTrain.meanBERs),
-                            Double.valueOf(crLoocv.BER)};
-                        if (Main.doSampling) {
-                            BERs = new double[]{
-                                Double.valueOf(cr.BER),
-                                Double.valueOf(crLoocv.BER),
-                                Double.valueOf(eproRHTrain.meanBERs),
-                                Double.valueOf(eproBSTrain.meanBERs),
-                                Double.valueOf(tro.BER),
-                                Double.valueOf(eproRHTrainTest.meanBERs),
-                                Double.valueOf(eproBSTrainTest.meanBERs)};
-                        }
-                    } else {
-                        BERs = new double[]{Double.valueOf(cr.BER),
-                            Double.valueOf(eproRHTrain.meanBERs),
-                            Double.valueOf(eproBSTrain.meanBERs)};
-                        if (Main.doSampling) {
-                            BERs = new double[]{
-                                Double.valueOf(cr.BER),
-                                Double.valueOf(eproRHTrain.meanBERs),
-                                Double.valueOf(eproBSTrain.meanBERs),
-                                Double.valueOf(tro.BER),
-                                Double.valueOf(eproRHTrainTest.meanBERs),
-                                Double.valueOf(eproBSTrainTest.meanBERs)};
-                        }
+                    List<Double> alBERs = new ArrayList<>();
+                    try {
+                        alBERs.add(Double.valueOf(cr.BER));
+                    } catch (Exception e) {
                     }
+                    try {
+                        alBERs.add(Double.valueOf(eproRHTrain.meanBERs));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alBERs.add(Double.valueOf(eproBSTrain.meanBERs));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alBERs.add(Double.valueOf(crLoocv.BER));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alBERs.add(Double.valueOf(tro.BER));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alBERs.add(Double.valueOf(eproRHTrainTest.meanBERs));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alBERs.add(Double.valueOf(eproBSTrainTest.meanBERs));
+                    } catch (Exception e) {
+                    }
+
+                    double BERs[] = alBERs.stream().mapToDouble(Double::doubleValue).toArray();                    
 
                     StandardDeviation std = new StandardDeviation();
                     std.setData(BERs);
@@ -1015,36 +1019,37 @@ public class Training {
                     double averageBER = m.evaluate();
 
                     //average MAE
-                    double MAEs[] = null;
-                    if (Main.loocv) {
-                        MAEs = new double[]{Double.valueOf(cr.MAE),
-                            Double.valueOf(eproRHTrain.meanMAEs),
-                            Double.valueOf(eproBSTrain.meanMAEs),
-                            Double.valueOf(crLoocv.MAE)};
-                        if (Main.doSampling) {
-                            MAEs = new double[]{
-                                Double.valueOf(cr.MAE),
-                                Double.valueOf(crLoocv.MAE),
-                                Double.valueOf(eproRHTrain.meanMAEs),
-                                Double.valueOf(eproBSTrain.meanMAEs),
-                                Double.valueOf(tro.MAE),
-                                Double.valueOf(eproRHTrainTest.meanMAEs),
-                                Double.valueOf(eproBSTrainTest.meanMAEs)};
-                        }
-                    } else {
-                        MAEs = new double[]{Double.valueOf(cr.MAE),
-                            Double.valueOf(eproRHTrain.meanMAEs),
-                            Double.valueOf(eproBSTrain.meanMAEs)};
-                        if (Main.doSampling) {
-                            MAEs = new double[]{
-                                Double.valueOf(cr.MAE),
-                                Double.valueOf(eproRHTrain.meanMAEs),
-                                Double.valueOf(eproBSTrain.meanMAEs),
-                                Double.valueOf(tro.MAE),
-                                Double.valueOf(eproRHTrainTest.meanMAEs),
-                                Double.valueOf(eproBSTrainTest.meanMAEs)};
-                        }
+                    List<Double> alMAEs = new ArrayList<>();
+                    try {
+                        alMAEs.add(Double.valueOf(cr.MAE));
+                    } catch (Exception e) {
                     }
+                    try {
+                        alMAEs.add(Double.valueOf(eproRHTrain.meanMAEs));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alMAEs.add(Double.valueOf(eproBSTrain.meanMAEs));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alMAEs.add(Double.valueOf(crLoocv.MAE));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alMAEs.add(Double.valueOf(tro.MAE));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alMAEs.add(Double.valueOf(eproRHTrainTest.meanMAEs));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alMAEs.add(Double.valueOf(eproBSTrainTest.meanMAEs));
+                    } catch (Exception e) {
+                    }
+
+                    double MAEs[] = alMAEs.stream().mapToDouble(Double::doubleValue).toArray(); 
 
                     std = new StandardDeviation();
                     std.setData(MAEs);
@@ -1055,36 +1060,37 @@ public class Training {
                     double averageMAE = m.evaluate();
 
                     //average MCC
-                    double[] MCCs;
-                    if (Main.loocv) {
-                        MCCs = new double[]{Double.valueOf(cr.MCC),
-                            Double.valueOf(eproRHTrain.meanMCCs),
-                            Double.valueOf(eproBSTrain.meanMCCs),
-                            Double.valueOf(crLoocv.MCC)};
-                        if (Main.doSampling) {
-                            MCCs = new double[]{
-                                Double.valueOf(cr.MCC),
-                                Double.valueOf(crLoocv.MCC),
-                                Double.valueOf(eproRHTrain.meanMCCs),
-                                Double.valueOf(eproBSTrain.meanMCCs),
-                                Double.valueOf(tro.MCC),
-                                Double.valueOf(eproRHTrainTest.meanMCCs),
-                                Double.valueOf(eproBSTrainTest.meanMCCs)};
-                        }
-                    } else {
-                        MCCs = new double[]{Double.valueOf(cr.MCC),
-                            Double.valueOf(eproRHTrain.meanMCCs),
-                            Double.valueOf(eproBSTrain.meanMCCs)};
-                        if (Main.doSampling) {
-                            MCCs = new double[]{
-                                Double.valueOf(cr.MCC),
-                                Double.valueOf(eproRHTrain.meanMCCs),
-                                Double.valueOf(eproBSTrain.meanMCCs),
-                                Double.valueOf(tro.MCC),
-                                Double.valueOf(eproRHTrainTest.meanMCCs),
-                                Double.valueOf(eproBSTrainTest.meanMCCs)};
-                        }
+                    List<Double> alMCCs = new ArrayList<>();
+                    try {
+                        alMCCs.add(Double.valueOf(cr.MCC));
+                    } catch (Exception e) {
                     }
+                    try {
+                        alMCCs.add(Double.valueOf(eproRHTrain.meanMCCs));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alMCCs.add(Double.valueOf(eproBSTrain.meanMCCs));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alMCCs.add(Double.valueOf(crLoocv.MCC));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alMCCs.add(Double.valueOf(tro.MCC));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alMCCs.add(Double.valueOf(eproRHTrainTest.meanMCCs));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alMCCs.add(Double.valueOf(eproBSTrainTest.meanMCCs));
+                    } catch (Exception e) {
+                    }
+
+                    double MCCs[] = alMCCs.stream().mapToDouble(Double::doubleValue).toArray(); 
 
                     std = new StandardDeviation();
                     std.setData(MCCs);
@@ -1127,38 +1133,37 @@ public class Training {
                     //statistics
 
                     //average CC
-                    double[] CCs;
-                    if (Main.loocv) {
-                        CCs = new double[]{
-                            Double.valueOf(rr.CC),
-                            Double.valueOf(eproRHTrain.meanCCs),
-                            Double.valueOf(eproBSTrain.meanCCs),
-                            Double.valueOf(rrLoocv.CC)};
-                        if (Main.doSampling) {
-                            CCs = new double[]{
-                                Double.valueOf(rr.CC),
-                                Double.valueOf(rrLoocv.CC),
-                                Double.valueOf(eproRHTrain.meanCCs),
-                                Double.valueOf(eproBSTrain.meanCCs),
-                                Double.valueOf(tro.CC),
-                                Double.valueOf(eproRHTrainTest.meanCCs),
-                                Double.valueOf(eproBSTrainTest.meanCCs)};
-                        }
-                    } else {
-                        CCs = new double[]{
-                            Double.valueOf(rr.CC),
-                            Double.valueOf(eproRHTrain.meanCCs),
-                            Double.valueOf(eproBSTrain.meanCCs)};
-                        if (Main.doSampling) {
-                            CCs = new double[]{
-                                Double.valueOf(rr.CC),
-                                Double.valueOf(eproRHTrain.meanCCs),
-                                Double.valueOf(eproBSTrain.meanCCs),
-                                Double.valueOf(tro.CC),
-                                Double.valueOf(eproRHTrainTest.meanCCs),
-                                Double.valueOf(eproBSTrainTest.meanCCs)};
-                        }
+                    List<Double> alCCs = new ArrayList<>();
+                    try {
+                        alCCs.add(Double.valueOf(rr.CC));
+                    } catch (Exception e) {
                     }
+                    try {
+                        alCCs.add(Double.valueOf(eproRHTrain.meanCCs));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alCCs.add(Double.valueOf(eproBSTrain.meanCCs));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alCCs.add(Double.valueOf(rrLoocv.CC));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alCCs.add(Double.valueOf(tro.CC));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alCCs.add(Double.valueOf(eproRHTrainTest.meanCCs));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alCCs.add(Double.valueOf(eproBSTrainTest.meanCCs));
+                    } catch (Exception e) {
+                    }
+                    
+                    double CCs[] = alCCs.stream().mapToDouble(Double::doubleValue).toArray(); 
 
                     StandardDeviation std = new StandardDeviation();
                     std.setData(CCs);
@@ -1169,38 +1174,37 @@ public class Training {
                     double averageCC = m.evaluate();
 
                     //average MAE
-                    double[] MAEs;
-                    if (Main.loocv) {
-                        MAEs = new double[]{
-                            Double.valueOf(rr.MAE),
-                            Double.valueOf(eproRHTrain.meanMAEs),
-                            Double.valueOf(eproBSTrain.meanMAEs),
-                            Double.valueOf(rrLoocv.MAE)};
-                        if (Main.doSampling) {
-                            MAEs = new double[]{
-                                Double.valueOf(rr.MAE),
-                                Double.valueOf(rrLoocv.MAE),
-                                Double.valueOf(eproRHTrain.meanMAEs),
-                                Double.valueOf(eproBSTrain.meanMAEs),
-                                Double.valueOf(tro.MAE),
-                                Double.valueOf(eproRHTrainTest.meanMAEs),
-                                Double.valueOf(eproBSTrainTest.meanMAEs)};
-                        }
-                    } else {
-                        MAEs = new double[]{
-                            Double.valueOf(rr.MAE),
-                            Double.valueOf(eproRHTrain.meanMAEs),
-                            Double.valueOf(eproBSTrain.meanMAEs)};
-                        if (Main.doSampling) {
-                            MAEs = new double[]{
-                                Double.valueOf(rr.MAE),
-                                Double.valueOf(eproRHTrain.meanMAEs),
-                                Double.valueOf(eproBSTrain.meanMAEs),
-                                Double.valueOf(tro.MAE),
-                                Double.valueOf(eproRHTrainTest.meanMAEs),
-                                Double.valueOf(eproBSTrainTest.meanMAEs)};
-                        }
+                    List<Double> alMAEs = new ArrayList<>();
+                    try {
+                        alMAEs.add(Double.valueOf(rr.MAE));
+                    } catch (Exception e) {
                     }
+                    try {
+                        alMAEs.add(Double.valueOf(eproRHTrain.meanMAEs));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alMAEs.add(Double.valueOf(eproBSTrain.meanMAEs));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alMAEs.add(Double.valueOf(rrLoocv.MAE));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alMAEs.add(Double.valueOf(tro.MAE));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alMAEs.add(Double.valueOf(eproRHTrainTest.meanMAEs));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alMAEs.add(Double.valueOf(eproBSTrainTest.meanMAEs));
+                    } catch (Exception e) {
+                    }
+                    
+                    double MAEs[] = alMAEs.stream().mapToDouble(Double::doubleValue).toArray();
 
                     std = new StandardDeviation();
                     std.setData(MAEs);
@@ -1211,36 +1215,37 @@ public class Training {
                     double averageMAE = m.evaluate();
 
                     //average RMSE
-                    double[] RMSEs;
-                    if (Main.loocv) {
-                        RMSEs = new double[]{Double.valueOf(rr.RMSE),
-                            Double.valueOf(eproRHTrain.meanRMSEs),
-                            Double.valueOf(eproBSTrain.meanRMSEs),
-                            Double.valueOf(rrLoocv.RMSE)};
-                        if (Main.doSampling) {
-                            RMSEs = new double[]{
-                                Double.valueOf(rr.RMSE),
-                                Double.valueOf(rrLoocv.RMSE),
-                                Double.valueOf(eproRHTrain.meanRMSEs),
-                                Double.valueOf(eproBSTrain.meanRMSEs),
-                                Double.valueOf(tro.RMSE),
-                                Double.valueOf(eproRHTrainTest.meanRMSEs),
-                                Double.valueOf(eproBSTrainTest.meanRMSEs)};
-                        }
-                    } else {
-                        RMSEs = new double[]{Double.valueOf(rr.RMSE),
-                            Double.valueOf(eproRHTrain.meanRMSEs),
-                            Double.valueOf(eproBSTrain.meanRMSEs)};
-                        if (Main.doSampling) {
-                            RMSEs = new double[]{
-                                Double.valueOf(rr.RMSE),
-                                Double.valueOf(eproRHTrain.meanRMSEs),
-                                Double.valueOf(eproBSTrain.meanRMSEs),
-                                Double.valueOf(tro.RMSE),
-                                Double.valueOf(eproRHTrainTest.meanRMSEs),
-                                Double.valueOf(eproBSTrainTest.meanRMSEs)};
-                        }
+                    List<Double> alRMSEs = new ArrayList<>();
+                    try {
+                        alRMSEs.add(Double.valueOf(rr.RMSE));
+                    } catch (Exception e) {
                     }
+                    try {
+                        alRMSEs.add(Double.valueOf(eproRHTrain.meanRMSEs));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alRMSEs.add(Double.valueOf(eproBSTrain.meanRMSEs));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alRMSEs.add(Double.valueOf(rrLoocv.RMSE));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alRMSEs.add(Double.valueOf(tro.RMSE));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alRMSEs.add(Double.valueOf(eproRHTrainTest.meanRMSEs));
+                    } catch (Exception e) {
+                    }
+                    try {
+                        alRMSEs.add(Double.valueOf(eproBSTrainTest.meanRMSEs));
+                    } catch (Exception e) {
+                    }
+                    
+                    double RMSEs[] = alRMSEs.stream().mapToDouble(Double::doubleValue).toArray();
 
                     std = new StandardDeviation();
                     std.setData(RMSEs);
