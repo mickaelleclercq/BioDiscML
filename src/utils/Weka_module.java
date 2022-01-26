@@ -14,7 +14,6 @@ import java.text.DecimalFormatSymbols;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -22,13 +21,11 @@ import java.util.List;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicIntegerArray;
-import java.util.jar.Attributes;
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.analysis.integration.TrapezoidIntegrator;
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 import org.apache.commons.math3.analysis.interpolation.UnivariateInterpolator;
 import org.apache.commons.math3.exception.MaxCountExceededException;
-import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import static utils.utils.getMean;
 import weka.attributeSelection.AttributeSelection;
 import weka.classifiers.Classifier;
@@ -37,11 +34,9 @@ import weka.classifiers.evaluation.ThresholdCurve;
 import weka.classifiers.evaluation.output.prediction.PlainText;
 import weka.classifiers.meta.FilteredClassifier;
 import weka.core.Attribute;
-import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Range;
-import weka.core.SerializationHelper;
 import weka.core.UnsupportedAttributeTypeException;
 import weka.core.Utils;
 import weka.core.converters.ArffLoader;
@@ -51,7 +46,6 @@ import weka.core.converters.CSVSaver;
 import weka.core.converters.ConverterUtils;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.StratifiedRemoveFolds;
-import weka.filters.unsupervised.attribute.Add;
 import weka.filters.unsupervised.attribute.Remove;
 import weka.filters.unsupervised.attribute.Reorder;
 import weka.filters.unsupervised.attribute.StringToNominal;
@@ -1292,9 +1286,9 @@ public class Weka_module {
             pt.setBuffer(sb);
             pt.setOutputDistribution(true);
             pt.setAttributes("first");
+            data.toString();
 
             eval.evaluateModel(model, data, pt, new Range("first,last"), true);
-
             //return
             if (classification) {
                 return new ClassificationResultsObject(eval, sb, data, model);
