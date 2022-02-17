@@ -740,7 +740,7 @@ public class Training {
                 }
                 //Repeated Holdout
                 Weka_module.evaluationPerformancesResultsObject eproRHTrain = new Weka_module.evaluationPerformancesResultsObject();
-                if (Main.repeatedHoldoutTrain) {
+                if (Main.repeatedHoldout) {
                     if (Main.debug) {
                         System.out.println("\tRepeated Holdout on Train set " + Main.bootstrapAndRepeatedHoldoutFolds + " times");
                     }
@@ -878,7 +878,7 @@ public class Training {
                 Weka_module.evaluationPerformancesResultsObject eproRHTrainTest
                         = new Weka_module.evaluationPerformancesResultsObject();
                 try {
-                    if (Main.doSampling) {
+                    if (Main.doSampling && Main.repeatedHoldout) {
                         Weka_module weka2 = new Weka_module();
                         weka2.setARFFfile(trainFileName.replace("data_to_train.csv", "all_data.arff"));
                         weka2.setDataFromArff();
@@ -929,7 +929,7 @@ public class Training {
                 double bootstrapTrainTest632plus = 1000;
                 Weka_module.evaluationPerformancesResultsObject eproBSTrainTest = new Weka_module.evaluationPerformancesResultsObject();
                 try {
-                    if (Main.doSampling) {
+                    if (Main.doSampling && Main.bootstrap) {
                         Weka_module weka2 = new Weka_module();
                         weka2.setARFFfile(trainFileName.replace("data_to_train.csv", "all_data.arff"));
                         weka2.setDataFromArff();

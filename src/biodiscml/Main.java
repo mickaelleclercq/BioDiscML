@@ -83,7 +83,7 @@ public class Main {
     public static String combinationRule = "AVG";
     public static double maxRankingScoreDifference = 0.005; //for correlated gene retreiving
     public static boolean loocv = true;
-    public static boolean repeatedHoldoutTrain = true;
+    public static boolean repeatedHoldout = true;
     public static boolean bootstrap = true;
     public static boolean computeBestModel = true;
 
@@ -631,7 +631,7 @@ public class Main {
                 UpSetR = Boolean.valueOf(value.trim());
                 break;
             case "repeatedHoldoutTrain":
-                repeatedHoldoutTrain = Boolean.valueOf(value.trim());
+                repeatedHoldout = Boolean.valueOf(value.trim());
                 break;
             case "bootstrap":
                 bootstrap = Boolean.valueOf(value.trim());
