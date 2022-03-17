@@ -222,7 +222,7 @@ public class Training {
 
             System.out.print("Feature selection and ranking...");
             if (new File(featureSelectionFile).exists() && Main.resumeTraining) {
-                System.out.print("\nFeature selection and ranking already done... skipped by resumeTraining");
+                System.out.print("\nFeature selection and ranking already done... skipping");
             } else {
                 //ATTRIBUTE SELECTION for classification
                 weka.attributeSelectionByInfoGainRankingAndSaveToCSV(featureSelectionFile);
@@ -400,7 +400,7 @@ public class Training {
             }
 
             System.out.println("ResumeTraining: Remains " + alClassifiersAfterRemoval
-                    + "classifiers to train on the " + alClassifiersBeforeRemoval);
+                    + " classifiers to train on the " + alClassifiersBeforeRemoval);
 
         }
 
@@ -409,7 +409,7 @@ public class Training {
             PrintWriter pw;
             if (Main.resumeTraining) {
                 pw = new PrintWriter(new FileWriter(resultsFile, true));
-                pw.println("Resumed here");
+                //pw.println("Resumed here");
                 pw.flush();
             } else {
                 pw = new PrintWriter(new FileWriter(resultsFile));

@@ -10,8 +10,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.nio.file.StandardCopyOption;
 
 /**
  *
@@ -88,6 +92,10 @@ public class Main {
     public static boolean computeBestModel = true;
 
     public static boolean resumeTraining = false;
+    public static boolean restoreRun = false;
+    public static String previousRunPath = "";
+    public static String previousRunProjectName = "";
+
     //benchmark
     public static String bench_AUC = "";
 
@@ -149,6 +157,57 @@ public class Main {
             System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", cpus);
         }
 
+        // Retrieve previously existing a (train and test data) and b (infogain) files
+        if (restoreRun) {
+            resumeTraining = true;
+            // get current directory
+            if (wd.isEmpty()) {
+                wd = new java.io.File(".").getCanonicalPath()+java.io.File.separator;
+            }
+            System.out.println("Restoring data from previous project " + previousRunProjectName 
+                    + "\nCopying files from " + previousRunPath);
+            //copy previous run
+            try {
+                Path source = Paths.get(previousRunPath + previousRunProjectName + "_a.classification.all_data.arff");
+                Path destination = Paths.get(wd + "/" + project + "a.classification.all_data.arff");
+                Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+
+                source = Paths.get(previousRunPath + previousRunProjectName + "_a.classification.all_data.csv");
+                destination = Paths.get(wd + "/" + project + "a.classification.all_data.csv");
+                Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+
+                source = Paths.get(previousRunPath + previousRunProjectName + "_a.classification.data_to_test.arff");
+                destination = Paths.get(wd + "/" + project + "a.classification.data_to_test.arff");
+                Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+
+                source = Paths.get(previousRunPath + previousRunProjectName + "_a.classification.data_to_test.csv");
+                destination = Paths.get(wd + "/" + project + "a.classification.data_to_test.csv");
+                Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+
+                source = Paths.get(previousRunPath + previousRunProjectName + "_a.classification.data_to_train.arff");
+                destination = Paths.get(wd + "/" + project + "a.classification.data_to_train.arff");
+                Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+
+                source = Paths.get(previousRunPath + previousRunProjectName + "_a.classification.data_to_train.csv");
+                destination = Paths.get(wd + "/" + project + "a.classification.data_to_train.csv");
+                Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+
+                source = Paths.get(previousRunPath + previousRunProjectName + "_b.featureSelection.infoGain.arff");
+                destination = Paths.get(wd + "/" + project + "b.featureSelection.infoGain.arff");
+                Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+
+                source = Paths.get(previousRunPath + previousRunProjectName + "_b.featureSelection.infoGain.csv");
+                destination = Paths.get(wd + "/" + project + "b.featureSelection.infoGain.csv");
+                Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+                
+                File f = new File(previousRunPath + previousRunProjectName+"_c.classification.results.csv");
+                f.createNewFile();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+
         // Go to training
         if (training) {
             System.out.println("#### Start training...");
@@ -158,8 +217,9 @@ public class Main {
                 //put data together in the same file for ML
                 System.out.println("## Preprocessing of the input file(s)");
                 String CLASSIFICATION_FILE = wd + project + "a.classification.data_to_train.csv"; //output of AdaptDatasetToWeka()
+                if (debug) System.out.println("CLASSIFICATION_FILE: "+CLASSIFICATION_FILE);
                 if (new File(CLASSIFICATION_FILE).exists() && resumeTraining) {
-                    System.out.println("Preprocessing of the input file(s) already done... skipped by resumeTraining");
+                    System.out.println("Preprocessing of the input file(s) already done... skipping");
                 } else {
                     AdaptDatasetToTraining c = new AdaptDatasetToTraining(CLASSIFICATION_FILE);
                 }
@@ -636,7 +696,15 @@ public class Main {
             case "bootstrap":
                 bootstrap = Boolean.valueOf(value.trim());
                 break;
-
+            case "restoreRun":
+                restoreRun = Boolean.valueOf(value.trim());
+                break;
+            case "previousRunPath":
+                previousRunPath = value.trim();
+                break;
+            case "previousRunProjectName":
+                previousRunProjectName = value.trim();
+                break;
         }
     }
 
