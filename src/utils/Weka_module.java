@@ -840,11 +840,14 @@ public class Weka_module {
             if (data.classIndex() == -1) {
                 data.setClassIndex(data.numAttributes() - 1);
             }
-
+            //get id attribute
+            Attribute id = data.attribute(0);
+            
             weka.filters.supervised.attribute.AttributeSelection select = new weka.filters.supervised.attribute.AttributeSelection();
 
             //filter based on ranker score threshold
-            String options = "-E \"weka.attributeSelection.ReliefFAttributeEval -M -1 -D 1 -K 10\" -S \"weka.attributeSelection.Ranker -T -1.79E308 -N -1\"";
+            String limit = " -N " + Main.maxNumberOfSelectedFeatures;
+            String options = "-E \"weka.attributeSelection.ReliefFAttributeEval -M -1 -D 1 -K 10\" -S \"weka.attributeSelection.Ranker -T 0.01" + limit + "\"";
             select.setOptions(weka.core.Utils.splitOptions((options)));
             select.setInputFormat(data);
             Instances filteredData = Filter.useFilter(data, select);
@@ -863,37 +866,41 @@ public class Weka_module {
 //            filteredData.attribute(0).isNominal();
 
             System.out.println("Total attributes: " + (filteredData.numAttributes() - 1));
-            //remove some attribute if we have too many of them
-            if (filteredData.numAttributes() > Main.maxNumberOfSelectedFeatures) {
-                System.out.println("Too many attributes, only keep best " + Main.maxNumberOfSelectedFeatures);
-                String limit = " -N " + Main.maxNumberOfSelectedFeatures;
-                options = "-E \"weka.attributeSelection.ReliefFAttributeEval -M -1 -D 1 -K 10\" -S \"weka.attributeSelection.Ranker -T 0.01" + limit + "\"";
-                select.setOptions(weka.core.Utils.splitOptions((options)));
-                select.setInputFormat(filteredData);
-                filteredData = Filter.useFilter(filteredData, select);
-
-            } else if (filteredData.numAttributes() == 0) {
+            
+            if (filteredData.numAttributes() == 0) {
                 System.out.println("Not enough attributes, probably all non-informative. So keeping all and ranking them, but expect low training performance");
                 options = "-E \"weka.attributeSelection.ReliefFAttributeEval -M -1 -D 1 -K 10\" -S \"weka.attributeSelection.Ranker -T -1 -N -1\"";
                 select.setOptions(weka.core.Utils.splitOptions((options)));
                 select.setInputFormat(data);
                 filteredData = Filter.useFilter(data, select);
             }
-            //store IDs
-            List<String> alIDs = new ArrayList<>();
-            Enumeration en = filteredData.enumerateInstances();
-
-            while (en.hasMoreElements()) {
-                alIDs.add(((Instance) en.nextElement()).stringValue(filteredData.attribute(Main.mergingID)));
+            
+            //add identifier if it has been lost after relieff
+            if (filteredData.attribute(id.name()) == null) {
+                filteredData.insertAttributeAt(id, 0);
+                filteredData.attribute(0).isNominal();
             }
-            filteredData.deleteAttributeAt(filteredData.attribute(Main.mergingID).index());
+            //move identifier to index 0
+            if (filteredData.attribute(id.name()) != null && !filteredData.attribute(0).equals(id)) {
+                //find index of ID
+                int idIndex = 0;
+                for (int i = 0; i < filteredData.size(); i++) {
+                    if (filteredData.attribute(i).equals(id)) {
+                        idIndex = i;
+                    }
+                }
+                //delete ID
+                filteredData.deleteAttributeAt(idIndex);
+                //reinsert ID
+                filteredData.insertAttributeAt(id, 0);
+            }
+
 
             //restore IDs
-            Attribute att = new Attribute(Main.mergingID, alIDs);
-            filteredData.insertAttributeAt(att, 0);
             for (int i = 0; i < filteredData.numInstances(); i++) {
-                filteredData.instance(i).setValue(0, (String) alIDs.get(i));
+                filteredData.instance(i).setValue(0, (String) id.value(i));
             }
+            
             //save data as csv
             CSVSaver csv = new CSVSaver();
             csv.setInstances(filteredData);
@@ -923,24 +930,16 @@ public class Weka_module {
             Attribute id = data.attribute(0);
 
             weka.filters.supervised.attribute.AttributeSelection select = new weka.filters.supervised.attribute.AttributeSelection();
-            String options = "-E "
-                    + "\"weka.attributeSelection.InfoGainAttributeEval \" -S \"weka.attributeSelection.Ranker -T 0.001 -N -1\"";
+            String limit = " -N " + Main.maxNumberOfSelectedFeatures;
+            String options = "-E \"weka.attributeSelection.InfoGainAttributeEval \" -S \"weka.attributeSelection.Ranker -T 0.001" + limit + "\"";
             select.setOptions(weka.core.Utils.splitOptions((options)));
             select.setInputFormat(data);
 
             Instances filteredData = Filter.useFilter(data, select);
 
             System.out.println("Total attributes: " + (filteredData.numAttributes() - 1));
-            //remove some attribute if we have too many of them
-            if (filteredData.numAttributes() > Main.maxNumberOfSelectedFeatures) {
-                System.out.println("Too many attributes, only keep best " + Main.maxNumberOfSelectedFeatures);
-                String limit = " -N " + Main.maxNumberOfSelectedFeatures;
-                options = "-E \"weka.attributeSelection.InfoGainAttributeEval \" -S \"weka.attributeSelection.Ranker -T 0.001" + limit + "\"";
-                select.setOptions(weka.core.Utils.splitOptions((options)));
-                select.setInputFormat(filteredData);
-                filteredData = Filter.useFilter(filteredData, select);
 
-            } else if (filteredData.numAttributes() <= 10) {
+            if (filteredData.numAttributes() <= 10) {
                 System.out.println("Not enough attributes, probably all non-informative. So keeping all and ranking them, but expect very low performances");
                 options = "-E \"weka.attributeSelection.InfoGainAttributeEval \" -S \"weka.attributeSelection.Ranker -T -1 -N -1\"";
                 select.setOptions(weka.core.Utils.splitOptions((options)));
