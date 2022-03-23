@@ -118,7 +118,7 @@ public class Main {
         if (!classificationFastWay && !regressionFastWay) {
             try {
                 String line = "";
-                File classifiers = new File("classifiers.conf");
+                File classifiers = new File(wd+ "/"+"classifiers.conf");
                 BufferedReader br;
                 if (!classifiers.exists()) {
                     try {
@@ -159,7 +159,7 @@ public class Main {
 
         // Retrieve previously existing a (train and test data) and b (infogain) files
         if (restoreRun) {
-            resumeTraining = true;
+            resumeTraining = true;            
             // get current directory
             if (wd.isEmpty()) {
                 wd = new java.io.File(".").getCanonicalPath()+java.io.File.separator;

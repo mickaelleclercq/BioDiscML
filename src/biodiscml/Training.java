@@ -229,16 +229,15 @@ public class Training {
                 //get the rank of attributes
                 ranking = weka.featureRankingForClassification();
                 System.out.println("[done]");
-
                 //reset arff and keep compatible header
                 weka.setCSVFile(new File(featureSelectionFile));
                 weka.csvToArff(isClassification);
                 weka.makeCompatibleARFFheaders(dataToTrainModel.replace("data_to_train.csv", "data_to_train.arff"),
                         featureSelectionFile.replace("infoGain.csv", "infoGain.arff"));
-                weka.setARFFfile(featureSelectionFile.replace("infoGain.csv", "infoGain.arff"));
-                weka.setDataFromArff();
             }
 
+            weka.setARFFfile(featureSelectionFile.replace("infoGain.csv", "infoGain.arff"));
+            weka.setDataFromArff();
         } else {
             //REGRESSION
             if (Main.debug) {
@@ -363,7 +362,7 @@ public class Training {
 
         }
         //resume training, remove from alClassifier all classifiers already trained
-        if (Main.resumeTraining) {
+        if (Main.resumeTraining && !Main.restoreRun) {
             HashMap<String, String> hm = new HashMap<>();
             //get data
             try {
@@ -407,7 +406,7 @@ public class Training {
         try {
             //PREPARE OUTPUT
             PrintWriter pw;
-            if (Main.resumeTraining) {
+            if (Main.resumeTraining && !Main.restoreRun) {
                 pw = new PrintWriter(new FileWriter(resultsFile, true));
                 //pw.println("Resumed here");
                 pw.flush();
@@ -772,7 +771,7 @@ public class Training {
                         }
                     }
                     eproRHTrain.computeMeans();
-                } 
+                }
 
                 //BOOTSTRAP AND BOOTSTRAP .632+ rule TRAIN
                 if (Main.debug) {
@@ -804,7 +803,7 @@ public class Training {
                             Weka_module.RegressionResultsObject rro
                                     = (Weka_module.RegressionResultsObject) weka.trainClassifierBootstrap(classifier, classifier_options,
                                             ao.getRetainedAttributesIdClassInString(), isClassification, i);
-                            
+
                             eproBSTrain.alCCs.add(Double.valueOf(rro.CC));
                             eproBSTrain.alMAEs.add(Double.valueOf(rro.MAE));
                             eproBSTrain.alRMSEs.add(Double.valueOf(rro.RMSE));
@@ -1008,7 +1007,7 @@ public class Training {
                     } catch (Exception e) {
                     }
 
-                    double BERs[] = alBERs.stream().mapToDouble(Double::doubleValue).toArray();                    
+                    double BERs[] = alBERs.stream().mapToDouble(Double::doubleValue).toArray();
 
                     StandardDeviation std = new StandardDeviation();
                     std.setData(BERs);
@@ -1049,7 +1048,7 @@ public class Training {
                     } catch (Exception e) {
                     }
 
-                    double MAEs[] = alMAEs.stream().mapToDouble(Double::doubleValue).toArray(); 
+                    double MAEs[] = alMAEs.stream().mapToDouble(Double::doubleValue).toArray();
 
                     std = new StandardDeviation();
                     std.setData(MAEs);
@@ -1090,7 +1089,7 @@ public class Training {
                     } catch (Exception e) {
                     }
 
-                    double MCCs[] = alMCCs.stream().mapToDouble(Double::doubleValue).toArray(); 
+                    double MCCs[] = alMCCs.stream().mapToDouble(Double::doubleValue).toArray();
 
                     std = new StandardDeviation();
                     std.setData(MCCs);
@@ -1162,8 +1161,8 @@ public class Training {
                         alCCs.add(Double.valueOf(eproBSTrainTest.meanCCs));
                     } catch (Exception e) {
                     }
-                    
-                    double CCs[] = alCCs.stream().mapToDouble(Double::doubleValue).toArray(); 
+
+                    double CCs[] = alCCs.stream().mapToDouble(Double::doubleValue).toArray();
 
                     StandardDeviation std = new StandardDeviation();
                     std.setData(CCs);
@@ -1203,7 +1202,7 @@ public class Training {
                         alMAEs.add(Double.valueOf(eproBSTrainTest.meanMAEs));
                     } catch (Exception e) {
                     }
-                    
+
                     double MAEs[] = alMAEs.stream().mapToDouble(Double::doubleValue).toArray();
 
                     std = new StandardDeviation();
@@ -1244,7 +1243,7 @@ public class Training {
                         alRMSEs.add(Double.valueOf(eproBSTrainTest.meanRMSEs));
                     } catch (Exception e) {
                     }
-                    
+
                     double RMSEs[] = alRMSEs.stream().mapToDouble(Double::doubleValue).toArray();
 
                     std = new StandardDeviation();

@@ -356,7 +356,7 @@ public class Weka_module {
 
             //evaluation
             if (Main.debug) {
-                System.out.print("\tShort test of model of 10% of data...");
+                System.out.println("\tShort test of model on 5% of the data...");
             }
 
             //build model to save it
@@ -586,9 +586,10 @@ public class Weka_module {
             }
         } catch (Exception e) {
             if (Main.debug) {
-                e.printStackTrace();
+                System.err.println(e.getMessage() + " for " + classifier + " " + classifier_options);
+                e.printStackTrace();                
             }
-            //System.err.println(e.getMessage() + " for " + classifier + " " + classifier_options);
+            
             return null;
         }
 

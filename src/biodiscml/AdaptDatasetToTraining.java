@@ -187,6 +187,7 @@ public class AdaptDatasetToTraining {
         try {
             PrintWriter pw = new PrintWriter(new FileWriter(outfile));
             ///////// PRINT HEADER
+            int featuresCpt=0;
             pw.print(Main.mergingID);
             cpt = 0;
             for (TableObject tbo : al_tables) {
@@ -197,6 +198,7 @@ public class AdaptDatasetToTraining {
                         } else {
                             pw.print("\t" + s);
                         }
+                        featuresCpt++;
                     }
                 }
                 cpt++;
@@ -211,7 +213,8 @@ public class AdaptDatasetToTraining {
             } else {
                 System.out.println("Total number of instances between files: " + hm_ids.size());
             }
-            System.out.println("Total number of features: " + al_tables.get(0).hmData.size());
+            
+            System.out.println("Total number of features: " + featuresCpt);
 
             ///////PRINT CONTENT
             TreeMap<String, Integer> tm = new TreeMap<>();
