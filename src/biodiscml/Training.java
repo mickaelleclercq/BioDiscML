@@ -52,6 +52,24 @@ public class Training {
      */
     public Training(String dataToTrainModel, String resultsFile,
             String featureSelectionFile, String type) {
+        if (Main.restoreRun || Main.resumeTraining) {
+            System.out.println("Check if files exist and should be deleted...");
+            if (new File(dataToTrainModel).exists()) {
+                System.out.println("\t"+dataToTrainModel+" exist... deleting...");
+                new File(dataToTrainModel).delete();
+                new File(dataToTrainModel.replace(".csv", ".arff")).delete();
+            }
+            if (new File(featureSelectionFile).exists()) {
+                System.out.println("\t"+featureSelectionFile+" exist... deleting...");
+                new File(featureSelectionFile).delete();
+                new File(featureSelectionFile.replace(".csv", ".arff")).delete();
+            }
+            if (new File(resultsFile).exists()) {
+                System.out.println("\t"+resultsFile+" exist... deleting...");
+                new File(resultsFile).delete();
+                new File(resultsFile.replace(".csv", ".arff")).delete();
+            }
+        }
 
         df.setMaximumFractionDigits(3);
         DecimalFormatSymbols dfs = new DecimalFormatSymbols();
@@ -1311,7 +1329,7 @@ public class Training {
             }
         }
         Instant finish = Instant.now();
-        long s = Duration.between(start, finish).toMillis();
+        long s = Duration.between(start, finish).toMillis() / 1000;
         if (Main.debug) {
             System.out.println("model created in [" + s + "s]");
         }
