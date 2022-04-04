@@ -52,7 +52,7 @@ public class Training {
      */
     public Training(String dataToTrainModel, String resultsFile,
             String featureSelectionFile, String type) {
-        if (Main.restoreRun || Main.resumeTraining) {
+        if (!Main.restoreRun || !Main.resumeTraining) {
             System.out.println("Check if files exist and should be deleted...");
             if (new File(dataToTrainModel).exists()) {
                 System.out.println("\t"+dataToTrainModel+" exist... deleting...");
