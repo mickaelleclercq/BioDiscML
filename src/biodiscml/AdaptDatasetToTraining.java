@@ -33,6 +33,21 @@ public class AdaptDatasetToTraining {
      * @param trainFile
      */
     public AdaptDatasetToTraining(String trainFile) {
+        //remove files of previous run if exist
+        if (!Main.restoreRun || !Main.resumeTraining) {
+            System.out.println("Check if files exist and should be deleted...");
+            String allDataFile = trainFile.replace("data_to_train", "all_data");
+            if (new File(allDataFile).exists()) {
+                System.out.println("\t"+allDataFile+" exist... deleting...");
+                new File(allDataFile).delete();
+            }
+            if (new File(trainFile).exists()) {
+                System.out.println("\t"+trainFile+" exist... deleting...");
+                new File(trainFile).delete();
+                new File(trainFile.replace(".csv", ".arff")).delete();
+            }
+        }
+        
         //create the adapted training file
         System.out.println("# Training file(s)");
         if (Main.doClassification) {
