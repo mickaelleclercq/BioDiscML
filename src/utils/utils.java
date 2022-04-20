@@ -245,7 +245,12 @@ public class utils {
             int ID_index = getIdIndex(altable);
             for (int i = 1; i < altable.size(); i++) { //for each ID
                 //hmIDsList.put(altable.get(i)[ID_index].toLowerCase(), i - 1);
-                hmIDsList.put(altable.get(i)[ID_index], i - 1);
+                Integer j = hmIDsList.put(altable.get(i)[ID_index], i - 1);
+                if (j != null) {
+                    System.err.println("DUPLICATED ID DETECTED: " + altable.get(i)[ID_index]);
+                    System.err.println("All IDs must be unique");
+                    System.exit(0);
+                }
             }
         }
 
