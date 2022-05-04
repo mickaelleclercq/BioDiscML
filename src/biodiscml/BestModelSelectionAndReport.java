@@ -229,7 +229,7 @@ public class BestModelSelectionAndReport {
             PrintWriter pw, BufferedReader br, Boolean correlatedFeaturesMode) throws Exception {
         String corrMode = "";
         if (correlatedFeaturesMode) {
-            corrMode = ".corr";
+            corrMode = "_corr";
             System.out.print("\n# Model with correlated features");
             ((classificationObject) classifier).featuresSeparatedByCommas = correlatedFeatures;
         } else {
