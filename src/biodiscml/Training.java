@@ -448,15 +448,7 @@ public class Training {
                         .forEach((_item) -> {
                             pw.flush();
                         });
-//                alClassifiers.stream().parallel().map((classif) -> {
-//                    String s = StepWiseFeatureSelectionTraining(classif[0], classif[1], classif[2], classif[3]);
-//                    if (!s.contains("ERROR")) {
-//                        pw.println(s);
-//                    }
-//                    return classif;
-//                }).forEachOrdered((_item) -> {
-//                    pw.flush();
-//                });
+
 
             } else {
                 alClassifiers.stream().map((classif) -> {
@@ -1286,7 +1278,7 @@ public class Training {
 
                 //CREATE ID
                 Random r = new Random();
-                int randomNumber = r.nextInt(1000 - 10) + 10;
+                int randomNumber = r.nextInt(10000 - 10) + 10;
                 out = (lastOutput.split("\t")[0] + "_" + lastOutput.split("\t")[2]
                         + "_" + lastOutput.split("\t")[3] + "_" + lastOutput.split("\t")[4] + "_" + lastOutput.split("\t")[5] + "_" + randomNumber);
 
