@@ -60,7 +60,7 @@ public class Main {
     public static ArrayList<String> classificationFastWayCommands = new ArrayList<>(); //classifier, optimizer
     public static ArrayList<String> classificationBruteForceCommands = new ArrayList<>(); //classifier, optimizer
     public static String classificationOptimizers = "auc, mcc, fdr, ber, acc";
-    public static String searchmodes = "f,fb,b,bf,top1,top5,top10,top15,top20,top30,top40,top50,top75,top100";
+    public static String searchmodes = "f,fb,b,bf,top1,top5,top10,top15,top20,top30,top40,top50,top75,top100,top200";
     public static Boolean metaCostSensitiveClassifier = false;
     public static Boolean regressionFastWay = false;
     public static String regressionOptimizers = "CC, RMSE";
@@ -75,7 +75,7 @@ public class Main {
     public static double pearsonCorrelation_upper = 0.99;
     public static String bestModelsSortingMetric = "AVG_MCC";
     public static double bestModelsSortingMetricThreshold = 0.1;
-    public static Integer maxNumberOfFeaturesInModel = 250;
+    public static Integer maxNumberOfFeaturesInModel = 200;
     public static int maxNumberOfSelectedFeatures = 1000;
     public static boolean doSampling = true;
     public static int samplingFold = 3; //separate the set in x parts, keep 1 for test, others for training
@@ -95,6 +95,8 @@ public class Main {
     public static boolean restoreRun = false;
     public static String previousRunPath = "";
     public static String previousRunProjectName = "";
+
+    public static Boolean noFeatureSelection = false;
 
     //benchmark
     public static String bench_AUC = "";
@@ -118,7 +120,7 @@ public class Main {
         if (!classificationFastWay && !regressionFastWay) {
             try {
                 String line = "";
-                File classifiers = new File(wd+ "/"+"classifiers.conf");
+                File classifiers = new File(wd + "/" + "classifiers.conf");
                 BufferedReader br;
                 if (!classifiers.exists()) {
                     try {
@@ -159,12 +161,12 @@ public class Main {
 
         // Retrieve previously existing a (train and test data) and b (infogain) files
         if (restoreRun) {
-            resumeTraining = true;            
+            resumeTraining = true;
             // get current directory
             if (wd.isEmpty()) {
-                wd = new java.io.File(".").getCanonicalPath()+java.io.File.separator;
+                wd = new java.io.File(".").getCanonicalPath() + java.io.File.separator;
             }
-            System.out.println("Restoring data from previous project " + previousRunProjectName 
+            System.out.println("Restoring data from previous project " + previousRunProjectName
                     + "\nCopying files from " + previousRunPath);
             //copy previous run
             try {
@@ -199,8 +201,8 @@ public class Main {
                 source = Paths.get(previousRunPath + previousRunProjectName + "_b.featureSelection.infoGain.csv");
                 destination = Paths.get(wd + "/" + project + "b.featureSelection.infoGain.csv");
                 Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
-                
-                File f = new File(previousRunPath + previousRunProjectName+"_c.classification.results.csv");
+
+                File f = new File(previousRunPath + previousRunProjectName + "_c.classification.results.csv");
                 f.createNewFile();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -217,7 +219,9 @@ public class Main {
                 //put data together in the same file for ML
                 System.out.println("## Preprocessing of the input file(s)");
                 String CLASSIFICATION_FILE = wd + project + "a.classification.data_to_train.csv"; //output of AdaptDatasetToWeka()
-                if (debug) System.out.println("CLASSIFICATION_FILE: "+CLASSIFICATION_FILE);
+                if (debug) {
+                    System.out.println("CLASSIFICATION_FILE: " + CLASSIFICATION_FILE);
+                }
                 if (new File(CLASSIFICATION_FILE).exists() && resumeTraining) {
                     System.out.println("Preprocessing of the input file(s) already done... skipping");
                 } else {
@@ -698,6 +702,9 @@ public class Main {
                 break;
             case "restoreRun":
                 restoreRun = Boolean.valueOf(value.trim());
+                break;
+            case "noFeatureSelection":
+                noFeatureSelection = Boolean.valueOf(value.trim());
                 break;
             case "previousRunPath":
                 previousRunPath = value.trim();

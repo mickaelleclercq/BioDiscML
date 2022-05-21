@@ -52,14 +52,14 @@ public class Training {
      */
     public Training(String dataToTrainModel, String resultsFile,
             String featureSelectionFile, String type) {
-        if (!Main.restoreRun || !Main.resumeTraining) {            
+        if (!Main.restoreRun || !Main.resumeTraining) {
             if (new File(featureSelectionFile).exists()) {
-                System.out.println("\t"+featureSelectionFile+" exist... deleting...");
+                System.out.println("\t" + featureSelectionFile + " exist... deleting...");
                 new File(featureSelectionFile).delete();
                 new File(featureSelectionFile.replace(".csv", ".arff")).delete();
             }
             if (new File(resultsFile).exists()) {
-                System.out.println("\t"+resultsFile+" exist... deleting...");
+                System.out.println("\t" + resultsFile + " exist... deleting...");
                 new File(resultsFile).delete();
                 new File(resultsFile.replace(".csv", ".arff")).delete();
             }
@@ -224,11 +224,23 @@ public class Training {
 
                 }
             } else {
-                //brute force classification, try everything in the provided classifiers and optimizers
-                for (String cmd : Main.classificationBruteForceCommands) {
-                    String classifier = cmd.split(" ")[0];
-                    String options = cmd.replace(classifier, "").trim();
-                    addClassificationToQueue(classifier, options);
+                // if no feature selection is asked
+                if (Main.noFeatureSelection) {
+                    Main.maxNumberOfSelectedFeatures = weka.myData.numAttributes();
+                    Main.maxNumberOfFeaturesInModel = weka.myData.numAttributes();
+                    for (String cmd : Main.classificationBruteForceCommands) {
+                        String classifier = cmd.split(" ")[0];
+                        String options = cmd.replace(classifier, "").trim();
+                        addClassificationToQueue(classifier, options);
+                    }
+
+                } else {
+                    //brute force classification, try everything in the provided classifiers and optimizers
+                    for (String cmd : Main.classificationBruteForceCommands) {
+                        String classifier = cmd.split(" ")[0];
+                        String options = cmd.replace(classifier, "").trim();
+                        addClassificationToQueue(classifier, options);
+                    }
                 }
             }
 
@@ -449,7 +461,6 @@ public class Training {
                             pw.flush();
                         });
 
-
             } else {
                 alClassifiers.stream().map((classif) -> {
                     String s = StepWiseFeatureSelectionTraining(classif[0], classif[1], classif[2], classif[3]);
@@ -535,7 +546,7 @@ public class Training {
                 System.out.println("\tGoing to Stepwise evaluations");
             }
 
-            //all features search
+            //all features search, no feature selection
             if (searchMethod.startsWith("all")) {
                 int top = ao.alAttributes.size();
                 //Create attribute list
@@ -1391,10 +1402,12 @@ public class Training {
     private static void addClassificationToQueue(String classifier, String options) {
         String optimizers[] = Main.classificationOptimizers.split(",");
         String searchmodes[] = Main.searchmodes.split(",");
+        if (Main.noFeatureSelection){
+            searchmodes = new String[]{"all"};
+        }                    
 
-        for (String optimizer : optimizers) {
-            //AUC, ACC, SEN, SPE, MCC, TP+FN, kappa
-            for (String searchmode : searchmodes) {
+        for (String optimizer : optimizers) {//AUC, ACC, SEN, SPE, MCC, TP+FN, kappa            
+            for (String searchmode : searchmodes) {//F, FB, B, BF, topk
                 alClassifiers.add(new String[]{classifier, options, optimizer.trim(), searchmode.trim()});
             }
         }
