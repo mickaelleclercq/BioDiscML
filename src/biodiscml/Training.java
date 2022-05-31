@@ -611,7 +611,7 @@ public class Training {
                                 ao.getRetainedAttributesIdClassInString(), isClassification, 10);
 
                         if (o instanceof String || o == null) {
-                            break;
+                            return (String) o;
                         } else if (isClassification) {
                             cr = (Weka_module.ClassificationResultsObject) o;
                         } else {

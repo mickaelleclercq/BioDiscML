@@ -493,6 +493,17 @@ public class Weka_module {
             }
             return message;
 
+        } catch (Error err){
+            String message = "[model error] " + classifier + " " + classifier_options + " | " + err.getMessage();
+            if (Main.debug) {
+//                if (!e.getMessage().contains("handle") && !e.getMessage().contains("supported")) {
+//
+//                }
+                err.printStackTrace();
+                System.err.println(message);
+
+            }
+            return message;
         }
 
     }
