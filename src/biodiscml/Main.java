@@ -97,6 +97,7 @@ public class Main {
     public static String previousRunProjectName = "";
 
     public static Boolean noFeatureSelection = false;
+    public static boolean generateModelWithCorrelatedGenes=false;
 
     //benchmark
     public static String bench_AUC = "";
@@ -661,6 +662,9 @@ public class Main {
             case "retrieveCorrelatedGenes":
                 retrieveCorrelatedGenes = Boolean.valueOf(value.trim());
                 break;
+            case "generateModelWithCorrelatedGenes":
+                generateModelWithCorrelatedGenes = Boolean.valueOf(value.trim());
+                break;   
             case "combinationRule":
                 combinationRule = value.trim().toUpperCase();
                 break;
