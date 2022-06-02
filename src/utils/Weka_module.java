@@ -941,15 +941,27 @@ public class Weka_module {
             //get id attribute
             Attribute id = data.attribute(0);
 
+            // info gain filter on value (remove attributes with 0 merit)
             weka.filters.supervised.attribute.AttributeSelection select = new weka.filters.supervised.attribute.AttributeSelection();
-            String limit = " -N " + Main.maxNumberOfSelectedFeatures;
-            String options = "-E \"weka.attributeSelection.InfoGainAttributeEval \" -S \"weka.attributeSelection.Ranker -T 0.001" + limit + "\"";
+            String options = "-E \"weka.attributeSelection.InfoGainAttributeEval \" -S \"weka.attributeSelection.Ranker -T 0.001\"";
             select.setOptions(weka.core.Utils.splitOptions((options)));
             select.setInputFormat(data);
-
+           
             Instances filteredData = Filter.useFilter(data, select);
-
+            
             System.out.println("Total attributes: " + (filteredData.numAttributes() - 1));
+            
+            // filter on number of maxNumberOfSelectedFeatures
+            if (filteredData.numAttributes() > Main.maxNumberOfSelectedFeatures){
+                System.out.println("Too many attributes, only keep best " + Main.maxNumberOfSelectedFeatures);
+                String limit = " -N " + Main.maxNumberOfSelectedFeatures;
+                options = "-E \"weka.attributeSelection.InfoGainAttributeEval \" -S \"weka.attributeSelection.Ranker -T 0.001" + limit + "\"";
+                select.setOptions(weka.core.Utils.splitOptions((options)));
+                select.setInputFormat(filteredData);
+                filteredData = Filter.useFilter(filteredData, select);
+            }
+            filteredData.attribute(1);
+            
 
             if (filteredData.numAttributes() <= 10) {
                 System.out.println("Not enough attributes, probably all non-informative. So keeping all and ranking them, but expect very low performances");
