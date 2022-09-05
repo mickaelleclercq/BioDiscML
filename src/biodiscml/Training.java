@@ -40,6 +40,7 @@ public class Training {
     public boolean parrallel = true;
     public static String trainFileName = "";
     public static DecimalFormat df = new DecimalFormat();
+    public static PrintWriter pw ;
 
     public Training() {
     }
@@ -426,10 +427,9 @@ public class Training {
                     + " classifiers to train on the " + alClassifiersBeforeRemoval);
 
         }
-
+        
         try {
             //PREPARE OUTPUT
-            PrintWriter pw;
             if (Main.resumeTraining && !Main.restoreRun) {
                 pw = new PrintWriter(new FileWriter(resultsFile, true));
                 //pw.println("Resumed here");
@@ -440,7 +440,7 @@ public class Training {
             }
 
             //EXECUTE IN PARRALLEL
-            System.out.println("total classifiers to test: " + alClassifiers.size());
+            System.out.println("Total classifiers to test: " + alClassifiers.size());
 
             if (parrallel) {
                 alClassifiers
@@ -484,10 +484,17 @@ public class Training {
             if (Main.debug) {
                 e.printStackTrace();
             }
+            System.out.println("Total model tested: " + cptPassed + "/" + alClassifiers.size()
+                    + ", including " + cptFailed + " incompatible models");
+            pw.close();
+
         } catch (Error err) {
             if (Main.debug) {
                 err.printStackTrace();
             }
+            System.out.println("Total model tested: " + cptPassed + "/" + alClassifiers.size()
+                    + ", including " + cptFailed + " incompatible models");
+            pw.close();
         }
     }
 
@@ -1402,9 +1409,9 @@ public class Training {
     private static void addClassificationToQueue(String classifier, String options) {
         String optimizers[] = Main.classificationOptimizers.split(",");
         String searchmodes[] = Main.searchmodes.split(",");
-        if (Main.noFeatureSelection){
+        if (Main.noFeatureSelection) {
             searchmodes = new String[]{"all"};
-        }                    
+        }
 
         for (String optimizer : optimizers) {//AUC, ACC, SEN, SPE, MCC, TP+FN, kappa            
             for (String searchmode : searchmodes) {//F, FB, B, BF, topk
