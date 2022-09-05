@@ -543,7 +543,7 @@ public class BestModelSelectionAndReport {
                 if (classification) {
                     Weka_module.ClassificationResultsObject cr2
                             = (Weka_module.ClassificationResultsObject) weka2.testClassifierFromFileSource(new File(weka2.ARFFfile),
-                                    modelFilename + ".model", Main.isClassification);
+                                    modelFilename + ".model", true);
                     alROCs.add(cr2);
                     alROCs.add(cr2);
                     System.out.println("[score_testing] ACC: " + cr2.ACC);
@@ -573,7 +573,7 @@ public class BestModelSelectionAndReport {
                 } else {
                     Weka_module.RegressionResultsObject rr2
                             = (Weka_module.RegressionResultsObject) weka2.testClassifierFromFileSource(new File(weka2.ARFFfile),
-                                    modelFilename + ".model", Main.isClassification);
+                                    modelFilename + ".model", false);
                     System.out.println("[score_testing] Average CC: " + rr2.CC);
                     System.out.println("[score_testing] Average RMSE: " + rr2.RMSE);
                     //
