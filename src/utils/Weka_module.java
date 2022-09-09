@@ -896,7 +896,7 @@ public class Weka_module {
             if (filteredData.attribute(id.name()) != null && !filteredData.attribute(0).equals(id)) {
                 //find index of ID
                 int idIndex = 0;
-                for (int i = 0; i < filteredData.size(); i++) {
+                for (int i = 0; i < filteredData.numAttributes(); i++) {
                     if (filteredData.attribute(i).equals(id)) {
                         idIndex = i;
                     }
