@@ -40,7 +40,7 @@ public class Training {
     public boolean parrallel = true;
     public static String trainFileName = "";
     public static DecimalFormat df = new DecimalFormat();
-    public static PrintWriter pw ;
+    public static PrintWriter pw;
 
     public Training() {
     }
@@ -53,7 +53,8 @@ public class Training {
      */
     public Training(String dataToTrainModel, String resultsFile,
             String featureSelectionFile, String type) {
-        if (!Main.restoreRun || !Main.resumeTraining) {
+        // deleting previous run
+        if (!Main.restoreRun && !Main.resumeTraining) {
             if (new File(featureSelectionFile).exists()) {
                 System.out.println("\t" + featureSelectionFile + " exist... deleting...");
                 new File(featureSelectionFile).delete();
@@ -373,7 +374,12 @@ public class Training {
             if (new File(featureSelectionFile).exists() && Main.resumeTraining) {
                 System.out.print("Selecting attributes and ranking by RelieFF already done... skipped by resumeTraining");
             } else {
-                weka.attributeSelectionByRelieFFAndSaveToCSV(featureSelectionFile);
+                if (weka.myData.numInstances() > 500) {
+                    weka.attributeSelectionByRelieFFAndSaveToCSVbigData(featureSelectionFile);
+                } else {
+                    weka.attributeSelectionByRelieFFAndSaveToCSV(featureSelectionFile);
+                }
+
                 System.out.println("[done]");
 
                 //reset arff and keep compatible header
@@ -427,7 +433,7 @@ public class Training {
                     + " classifiers to train on the " + alClassifiersBeforeRemoval);
 
         }
-        
+
         try {
             //PREPARE OUTPUT
             if (Main.resumeTraining && !Main.restoreRun) {

@@ -109,6 +109,18 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         System.out.println("#### BioDiscML ####\n");
+        // check java version
+        String version = System.getProperty("java.version");
+        if (!version.contains("1.8")){
+            String arg = "";
+            for (String argl : args) {
+                arg+=argl+" ";
+            }
+            System.out.println("ERROR: Java version is "+ version+"."
+                    + "\nYou need java 1.8. If it is installed, try this command:\n"
+                    + "\t/usr/lib/jvm/java-8-openjdk-amd64/bin/java -jar biodiscml.jar "+arg);
+            System.exit(0);
+        }
         //read configuration file
         System.out.println("#### Parsing options...");
         setOptionsFromCommandLine(args); //from command line

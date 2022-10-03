@@ -121,7 +121,7 @@ public class BestModelSelectionAndReport {
             //read results
             while (br.ready()) {
                 line = br.readLine();
-                if (!line.trim().isEmpty()) {
+                if (!line.trim().isEmpty() && !line.contains("[model error]")) {
                     if (classification) {
                         try {
                             classificationObject co = new classificationObject(line);
@@ -132,7 +132,7 @@ public class BestModelSelectionAndReport {
                                 e.printStackTrace();
                             }
                         }
-                    } else {
+                    } else  {
                         try {
                             regressionObject ro = new regressionObject(line);
                             tmModels.put(Double.valueOf(ro.hmValues.get(Main.bestModelsSortingMetric)) + " " + ro.hmValues.get("ID"), ro);
