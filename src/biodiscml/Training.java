@@ -246,24 +246,26 @@ public class Training {
                 }
             }
 
-            System.out.print("Feature selection and ranking...");
-            if (new File(featureSelectionFile).exists() && Main.resumeTraining) {
-                System.out.print("\nFeature selection and ranking already done... skipping");
-            } else {
-                //ATTRIBUTE SELECTION for classification
-                weka.attributeSelectionByInfoGainRankingAndSaveToCSV(featureSelectionFile);
-                //get the rank of attributes
-                ranking = weka.featureRankingForClassification();
-                System.out.println("[done]");
-                //reset arff and keep compatible header
-                weka.setCSVFile(new File(featureSelectionFile));
-                weka.csvToArff(isClassification);
-                weka.makeCompatibleARFFheaders(dataToTrainModel.replace("data_to_train.csv", "data_to_train.arff"),
-                        featureSelectionFile.replace("infoGain.csv", "infoGain.arff"));
+            if (!Main.noFeatureSelection) {
+                System.out.print("Feature selection and ranking...");
+                if (new File(featureSelectionFile).exists() && Main.resumeTraining) {
+                    System.out.print("\nFeature selection and ranking already done... skipping");
+                } else {
+                    //ATTRIBUTE SELECTION for classification
+                    weka.attributeSelectionByInfoGainRankingAndSaveToCSV(featureSelectionFile);
+                    //get the rank of attributes
+                    ranking = weka.featureRankingForClassification();
+                    System.out.println("[done]");
+                    //reset arff and keep compatible header
+                    weka.setCSVFile(new File(featureSelectionFile));
+                    weka.csvToArff(isClassification);
+                    weka.makeCompatibleARFFheaders(dataToTrainModel.replace("data_to_train.csv", "data_to_train.arff"),
+                            featureSelectionFile.replace("infoGain.csv", "infoGain.arff"));
+                }
+                weka.setARFFfile(featureSelectionFile.replace("infoGain.csv", "infoGain.arff"));
+                weka.setDataFromArff();
             }
 
-            weka.setARFFfile(featureSelectionFile.replace("infoGain.csv", "infoGain.arff"));
-            weka.setDataFromArff();
         } else {
             //REGRESSION
             if (Main.debug) {
@@ -370,7 +372,7 @@ public class Training {
             }
 
             //ATTRIBUTE SELECTION for regression
-            if (!Main.skipRanking) {
+            if (!Main.noFeatureSelection) {
                 System.out.print("Selecting attributes and ranking by RelieFF...");
                 if (new File(featureSelectionFile).exists() && Main.resumeTraining) {
                     System.out.print("Selecting attributes and ranking by RelieFF already done... skipped by resumeTraining");
@@ -387,7 +389,7 @@ public class Training {
                     weka.setARFFfile(featureSelectionFile.replace("RELIEFF.csv", "RELIEFF.arff"));
                     weka.setDataFromArff();
                 }
-            } 
+            }
 
         }
         //resume training, remove from alClassifier all classifiers already trained

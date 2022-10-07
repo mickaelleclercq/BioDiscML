@@ -57,7 +57,7 @@ public class BestModelSelectionAndReport {
             String type
     ) {
         trainFileName = trainFilName;
-        if (Main.skipRanking) {
+        if (Main.noFeatureSelection) {
             featureSelectionFile = trainFilName;
         } else {
             featureSelectionFile = featureSelFile;

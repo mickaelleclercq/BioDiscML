@@ -99,7 +99,6 @@ public class Main {
     public static Boolean noFeatureSelection = false;
     public static boolean generateModelWithCorrelatedGenes = false;
 
-    static boolean skipRanking = false; // in case of huge dataset for regression. 
 
     //benchmark
     public static String bench_AUC = "";
@@ -678,9 +677,6 @@ public class Main {
                 break;
             case "generateModelWithCorrelatedGenes":
                 generateModelWithCorrelatedGenes = Boolean.valueOf(value.trim());
-                break;
-            case "skipRanking":
-                skipRanking = Boolean.valueOf(value.trim());
                 break;
             case "combinationRule":
                 combinationRule = value.trim().toUpperCase();
