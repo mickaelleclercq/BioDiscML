@@ -97,7 +97,9 @@ public class Main {
     public static String previousRunProjectName = "";
 
     public static Boolean noFeatureSelection = false;
-    public static boolean generateModelWithCorrelatedGenes=false;
+    public static boolean generateModelWithCorrelatedGenes = false;
+
+    static boolean skipRanking = false; // in case of huge dataset for regression. 
 
     //benchmark
     public static String bench_AUC = "";
@@ -111,14 +113,14 @@ public class Main {
         System.out.println("#### BioDiscML ####\n");
         // check java version
         String version = System.getProperty("java.version");
-        if (!version.contains("1.8")){
+        if (!version.contains("1.8")) {
             String arg = "";
             for (String argl : args) {
-                arg+=argl+" ";
+                arg += argl + " ";
             }
-            System.out.println("ERROR: Java version is "+ version+"."
+            System.out.println("ERROR: Java version is " + version + "."
                     + "\nYou need java 1.8. If it is installed, try this command:\n"
-                    + "\t/usr/lib/jvm/java-8-openjdk-amd64/bin/java -jar biodiscml.jar "+arg);
+                    + "\t/usr/lib/jvm/java-8-openjdk-amd64/bin/java -jar biodiscml.jar " + arg);
             System.exit(0);
         }
         //read configuration file
@@ -676,7 +678,10 @@ public class Main {
                 break;
             case "generateModelWithCorrelatedGenes":
                 generateModelWithCorrelatedGenes = Boolean.valueOf(value.trim());
-                break;   
+                break;
+            case "skipRanking":
+                skipRanking = Boolean.valueOf(value.trim());
+                break;
             case "combinationRule":
                 combinationRule = value.trim().toUpperCase();
                 break;

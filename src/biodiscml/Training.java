@@ -370,26 +370,24 @@ public class Training {
             }
 
             //ATTRIBUTE SELECTION for regression
-            System.out.print("Selecting attributes and ranking by RelieFF...");
-            if (new File(featureSelectionFile).exists() && Main.resumeTraining) {
-                System.out.print("Selecting attributes and ranking by RelieFF already done... skipped by resumeTraining");
-            } else {
-                if (weka.myData.numInstances() > 500) {
-                    weka.attributeSelectionByRelieFFAndSaveToCSVbigData(featureSelectionFile);
+            if (!Main.skipRanking) {
+                System.out.print("Selecting attributes and ranking by RelieFF...");
+                if (new File(featureSelectionFile).exists() && Main.resumeTraining) {
+                    System.out.print("Selecting attributes and ranking by RelieFF already done... skipped by resumeTraining");
                 } else {
                     weka.attributeSelectionByRelieFFAndSaveToCSV(featureSelectionFile);
+
+                    System.out.println("[done]");
+
+                    //reset arff and keep compatible header
+                    weka.setCSVFile(new File(featureSelectionFile));
+                    weka.csvToArff(isClassification);
+                    weka.makeCompatibleARFFheaders(dataToTrainModel.replace("data_to_train.csv", "data_to_train.arff"),
+                            featureSelectionFile.replace("RELIEFF.csv", "RELIEFF.arff"));
+                    weka.setARFFfile(featureSelectionFile.replace("RELIEFF.csv", "RELIEFF.arff"));
+                    weka.setDataFromArff();
                 }
-
-                System.out.println("[done]");
-
-                //reset arff and keep compatible header
-                weka.setCSVFile(new File(featureSelectionFile));
-                weka.csvToArff(isClassification);
-                weka.makeCompatibleARFFheaders(dataToTrainModel.replace("data_to_train.csv", "data_to_train.arff"),
-                        featureSelectionFile.replace("RELIEFF.csv", "RELIEFF.arff"));
-                weka.setARFFfile(featureSelectionFile.replace("RELIEFF.csv", "RELIEFF.arff"));
-                weka.setDataFromArff();
-            }
+            } 
 
         }
         //resume training, remove from alClassifier all classifiers already trained

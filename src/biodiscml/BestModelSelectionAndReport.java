@@ -57,7 +57,11 @@ public class BestModelSelectionAndReport {
             String type
     ) {
         trainFileName = trainFilName;
-        featureSelectionFile = featureSelFile;
+        if (Main.skipRanking) {
+            featureSelectionFile = trainFilName;
+        } else {
+            featureSelectionFile = featureSelFile;
+        }
         predictionsResultsFile = predictionsResFile;
         df.setMaximumFractionDigits(3);
         DecimalFormatSymbols dfs = new DecimalFormatSymbols();
@@ -132,7 +136,7 @@ public class BestModelSelectionAndReport {
                                 e.printStackTrace();
                             }
                         }
-                    } else  {
+                    } else {
                         try {
                             regressionObject ro = new regressionObject(line);
                             tmModels.put(Double.valueOf(ro.hmValues.get(Main.bestModelsSortingMetric)) + " " + ro.hmValues.get("ID"), ro);
