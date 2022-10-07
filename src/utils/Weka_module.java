@@ -493,7 +493,7 @@ public class Weka_module {
             }
             return message;
 
-        } catch (Error err){
+        } catch (Error err) {
             String message = "[model error] " + classifier + " " + classifier_options + " | " + err.getMessage();
             if (Main.debug) {
 //                if (!e.getMessage().contains("handle") && !e.getMessage().contains("supported")) {
@@ -598,9 +598,9 @@ public class Weka_module {
         } catch (Exception e) {
             if (Main.debug) {
                 System.err.println(e.getMessage() + " for " + classifier + " " + classifier_options);
-                e.printStackTrace();                
+                e.printStackTrace();
             }
-            
+
             return null;
         }
 
@@ -854,7 +854,7 @@ public class Weka_module {
             }
             //get id attribute
             Attribute id = data.attribute(0);
-            
+
             weka.filters.supervised.attribute.AttributeSelection select = new weka.filters.supervised.attribute.AttributeSelection();
 
             //filter based on ranker score threshold
@@ -878,7 +878,7 @@ public class Weka_module {
 //            filteredData.attribute(0).isNominal();
 
             System.out.println("Total attributes: " + (filteredData.numAttributes() - 1));
-            
+
             if (filteredData.numAttributes() == 0) {
                 System.out.println("Not enough attributes, probably all non-informative. So keeping all and ranking them, but expect low training performance");
                 options = "-E \"weka.attributeSelection.ReliefFAttributeEval -M -1 -D 1 -K 10\" -S \"weka.attributeSelection.Ranker -T -1 -N -1\"";
@@ -886,7 +886,7 @@ public class Weka_module {
                 select.setInputFormat(data);
                 filteredData = Filter.useFilter(data, select);
             }
-            
+
             //add identifier if it has been lost after relieff
             if (filteredData.attribute(id.name()) == null) {
                 filteredData.insertAttributeAt(id, 0);
@@ -907,12 +907,97 @@ public class Weka_module {
                 filteredData.insertAttributeAt(id, 0);
             }
 
+            //restore IDs
+            for (int i = 0; i < filteredData.numInstances(); i++) {
+                filteredData.instance(i).setValue(0, (String) id.value(i));
+            }
+
+            //save data as csv
+            CSVSaver csv = new CSVSaver();
+            csv.setInstances(filteredData);
+
+            csv.setFile(new File(outfile));
+            if (new File(outfile.replace(".csv", ".arff")).exists()) {
+                new File(outfile.replace(".csv", ".arff")).delete();
+            }
+            csv.writeBatch();
+            myData = filteredData;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void attributeSelectionByRelieFFAndSaveToCSVbigData(String outfile) {
+
+        // load data
+        try {
+            ConverterUtils.DataSource source = new ConverterUtils.DataSource(ARFFfile);
+            Instances data = source.getDataSet();
+            if (data.classIndex() == -1) {
+                data.setClassIndex(data.numAttributes() - 1);
+            }
+            //get id attribute
+            Attribute id = data.attribute(0);
+
+            weka.filters.supervised.attribute.AttributeSelection select = new weka.filters.supervised.attribute.AttributeSelection();
+
+            //go parallel one set of features at a time
+            //filter based on ranker score threshold
+            String limit = " -N " + Main.maxNumberOfSelectedFeatures;
+            String options = "-E \"weka.attributeSelection.ReliefFAttributeEval -M -1 -D 1 -K 10\" -S \"weka.attributeSelection.Ranker -T 0.01" + limit + "\"";
+            select.setOptions(weka.core.Utils.splitOptions((options)));
+            select.setInputFormat(data);
+            Instances filteredData = Filter.useFilter(data, select);
+            //restoring instances IDs as first attribute
+//            Attribute attributeInstances = filteredData.attribute("Instance");
+//            filteredData.deleteAttributeAt(filteredData.attribute("Instance").index());
+//            filteredData.insertAttributeAt(attributeInstances, 0);
+//
+//            Enumeration e = attributeInstances.enumerateValues();
+//            int cpt = 0;
+//            while (e.hasMoreElements()) {
+//                String s = (String) e.nextElement();
+//                filteredData.instance(cpt).setValue(0, s);
+//                cpt++;
+//            }
+//            filteredData.attribute(0).isNominal();
+
+            System.out.println("Total attributes: " + (filteredData.numAttributes() - 1));
+
+            if (filteredData.numAttributes() == 0) {
+                System.out.println("Not enough attributes, probably all non-informative. So keeping all and ranking them, but expect low training performance");
+                options = "-E \"weka.attributeSelection.ReliefFAttributeEval -M -1 -D 1 -K 10\" -S \"weka.attributeSelection.Ranker -T -1 -N -1\"";
+                select.setOptions(weka.core.Utils.splitOptions((options)));
+                select.setInputFormat(data);
+                filteredData = Filter.useFilter(data, select);
+            }
+
+            //add identifier if it has been lost after relieff
+            if (filteredData.attribute(id.name()) == null) {
+                filteredData.insertAttributeAt(id, 0);
+                filteredData.attribute(0).isNominal();
+            }
+            //move identifier to index 0
+            if (filteredData.attribute(id.name()) != null && !filteredData.attribute(0).equals(id)) {
+                //find index of ID
+                int idIndex = 0;
+                for (int i = 0; i < filteredData.numAttributes(); i++) {
+                    if (filteredData.attribute(i).equals(id)) {
+                        idIndex = i;
+                    }
+                }
+                //delete ID
+                filteredData.deleteAttributeAt(idIndex);
+                //reinsert ID
+                filteredData.insertAttributeAt(id, 0);
+            }
 
             //restore IDs
             for (int i = 0; i < filteredData.numInstances(); i++) {
                 filteredData.instance(i).setValue(0, (String) id.value(i));
             }
-            
+
             //save data as csv
             CSVSaver csv = new CSVSaver();
             csv.setInstances(filteredData);
@@ -946,13 +1031,13 @@ public class Weka_module {
             String options = "-E \"weka.attributeSelection.InfoGainAttributeEval \" -S \"weka.attributeSelection.Ranker -T 0.001\"";
             select.setOptions(weka.core.Utils.splitOptions((options)));
             select.setInputFormat(data);
-           
+
             Instances filteredData = Filter.useFilter(data, select);
-            
+
             System.out.println("Total attributes: " + (filteredData.numAttributes() - 1));
-            
+
             // filter on number of maxNumberOfSelectedFeatures
-            if (filteredData.numAttributes() > Main.maxNumberOfSelectedFeatures){
+            if (filteredData.numAttributes() > Main.maxNumberOfSelectedFeatures) {
                 System.out.println("Too many attributes, only keep best " + Main.maxNumberOfSelectedFeatures);
                 String limit = " -N " + Main.maxNumberOfSelectedFeatures;
                 options = "-E \"weka.attributeSelection.InfoGainAttributeEval \" -S \"weka.attributeSelection.Ranker -T 0.001" + limit + "\"";
@@ -961,7 +1046,6 @@ public class Weka_module {
                 filteredData = Filter.useFilter(filteredData, select);
             }
             filteredData.attribute(1);
-            
 
             if (filteredData.numAttributes() <= 10) {
                 System.out.println("Not enough attributes, probably all non-informative. So keeping all and ranking them, but expect very low performances");
@@ -978,15 +1062,21 @@ public class Weka_module {
             if (filteredData.attribute(id.name()) != null && !filteredData.attribute(0).equals(id)) {
                 //find index of ID
                 int idIndex = 0;
-                for (int i = 0; i < filteredData.size(); i++) {
+                for (int i = 0; i < filteredData.numAttributes(); i++) {
                     if (filteredData.attribute(i).equals(id)) {
                         idIndex = i;
                     }
                 }
-                //delete ID
-                filteredData.deleteAttributeAt(idIndex);
-                //reinsert ID
-                filteredData.insertAttributeAt(id, 0);
+                Reorder r = new Reorder();
+                idIndex=idIndex+1;
+                if (idIndex != (filteredData.numAttributes() - 1)) {
+                    options = "-R " + idIndex + ",first-" + (idIndex - 1) + "," + (idIndex + 1) + "-last";
+                } else {
+                    options = "-R " + idIndex + ",first-" + (idIndex - 1) + "," + (idIndex + 1) ;
+                }
+                r.setOptions(weka.core.Utils.splitOptions((options)));
+                r.setInputFormat(filteredData);
+                filteredData = Filter.useFilter(filteredData, r);
             }
 
             //save data as csv
@@ -1003,7 +1093,7 @@ public class Weka_module {
             //evaluation.crossValidateModel(classifier, data, 10, new Random(1));
         } catch (Exception e) {
             e.printStackTrace();
-            System.err.println(e.getMessage() + "\nImpossible to execute InfoGain. Trying directly Ranking");
+            System.err.println(e.getMessage() + "\nUnable to execute InfoGain. Trying directly Ranking");
             featureRankingForClassification();
         }
     }
@@ -1268,7 +1358,7 @@ public class Weka_module {
                     if (j == 0) {
                         newData.insertAttributeAt(data.attribute(0), 0);
                     }
-                    //sert instance name
+                    //insert instance name
                     try {
                         newData.instance(j).setValue(0, data.instance(j).stringValue(0));
                     } catch (Exception e) {
@@ -1606,11 +1696,11 @@ public class Weka_module {
         try {
             //load model
             for (String s : model.toString().split("\n")) {
-                if (s.startsWith("@attribute '") && s.endsWith("numeric")){
+                if (s.startsWith("@attribute '") && s.endsWith("numeric")) {
                     s = s.replace("@attribute '", "").trim();
                     s = s.substring(0, s.lastIndexOf("'"));
                     al.add(s);
-                }else if (s.startsWith("@attribute '")) {
+                } else if (s.startsWith("@attribute '")) {
                     s = s.replace("@attribute '", "").trim();
                     s = s.substring(0, s.lastIndexOf("' {"));
                     al.add(s);
@@ -1644,7 +1734,7 @@ public class Weka_module {
                     s = s.replace("@attribute '", "").trim();
                     String attributeName = s.substring(0, s.lastIndexOf("' {")).trim();
                     String attributeType = s.substring(s.indexOf("' {")).trim();
-                    hm.put("'"+attributeName+"'", attributeType);
+                    hm.put("'" + attributeName + "'", attributeType);
                 } else if (s.startsWith("@attribute")) {
                     //hm.put(s.split(" ")[1], s.split(" ")[2]); //feature_name, feature_type
                     s = s.replace("@attribute ", "").trim();
