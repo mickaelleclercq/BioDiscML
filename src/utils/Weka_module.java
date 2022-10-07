@@ -863,19 +863,6 @@ public class Weka_module {
             select.setOptions(weka.core.Utils.splitOptions((options)));
             select.setInputFormat(data);
             Instances filteredData = Filter.useFilter(data, select);
-            //restoring instances IDs as first attribute
-//            Attribute attributeInstances = filteredData.attribute("Instance");
-//            filteredData.deleteAttributeAt(filteredData.attribute("Instance").index());
-//            filteredData.insertAttributeAt(attributeInstances, 0);
-//
-//            Enumeration e = attributeInstances.enumerateValues();
-//            int cpt = 0;
-//            while (e.hasMoreElements()) {
-//                String s = (String) e.nextElement();
-//                filteredData.instance(cpt).setValue(0, s);
-//                cpt++;
-//            }
-//            filteredData.attribute(0).isNominal();
 
             System.out.println("Total attributes: " + (filteredData.numAttributes() - 1));
 
@@ -911,7 +898,6 @@ public class Weka_module {
             for (int i = 0; i < filteredData.numInstances(); i++) {
                 filteredData.instance(i).setValue(0, (String) id.value(i));
             }
-
             //save data as csv
             CSVSaver csv = new CSVSaver();
             csv.setInstances(filteredData);
