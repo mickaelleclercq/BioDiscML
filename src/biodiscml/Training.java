@@ -529,9 +529,6 @@ public class Training {
                 || valueToMaximizeOrMinimize.equals("rrse");
 
         try {
-            StringBuilder predictions = new StringBuilder();
-            StringBuilder selectedAttributes = new StringBuilder();
-            Classifier model = null;
             Object o = null;
             int numberOfAttributes = 0;
             double previousMeasureToMaximize = -1000.0;
@@ -547,16 +544,18 @@ public class Training {
             Weka_module.RegressionResultsObject rr = null;
 
             // SHORT TEST to ensure compatibility of the model
-            o = weka.shortTestTrainClassifier(classifier, classifier_options,
-                    ao.getAttributesIdClassInString(), isClassification);
-            if (o.getClass().getName().equals("java.lang.String")) {
-                if (Main.debug) {
-                    System.out.println("SHORT TEST FAILED");
+            if (Main.performShortTest) {
+                o = weka.shortTestTrainClassifier(classifier, classifier_options,
+                        ao.getAttributesIdClassInString(), isClassification);
+                if (o.getClass().getName().equals("java.lang.String")) {
+                    if (Main.debug) {
+                        System.out.println("SHORT TEST FAILED");
+                    }
+                    return "ERROR\t" + o.toString();
                 }
-                return "ERROR\t" + o.toString();
             }
             if (Main.debug) {
-                System.out.println("\tGoing to Stepwise evaluations");
+                System.out.println("\tGoing to training");
             }
 
             //all features search, no feature selection
@@ -650,18 +649,6 @@ public class Training {
                                 previousMeasureToMaximize = currentMeasure;
                             } else {
                                 previousMeasureToMinimize = currentMeasure;
-                            }
-                            if (isClassification) {
-                                predictions = cr.predictions;
-                                selectedAttributes = cr.features;
-                                numberOfAttributes = cr.numberOfFeatures;
-                                model = cr.model;
-                            } else {
-                                //previousMeasureToMaximize = currentMeasure; ???
-                                predictions = rr.predictions;
-                                selectedAttributes = rr.features;
-                                numberOfAttributes = rr.numberOfFeatures;
-                                model = rr.model;
                             }
 
                             // do backward OR forward, check if we have an improvement if we remove previously chosen features
@@ -1437,7 +1424,9 @@ public class Training {
         //String valuesToMaximizeOrMinimize[] = new String[]{"CC", "MAE", "RMSE", "RAE", "RRSE"};
         String optimizers[] = Main.regressionOptimizers.split(",");
         String searchmodes[] = Main.searchmodes.split(",");
-
+        if (Main.noFeatureSelection) {
+            searchmodes = new String[]{"all"};
+        }
         for (String optimizer : optimizers) {//only CC is maximized here
             for (String searchmode : searchmodes) {
                 alClassifiers.add(new String[]{classifier, options, optimizer.trim(), searchmode.trim()});
