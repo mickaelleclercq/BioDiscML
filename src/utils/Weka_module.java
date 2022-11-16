@@ -571,7 +571,14 @@ public class Weka_module {
             StringBuffer sb = new StringBuffer();
 
             //build model to save it
-            model.buildClassifier(train);
+            try {
+                model.buildClassifier(train);
+            } catch (Exception exception) {
+                //crashing, try to remove ID and run again
+                train.deleteAttributeAt(0);
+                test.deleteAttributeAt(0);
+                model.buildClassifier(train);
+            }
 
             //evaluation
             Instant start = null;
@@ -669,14 +676,23 @@ public class Weka_module {
                 al_trainSet.add(instance);
                 al_testSet.remove(instance);
             }
-            //train the train set
+            //prepare train and test sets
             Instances trainSet = new Instances(data, al_trainSet.size());
             trainSet.addAll(al_trainSet);
-            model.buildClassifier(trainSet);
-
-            // Test the test set
             Instances testSet = new Instances(data, al_testSet.size());
             testSet.addAll(al_testSet);
+            
+            //train the train set            
+            try {
+                model.buildClassifier(trainSet);
+            } catch (Exception exception) {
+                // crashing probably because of presence of ID, removing it
+                trainSet.deleteAttributeAt(0);
+                testSet.deleteAttributeAt(0);
+                model.buildClassifier(trainSet);
+            }
+
+            // Test the test set            
             Evaluation eval = new Evaluation(data);
             eval.evaluateModel(model, testSet);
 
