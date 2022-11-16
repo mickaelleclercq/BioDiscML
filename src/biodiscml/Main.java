@@ -107,6 +107,7 @@ public class Main {
     static boolean retreiveCorrelatedGenesByRankingScore = true; //avoid for non-binary classes and regression
     static boolean ROCcurves = false; //experimental
     static boolean UpSetR = false; //experimental
+    static boolean performShortTest = true;
 
     public static void main(String[] args) throws IOException {
         System.out.println("#### BioDiscML ####\n");
@@ -728,6 +729,9 @@ public class Main {
                 break;
             case "previousRunProjectName":
                 previousRunProjectName = value.trim();
+                break;
+            case "performShortTest":
+                performShortTest = Boolean.valueOf(value.trim());
                 break;
         }
     }
