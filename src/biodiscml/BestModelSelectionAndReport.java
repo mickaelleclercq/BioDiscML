@@ -288,16 +288,17 @@ public class BestModelSelectionAndReport {
 
             classifierName = ro.classifier + "_" + ro.printOptions() + "_"
                     + ro.optimizer.toUpperCase().trim() + "_" + ro.mode;
-            //save feature file
-            weka.saveFilteredDataToCSV(ro.featuresSeparatedByCommas, classification, modelFilename + ".train_features.csv");
-            //call ranking function
-            rr.featuresRankingResults = weka.featureRankingForRegression(modelFilename + ".train_features.csv");
+                        
             //save model and features
             try {
                 SerializationHelper.write(modelFilename + ".model", rr.model);
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            //save feature file
+            weka.saveFilteredDataToCSV(ro.featuresSeparatedByCommas, classification, modelFilename + ".train_features.csv");
+            //call ranking function
+            rr.featuresRankingResults = weka.featureRankingForRegression(modelFilename + ".train_features.csv");
             System.out.println(modelFilename);
         }
 
