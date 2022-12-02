@@ -539,6 +539,8 @@ public class Weka_module {
                 data = Filter.useFilter(data, r);
                 data.setClassIndex(data.numAttributes() - 1);
 
+            }
+            if (!classifier.contains("meta.Vote")){
                 //create weka configuration string
                 String filterID = "weka.classifiers.meta.FilteredClassifier "
                         + "-F \"weka.filters.unsupervised.attribute.Remove -R 1\" "
@@ -554,7 +556,7 @@ public class Weka_module {
             int testSize = data.numInstances() - trainSize;
             Instances train = new Instances(data, 0, trainSize);
             Instances test = new Instances(data, trainSize, testSize);
-
+            
             //if cost sensitive case
             if (classifier.contains("CostSensitiveClassifier")) {
                 int falseExemples = train.attributeStats(train.classIndex()).nominalCounts[1];
@@ -569,10 +571,10 @@ public class Weka_module {
             config[0] = "";
             Classifier model = (Classifier) Utils.forName(Classifier.class, classname, config);
             StringBuffer sb = new StringBuffer();
-
+            
             //build model to save it
             try {
-                model.buildClassifier(train);
+                model.buildClassifier(train);                
             } catch (Exception exception) {
                 //crashing, try to remove ID and run again
                 train.deleteAttributeAt(0);
@@ -587,7 +589,7 @@ public class Weka_module {
                 start = Instant.now();
             }
 
-            Evaluation eval = new Evaluation(test);
+            Evaluation eval = new Evaluation(data);
             eval.evaluateModel(model, test);
 
             if (Main.debug2) {
@@ -644,6 +646,8 @@ public class Weka_module {
                 data = Filter.useFilter(data, r);
                 data.setClassIndex(data.numAttributes() - 1);
 
+            }
+            if (!classifier.contains("meta.Vote")){
                 //create weka configuration string
                 String filterID = "weka.classifiers.meta.FilteredClassifier "
                         + "-F \"weka.filters.unsupervised.attribute.Remove -R 1\" "
