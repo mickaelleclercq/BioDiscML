@@ -971,7 +971,7 @@ public class Training {
                             weka2.myData = weka2.extractFeaturesFromDatasetBasedOnModel(rr.model, weka2.myData);
                             for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
                                 Weka_module.RegressionResultsObject rro
-                                        = (Weka_module.RegressionResultsObject) weka2.trainClassifierHoldOutValidation(
+                                        = (Weka_module.RegressionResultsObject) weka2.trainClassifierBootstrap(
                                                 classifier, classifier_options,
                                                 null, isClassification, i);
                                 eproBSTrainTest.alCCs.add(Double.valueOf(rro.CC));
