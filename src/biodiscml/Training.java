@@ -453,7 +453,7 @@ public class Training {
                         .parallelStream()
                         .map((classif) -> StepWiseFeatureSelectionTraining(classif[0], classif[1], classif[2], classif[3]))
                         .map((s) -> {
-                            if (!s.contains("ERROR")) {
+                            if (!s.toLowerCase().contains("error")) {
                                 pw.println(s);
                                 pw.flush();
                             } else if (Main.printFailedModels) {
@@ -470,7 +470,7 @@ public class Training {
             } else {
                 alClassifiers.stream().map((classif) -> {
                     String s = StepWiseFeatureSelectionTraining(classif[0], classif[1], classif[2], classif[3]);
-                    if (!s.contains("ERROR")) {
+                    if (!s.toLowerCase().contains("error")) {
                         pw.println(s);
                     } else if (Main.printFailedModels) {
                         pw.println(s);

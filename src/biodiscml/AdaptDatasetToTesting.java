@@ -172,7 +172,7 @@ public class AdaptDatasetToTesting {
                                 // print values and replace , per .
                                 String out = tbo.hmData.get(s).get(idIndex).replace(",", ".").trim();
                                 if (out.isEmpty()) {
-                                    out = "?";
+                                    out = Main.missingValueToReplace;
                                 }
                                 hmOutput.get(feature).add(out);
                             }

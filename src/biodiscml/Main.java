@@ -98,6 +98,7 @@ public class Main {
 
     public static Boolean noFeatureSelection = false;
     public static boolean generateModelWithCorrelatedGenes = false;
+    public static String missingValueToReplace = "?"; //for testing, if a feature is missing, set a value to replace missing data
 
 
     //benchmark
@@ -732,6 +733,9 @@ public class Main {
                 break;
             case "performShortTest":
                 performShortTest = Boolean.valueOf(value.trim());
+                break;
+            case "missingValueToReplace":
+                missingValueToReplace = value.trim();
                 break;
         }
     }
