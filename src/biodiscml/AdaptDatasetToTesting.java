@@ -105,10 +105,10 @@ public class AdaptDatasetToTesting {
             System.out.println("Class " + theClass + " not found in " + f + ". Class values are filled by ?");
             missingClass = true;
         }
-        
+
         // replace spaces by _ in class
         for (int i = 0; i < myClass.size(); i++) {
-            String c=myClass.get(i).replace(" ", "_");
+            String c = myClass.get(i).replace(" ", "_");
             myClass.set(i, c);
         }
 
@@ -207,6 +207,7 @@ public class AdaptDatasetToTesting {
                 pw.print("\t" + feature);
             }
             pw.println();
+            pw.flush();
             //content
             for (int i = 0; i < hm_ids.size(); i++) {//for every instance
                 pw.print(hmOutput.get(Main.mergingID).get(i));
@@ -215,6 +216,7 @@ public class AdaptDatasetToTesting {
                 }
                 pw.println();
             }
+            pw.flush();
             pw.close();
             if (debug) {
                 System.out.println("closing outfile " + outfile);
