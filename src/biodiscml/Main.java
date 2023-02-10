@@ -100,7 +100,6 @@ public class Main {
     public static boolean generateModelWithCorrelatedGenes = false;
     public static String missingValueToReplace = "?"; //for testing, if a feature is missing, set a value to replace missing data
 
-
     //benchmark
     public static String bench_AUC = "";
 
@@ -121,7 +120,12 @@ public class Main {
             }
             System.out.println("ERROR: Java version is " + version + "."
                     + "\nYou need java 1.8. If it is installed, try this command:\n"
-                    + "\t/usr/lib/jvm/java-8-openjdk-amd64/bin/java -jar biodiscml.jar " + arg);
+            );
+            if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+                System.out.println("\"c:\\Program Files\\Java\\jdk1.8.0_111\\bin\\java.exe\" -jar biodiscml.jar " + arg);
+            } else {
+                System.out.println("/usr/lib/jvm/java-8-openjdk-amd64/bin/java -jar biodiscml.jar " + arg);
+            }
             System.exit(0);
         }
         //read configuration file
