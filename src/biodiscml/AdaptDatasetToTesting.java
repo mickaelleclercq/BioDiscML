@@ -212,7 +212,12 @@ public class AdaptDatasetToTesting {
             for (int i = 0; i < hm_ids.size(); i++) {//for every instance
                 pw.print(hmOutput.get(Main.mergingID).get(i));
                 for (String feature : alModelFeatures) {
-                    pw.print("\t" + hmOutput.get(feature).get(i));
+                    try {
+                        pw.print("\t" + hmOutput.get(feature).get(i));
+                    } catch (Exception e) {
+                        System.out.println("Feature "+feature+" is not present in the test set. Replacing with missing data");
+                        pw.print("\t?");
+                    }
                 }
                 pw.println();
             }
