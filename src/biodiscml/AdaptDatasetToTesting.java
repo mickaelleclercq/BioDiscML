@@ -60,9 +60,11 @@ public class AdaptDatasetToTesting {
             if (!f.startsWith("Model") && !f.startsWith("class")) {
                 hmModelFeatures.put(f, f);
             }
-            System.out.println("\t" + f);
         }
         hmModelFeatures.put("class", "class");
+        for (String s : hmModelFeatures.keySet()) {
+            System.out.println("\t" + s);
+        }
 
         //convert hashmap to list
         String[] files = new String[infiles.size()];
@@ -191,7 +193,7 @@ public class AdaptDatasetToTesting {
                 }
             }
             //PRINTING CONTENT IN THE RIGHT ORDER
-            if (voteModel) {
+            if (voteModel || (alModelFeatures.size() != hmModelFeatures.size())) {
                 //ensure class is at the end of the list
                 alModelFeatures = new ArrayList<>();
                 for (String feature : hmModelFeatures.keySet()) {

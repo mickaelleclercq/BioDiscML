@@ -60,7 +60,7 @@ public class Main {
     public static ArrayList<String> classificationFastWayCommands = new ArrayList<>(); //classifier, optimizer
     public static ArrayList<String> classificationBruteForceCommands = new ArrayList<>(); //classifier, optimizer
     public static String classificationOptimizers = "auc, mcc, fdr, ber, acc";
-    public static String searchmodes = "f,fb,b,bf,top1,top5,top10,top15,top20,top30,top40,top50,top75,top100,top200";
+    public static String searchmodes = "f,fb,b,bf,top1,top5,top10,top15,top20,top30,top40,top50,top75,top100,top200,all";
     public static Boolean metaCostSensitiveClassifier = false;
     public static Boolean regressionFastWay = false;
     public static String regressionOptimizers = "CC, RMSE";
@@ -124,7 +124,7 @@ public class Main {
             if (System.getProperty("os.name").toLowerCase().contains("windows")) {
                 System.out.println("\"c:\\Program Files\\Java\\jdk1.8.0_111\\bin\\java.exe\" -jar biodiscml.jar " + arg);
             } else {
-                System.out.println("/usr/lib/jvm/java-8-openjdk-amd64/bin/java -jar biodiscml.jar " + arg);
+                System.out.println("/mnt/software/jvm/jdk1.8.0_371/bin/java -jar biodiscml.jar " + arg);
             }
             System.exit(0);
         }

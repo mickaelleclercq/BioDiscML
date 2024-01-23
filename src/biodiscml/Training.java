@@ -1404,7 +1404,11 @@ public class Training {
         String searchmodes[] = Main.searchmodes.split(",");
         if (Main.noFeatureSelection) {
             searchmodes = new String[]{"all"};
-        }
+        } 
+//        else if(weka.myData.numAttributes()>500){
+//            
+//        }
+        
 
         for (String optimizer : optimizers) {//AUC, ACC, SEN, SPE, MCC, TP+FN, kappa            
             for (String searchmode : searchmodes) {//F, FB, B, BF, topk
