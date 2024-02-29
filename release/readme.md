@@ -27,6 +27,9 @@ machine learning steps, including data pre-processing, feature selection, model
 selection, and performance evaluation. 
 https://github.com/mickaelleclercq/BioDiscML/
 
+See also BioDiscViz (https://gitlab.com/SBouirdene/biodiscviz.git), which 
+includes consensus feature search, to visualize your results.
+
 Full manuscript: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6532608/
 
 ## Requirements
