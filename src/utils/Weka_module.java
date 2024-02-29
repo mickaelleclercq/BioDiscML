@@ -1025,7 +1025,6 @@ public class Weka_module {
 
         //load data
         try {
-
             if (data.classIndex() == -1) {
                 data.setClassIndex(data.numAttributes() - 1);
             }
@@ -1051,7 +1050,6 @@ public class Weka_module {
                 select.setInputFormat(filteredData);
                 filteredData = Filter.useFilter(filteredData, select);
             }
-            filteredData.attribute(1);
 
             if (filteredData.numAttributes() <= 10) {
                 System.out.println("Not enough attributes, probably all non-informative. So keeping all and ranking them, but expect very low performances");
@@ -1085,10 +1083,17 @@ public class Weka_module {
                 filteredData = Filter.useFilter(filteredData, r);
             }
 
+            //in case of complete lost ID (replaced by ?)
+            if(filteredData.instance(0).toString().startsWith("?")){
+                for (int i = 0; i < filteredData.numInstances(); i++) {
+                    filteredData.instance(i).setValue(0, data.attribute(i).value((int)data.instance(i).value(0)));                    
+                }
+            }
+                        
             //save data as csv
             CSVSaver csv = new CSVSaver();
             csv.setInstances(filteredData);
-
+            
             csv.setFile(new File(outfile));
             if (new File(outfile.replace(".csv", ".arff")).exists()) {
                 new File(outfile.replace(".csv", ".arff")).delete();
