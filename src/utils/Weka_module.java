@@ -1086,7 +1086,7 @@ public class Weka_module {
             //in case of complete lost ID (replaced by ?)
             if(filteredData.instance(0).toString().startsWith("?")){
                 for (int i = 0; i < filteredData.numInstances(); i++) {
-                    filteredData.instance(i).setValue(0, data.attribute(i).value((int)data.instance(i).value(0)));                    
+                    filteredData.instance(i).setValue(0, data.attribute(0).value((int)data.instance(i).value(0)));                    
                 }
             }
                         
