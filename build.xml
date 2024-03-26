@@ -94,6 +94,7 @@
         <copy file="config.conf" tofile="${store.dir}/config.conf"/>
         <copy file="readme.md" tofile="${store.dir}/readme.md"/>
         <copy file="LICENSE.txt" tofile="${store.dir}/LICENSE.txt"/>
+        <!--
         <copy file="benchmark/Datasets_results.xlsx" tofile="${store.dir}/Test_datasets/Datasets_results.xlsx"/>
         <mkdir dir="${store.dir}/Test_datasets/"/>
         <copydir src="benchmark/CNS" dest="${datasets.dir}/CNS"/>
@@ -101,5 +102,7 @@
         <copydir src="benchmark/dlbcl" dest="${datasets.dir}/dlbcl"/>
         <copydir src="benchmark/mint_stem_cells" dest="${datasets.dir}/mint_stem_cells"/>
         <copydir src="benchmark/prostate-singh" dest="${datasets.dir}/prostate-singh"/>
+        
+         -->
     </target>
 </project>
