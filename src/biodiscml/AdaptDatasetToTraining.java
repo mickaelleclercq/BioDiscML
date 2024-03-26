@@ -51,9 +51,9 @@ public class AdaptDatasetToTraining {
         //create the adapted training file
         System.out.println("# Training file(s)");
         if (Main.doClassification) {
-            createFileCompatibleForWeka(Main.classificationClassName, Main.hmTrainFiles, trainFile, Main.separator);
+            createFileCompatibleForWeka(Main.classificationClassName, Main.hmTrainFiles, trainFile, Main.separator, true);
         } else {
-            createFileCompatibleForWeka(Main.regressionClassName, Main.hmTrainFiles, trainFile, Main.separator);
+            createFileCompatibleForWeka(Main.regressionClassName, Main.hmTrainFiles, trainFile, Main.separator, true);
         }
         //create the adapted tested file
         if (Main.doSampling) {
@@ -66,9 +66,9 @@ public class AdaptDatasetToTraining {
             if (!Main.hmNewDataFiles.isEmpty()) {
                 System.out.println("# Testing file(s)");
                 if (Main.doClassification) {
-                    createFileCompatibleForWeka(Main.classificationClassName, Main.hmNewDataFiles, testFile, Main.separator);
+                    createFileCompatibleForWeka(Main.classificationClassName, Main.hmNewDataFiles, testFile, Main.separator, false);
                 } else {
-                    createFileCompatibleForWeka(Main.regressionClassName, Main.hmNewDataFiles, testFile, Main.separator);
+                    createFileCompatibleForWeka(Main.regressionClassName, Main.hmNewDataFiles, testFile, Main.separator, false);
                 }
                 //if a test file is provided, we need to merge it to the train file and
                 // split it again to preserve a compatible arff format between train and test sets
@@ -125,7 +125,7 @@ public class AdaptDatasetToTraining {
         return hm_ids;
     }
 
-    private void createFileCompatibleForWeka(String theClass, HashMap<String, String> infiles, String outfile, String separator) {
+    private void createFileCompatibleForWeka(String theClass, HashMap<String, String> infiles, String outfile, String separator, Boolean trainingFile) {
         //convert hashmap to list
         String[] files = new String[infiles.size()];
         String[] prefixes = new String[infiles.size()];
@@ -170,29 +170,31 @@ public class AdaptDatasetToTraining {
             System.exit(0);
         }
         //remove useless features having 100% the same value
-        try {
-            for (TableObject tbo : al_tables) {
-                for (String s : tbo.getSortedHmDataKeyset()) {
-                    HashMap<String, String> hm = new HashMap<>();
-                    for (String value : tbo.hmData.get(s)) {
-                        hm.put(value, value);
-                    }
-                    if (hm.size() == 1) {
-                        tbo.hmData.remove(s);
-                        if (hm.keySet().toArray()[0].equals("?")) {
-                            System.out.println("Removing feature " + s + " "
-                                    + "because 100% of values are missing");
-                        } else {
-                            System.out.println("Removing feature " + s + " "
-                                    + "because 100% of values are identical "
-                                    + "{" + hm.keySet().toArray()[0] + "}");
+        if (trainingFile) {
+            try {
+                for (TableObject tbo : al_tables) {
+                    for (String s : tbo.getSortedHmDataKeyset()) {
+                        HashMap<String, String> hm = new HashMap<>();
+                        for (String value : tbo.hmData.get(s)) {
+                            hm.put(value, value);
+                        }
+                        if (hm.size() == 1) {
+                            tbo.hmData.remove(s);
+                            if (hm.keySet().toArray()[0].equals("?")) {
+                                System.out.println("Removing feature " + s + " "
+                                        + "because 100% of values are missing");
+                            } else {
+                                System.out.println("Removing feature " + s + " "
+                                        + "because 100% of values are identical "
+                                        + "{" + hm.keySet().toArray()[0] + "}");
+                            }
                         }
                     }
+                    cpt++;
                 }
-                cpt++;
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
         //create outfile
