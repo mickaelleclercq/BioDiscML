@@ -23,6 +23,7 @@ import static utils.utils.*;
 public class AdaptDatasetToTraining {
 
     public static boolean debug = Main.debug;
+    public static HashMap<String, String> removedFeatures = new HashMap<>();
 
     public AdaptDatasetToTraining() {
     }
@@ -38,16 +39,16 @@ public class AdaptDatasetToTraining {
             System.out.println("Check if files exist and should be deleted...");
             String allDataFile = trainFile.replace("data_to_train", "all_data");
             if (new File(allDataFile).exists()) {
-                System.out.println("\t"+allDataFile+" exist... deleting...");
+                System.out.println("\t" + allDataFile + " exist... deleting...");
                 new File(allDataFile).delete();
             }
             if (new File(trainFile).exists()) {
-                System.out.println("\t"+trainFile+" exist... deleting...");
+                System.out.println("\t" + trainFile + " exist... deleting...");
                 new File(trainFile).delete();
                 new File(trainFile.replace(".csv", ".arff")).delete();
             }
         }
-        
+
         //create the adapted training file
         System.out.println("# Training file(s)");
         if (Main.doClassification) {
@@ -188,6 +189,20 @@ public class AdaptDatasetToTraining {
                                         + "because 100% of values are identical "
                                         + "{" + hm.keySet().toArray()[0] + "}");
                             }
+                            removedFeatures.put(s, s);
+                        }
+                    }
+                    cpt++;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                for (TableObject tbo : al_tables) {
+                    for (String s : tbo.getSortedHmDataKeyset()) {
+                        if (removedFeatures.containsKey(s)) {
+                            tbo.hmData.remove(s);
                         }
                     }
                     cpt++;
@@ -204,7 +219,7 @@ public class AdaptDatasetToTraining {
         try {
             PrintWriter pw = new PrintWriter(new FileWriter(outfile));
             ///////// PRINT HEADER
-            int featuresCpt=0;
+            int featuresCpt = 0;
             pw.print(Main.mergingID);
             cpt = 0;
             for (TableObject tbo : al_tables) {
@@ -230,7 +245,7 @@ public class AdaptDatasetToTraining {
             } else {
                 System.out.println("Total number of instances between files: " + hm_ids.size());
             }
-            
+
             System.out.println("Total number of features: " + featuresCpt);
 
             ///////PRINT CONTENT
