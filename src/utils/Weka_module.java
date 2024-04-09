@@ -540,7 +540,7 @@ public class Weka_module {
                 data.setClassIndex(data.numAttributes() - 1);
 
             }
-            if (!classifier.contains("meta.Vote")){
+            if (!classifier.contains("meta.Vote")) {
                 //create weka configuration string
                 String filterID = "weka.classifiers.meta.FilteredClassifier "
                         + "-F \"weka.filters.unsupervised.attribute.Remove -R 1\" "
@@ -556,7 +556,7 @@ public class Weka_module {
             int testSize = data.numInstances() - trainSize;
             Instances train = new Instances(data, 0, trainSize);
             Instances test = new Instances(data, trainSize, testSize);
-            
+
             //if cost sensitive case
             if (classifier.contains("CostSensitiveClassifier")) {
                 int falseExemples = train.attributeStats(train.classIndex()).nominalCounts[1];
@@ -571,10 +571,10 @@ public class Weka_module {
             config[0] = "";
             Classifier model = (Classifier) Utils.forName(Classifier.class, classname, config);
             StringBuffer sb = new StringBuffer();
-            
+
             //build model to save it
             try {
-                model.buildClassifier(train);                
+                model.buildClassifier(train);
             } catch (Exception exception) {
                 //crashing, try to remove ID and run again
                 train.deleteAttributeAt(0);
@@ -647,7 +647,7 @@ public class Weka_module {
                 data.setClassIndex(data.numAttributes() - 1);
 
             }
-            if (!classifier.contains("meta.Vote")){
+            if (!classifier.contains("meta.Vote")) {
                 //create weka configuration string
                 String filterID = "weka.classifiers.meta.FilteredClassifier "
                         + "-F \"weka.filters.unsupervised.attribute.Remove -R 1\" "
@@ -685,7 +685,7 @@ public class Weka_module {
             trainSet.addAll(al_trainSet);
             Instances testSet = new Instances(data, al_testSet.size());
             testSet.addAll(al_testSet);
-            
+
             //train the train set            
             try {
                 model.buildClassifier(trainSet);
@@ -1072,11 +1072,11 @@ public class Weka_module {
                     }
                 }
                 Reorder r = new Reorder();
-                idIndex=idIndex+1;
+                idIndex = idIndex + 1;
                 if (idIndex != (filteredData.numAttributes() - 1)) {
                     options = "-R " + idIndex + ",first-" + (idIndex - 1) + "," + (idIndex + 1) + "-last";
                 } else {
-                    options = "-R " + idIndex + ",first-" + (idIndex - 1) + "," + (idIndex + 1) ;
+                    options = "-R " + idIndex + ",first-" + (idIndex - 1) + "," + (idIndex + 1);
                 }
                 r.setOptions(weka.core.Utils.splitOptions((options)));
                 r.setInputFormat(filteredData);
@@ -1084,16 +1084,16 @@ public class Weka_module {
             }
 
             //in case of complete lost ID (replaced by ?)
-            if(filteredData.instance(0).toString().startsWith("?")){
+            if (filteredData.instance(0).toString().startsWith("?")) {
                 for (int i = 0; i < filteredData.numInstances(); i++) {
-                    filteredData.instance(i).setValue(0, data.attribute(0).value((int)data.instance(i).value(0)));                    
+                    filteredData.instance(i).setValue(0, data.attribute(0).value((int) data.instance(i).value(0)));
                 }
             }
-                        
+
             //save data as csv
             CSVSaver csv = new CSVSaver();
             csv.setInstances(filteredData);
-            
+
             csv.setFile(new File(outfile));
             if (new File(outfile.replace(".csv", ".arff")).exists()) {
                 new File(outfile.replace(".csv", ".arff")).delete();
@@ -1410,7 +1410,6 @@ public class Weka_module {
             pt.setBuffer(sb);
             pt.setOutputDistribution(true);
             pt.setAttributes("first");
-            data.toString();
 
             eval.evaluateModel(model, data, pt, new Range("first,last"), true);
             //return
@@ -2560,7 +2559,12 @@ public class Weka_module {
                     String inst = tab[1];
                     try {
                         String actual = tab[2].split(":")[1];
-                        String predicted = tab[3].split(":")[1];
+                        String predicted = "";
+                        try {
+                            predicted = tab[3].split(":")[1];
+                        } catch (Exception e) {
+                            predicted = tab[3];
+                        }
                         String error;
                         String prob;
                         String ID;
@@ -2569,9 +2573,12 @@ public class Weka_module {
                                 error = "?";
                             } else {
                                 error = "No";
-                            };
+                            }
                             prob = tab[4];
                             ID = tab[5];
+                            if (prob.contains("?")) {
+                                error = "?";
+                            }
                         } else {
                             error = "Yes";
                             prob = tab[5];
