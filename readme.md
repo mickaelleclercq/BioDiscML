@@ -45,8 +45,8 @@ training set (TRAIN_* columns) are therefore optimistic. Only the scores on the
 held-out test set (TEST_* columns, with sampling=true or a validationFile) are 
 unbiased estimates of the performance on new data.
 
-## Changes since 1.8.14
-Results differ from those of version 1.8.14 and earlier. Main changes:
+## Changes in 1.9
+Results of 1.9 differ from those of version 1.8.14 and earlier. Main changes:
 - Metrics. For a binary class, SEN, SPE, FPR, FNR, PPV, FDR, F-score and AUPRC 
 are those of the positive class (option positiveClass), not class-weighted 
 averages. A warning is printed when the positive class is chosen arbitrarily 
@@ -79,7 +79,8 @@ from the first file (in the order of the config file) that contains it.
 (value # comment) are removed, booleans accept true/false, yes/no, 1/0 and 
 on/off, empty values are ignored (default kept), and unknown options are 
 reported. The last line of classifiers.conf is read even without a final 
-newline. cpus values below 1 mean 1. -help works with any Java version.
+newline. cpus values below 1 mean 1. -version prints the version, and -help 
+and -version work with any Java version.
 - Training. Models whose options contain the word error (e.g. the SquaredError 
 loss of MLPClassifier) are no longer discarded as failed models.
 - Errors. BioDiscML exits with code 1 when it fails (configuration errors, no 

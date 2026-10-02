@@ -24,6 +24,7 @@ import java.nio.file.StandardCopyOption;
  */
 public class Main {
 
+    public static final String VERSION = "1.9";
     public static boolean debug = false;
     public static boolean debug2 = false;
     public static boolean printFailedModels = false; //print errors of failed models
@@ -122,10 +123,14 @@ public class Main {
     public static int exitCode = 0;
 
     public static void main(String[] args) throws IOException {
-        System.out.println("#### BioDiscML ####\n");
-        // -help works with any java version
+        System.out.println("#### BioDiscML " + VERSION + " ####\n");
+        // -version and -help work with any java version
         for (String arg : args) {
             String a = arg.trim().replaceFirst("^-+", "");
+            if (a.equals("version")) {
+                System.out.println("BioDiscML " + VERSION);
+                System.exit(0);
+            }
             if (a.equals("help")) {
                 System.out.println("Read readme.md file or https://github.com/mickaelleclercq/BioDiscML");
                 System.exit(0);
@@ -438,6 +443,10 @@ public class Main {
         for (String s : options) {
             if (s.trim().equals("help")) {
                 System.out.println("Read readme.md file or https://github.com/mickaelleclercq/BioDiscML");
+                System.exit(0);
+            }
+            if (s.trim().equals("version")) {
+                System.out.println("BioDiscML " + VERSION);
                 System.exit(0);
             }
             if (s.contains("=")) {
