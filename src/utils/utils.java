@@ -20,6 +20,8 @@ import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
 import java.util.TreeMap;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
@@ -41,6 +43,10 @@ public class utils {
                 } catch (Exception e) {
                     al.add("");
                 }
+            }
+            if (hmData.containsKey(header)) {
+                System.out.println("[warning] Duplicated column name " + header
+                        + ": only its last occurrence is kept. Column names must be unique");
             }
             hmData.put(header, al);
         }
@@ -216,15 +222,40 @@ public class utils {
         return al.stream().mapToDouble(Double::doubleValue).toArray();
     }
 
-    public static String getStandardDeviation(ArrayList<Double> al) {
-        DecimalFormat df = new DecimalFormat();
-        df.setMaximumFractionDigits(3);
-        DecimalFormatSymbols dfs = new DecimalFormatSymbols();
+    /**
+     * @param al list of values, possibly containing null or NaN
+     * @return the values that are neither null nor NaN
+     */
+    public static double[] arrayToDoubleWithoutNaN(List<Double> al) {
+        return al.stream().filter(d -> d != null && !d.isNaN())
+                .mapToDouble(Double::doubleValue).toArray();
+    }
+
+    /**
+     * Create the number format used to write metrics: at most 3 fraction
+     * digits, '.' as decimal separator whatever the default locale, no
+     * grouping separator, and "NaN" / "Infinity" for non-finite values (so
+     * that the written values can be parsed back with Double.valueOf).
+     * DecimalFormat is not thread-safe: callers running in parallel must
+     * each use their own instance.
+     *
+     * @return a new DecimalFormat
+     */
+    public static DecimalFormat newDecimalFormat() {
+        DecimalFormatSymbols dfs = new DecimalFormatSymbols(Locale.US);
         dfs.setDecimalSeparator('.');
-        df.setDecimalFormatSymbols(dfs);
+        dfs.setNaN("NaN");
+        dfs.setInfinity("Infinity");
+        DecimalFormat df = new DecimalFormat("0.###", dfs);
+        df.setGroupingUsed(false);
+        return df;
+    }
+
+    public static String getStandardDeviation(ArrayList<Double> al) {
+        DecimalFormat df = newDecimalFormat();
 
         StandardDeviation s = new StandardDeviation();
-        s.setData(utils.arrayToDouble(al));
+        s.setData(arrayToDoubleWithoutNaN(al));
 
         return df.format(s.evaluate());
     }
@@ -249,7 +280,7 @@ public class utils {
                 if (j != null) {
                     System.err.println("DUPLICATED ID DETECTED: " + altable.get(i)[ID_index]);
                     System.err.println("All IDs must be unique");
-                    System.exit(0);
+                    System.exit(1);
                 }
             }
         }
@@ -262,6 +293,23 @@ public class utils {
 
         public boolean containsClass(String theClass) {
             return hmData.containsKey(theClass);
+        }
+
+        /**
+         * @param id
+         * @return row index of the ID, matched case-insensitively if it is
+         * not found as is
+         */
+        public Integer getIdIndex(String id) {
+            Integer index = hmIDsList.get(id);
+            if (index == null) {
+                for (String s : hmIDsList.keySet()) {
+                    if (s.equalsIgnoreCase(id)) {
+                        return hmIDsList.get(s);
+                    }
+                }
+            }
+            return index;
         }
 
         public int getIdIndex(ArrayList<String[]> altable) {
@@ -296,19 +344,12 @@ public class utils {
     public static String getMean(ArrayList<Double> al) {
 
         if (!al.isEmpty()) {
-            double d[] = new double[al.size()];
-            for (int i = 0; i < al.size(); i++) {
-                if (!al.get(i).isNaN()) {
-                    d[i] = (double) al.get(i);
-                }
-            }
+            // undefined values (NaN, e.g. a metric on a fold with a single
+            // class) are ignored, neither counted as 0 nor in the denominator
+            double d[] = arrayToDoubleWithoutNaN(al);
 
             Mean m = new Mean();
-            DecimalFormat df = new DecimalFormat();
-            df.setMaximumFractionDigits(3);
-            DecimalFormatSymbols dfs = new DecimalFormatSymbols();
-            dfs.setDecimalSeparator('.');
-            df.setDecimalFormatSymbols(dfs);
+            DecimalFormat df = newDecimalFormat();
             return df.format(m.evaluate(d));
         } else {
             return "";

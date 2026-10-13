@@ -10,7 +10,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -20,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicIntegerArray;
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.analysis.integration.TrapezoidIntegrator;
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
@@ -57,7 +55,6 @@ import weka.filters.unsupervised.instance.RemoveRange;
  */
 public class Weka_module {
 
-    public DecimalFormat df = new DecimalFormat();
     public ArrayList<String> alPrint = new ArrayList<>();
     private File CSVFile;
     public String ARFFfile;
@@ -65,11 +62,6 @@ public class Weka_module {
     public Instances myData;
 
     public Weka_module() {
-        df.setMaximumFractionDigits(3);
-        DecimalFormatSymbols dec = new DecimalFormatSymbols();
-        dec.setDecimalSeparator('.');
-        df.setGroupingUsed(false);
-        df.setDecimalFormatSymbols(dec);
 //        svm.svm_set_print_string_function(new libsvm.svm_print_interface() {
 //            @Override
 //            public void print(String s) {
@@ -267,7 +259,7 @@ public class Weka_module {
 
             // cross validation 10 times on the model
             Evaluation eval = new Evaluation(data);
-            eval.crossValidateModel(model, data, numberOfFolds, new Random(1));
+            eval.crossValidateModel(model, data, numberOfFolds, new Random(Main.seed));
 
             //output classification results
             //System.out.println(eval.toSummaryString());
@@ -285,6 +277,215 @@ public class Weka_module {
     }
 
     /**
+     * Seed of the i-th repetition of the repeated holdout and bootstrap
+     * evaluations. With the default seed (1), repetition i uses seed i, as in
+     * previous versions. Each seed has its own series of repetitions (seed s
+     * uses (s-1)*B + i, B being the number of repetitions), so that two
+     * different seeds do not share their resamplings.
+     *
+     * @param i repetition index
+     * @return seed
+     */
+    public static long repetitionSeed(int i) {
+        return (Main.seed - 1L) * Main.bootstrapAndRepeatedHoldoutFolds + i;
+    }
+
+    /**
+     * For CostSensitiveClassifier, replace "ratio" in the options (cost
+     * matrix) by the ratio between the number of instances of the first and
+     * second classes.
+     *
+     * @param classifier
+     * @param classifier_options
+     * @param data
+     * @return options
+     */
+    private static String setCostSensitiveRatio(String classifier, String classifier_options, Instances data) {
+        if (classifier.contains("CostSensitiveClassifier")) {
+            int falseExemples = data.attributeStats(data.classIndex()).nominalCounts[1];
+            int trueExemples = data.attributeStats(data.classIndex()).nominalCounts[0];
+            double ratio = (double) trueExemples / (double) falseExemples;
+            classifier_options = classifier_options.replace("ratio", utils.newDecimalFormat().format(ratio));
+        }
+        return classifier_options;
+    }
+
+    /**
+     * Group the instances by class value (nominal class). Instances with a
+     * missing class are in the last group. For a numeric class, one group
+     * with all the instances.
+     *
+     * @param data
+     * @return groups of instance indexes, in the order of data
+     */
+    private static ArrayList<ArrayList<Integer>> groupIndexesByClass(Instances data) {
+        ArrayList<ArrayList<Integer>> groups = new ArrayList<>();
+        if (data.classAttribute().isNominal()) {
+            for (int c = 0; c <= data.numClasses(); c++) {
+                groups.add(new ArrayList<>());
+            }
+            for (int k = 0; k < data.numInstances(); k++) {
+                Instance instance = data.instance(k);
+                groups.get(instance.classIsMissing() ? data.numClasses() : (int) instance.classValue()).add(k);
+            }
+        } else {
+            groups.add(new ArrayList<>());
+            for (int k = 0; k < data.numInstances(); k++) {
+                groups.get(0).add(k);
+            }
+        }
+        return groups;
+    }
+
+    /**
+     * Same as groupIndexesByClass, with the instances themselves
+     *
+     * @param data
+     * @return groups of instances, in the order of data
+     */
+    private static ArrayList<ArrayList<Instance>> groupByClass(Instances data) {
+        ArrayList<ArrayList<Instance>> groups = new ArrayList<>();
+        for (ArrayList<Integer> indexes : groupIndexesByClass(data)) {
+            ArrayList<Instance> group = new ArrayList<>(indexes.size());
+            for (int k : indexes) {
+                group.add(data.instance(k));
+            }
+            groups.add(group);
+        }
+        return groups;
+    }
+
+    /**
+     * Stratified split: each class is split separately with the same
+     * fraction, so that the train and test sets keep the class proportions.
+     * A class with at least 2 instances has at least one instance in each
+     * set.
+     *
+     * @param data
+     * @param trainFraction fraction of the instances in the train set
+     * @param r
+     * @return {train, test}
+     */
+    public static Instances[] stratifiedSplit(Instances data, double trainFraction, Random r) {
+        Instances train = new Instances(data, data.numInstances());
+        Instances test = new Instances(data, data.numInstances());
+        for (ArrayList<Instance> group : groupByClass(data)) {
+            Collections.shuffle(group, r);
+            int nTrain = (int) Math.round(group.size() * trainFraction);
+            if (group.size() > 1) {
+                nTrain = Math.max(1, Math.min(group.size() - 1, nTrain));
+            }
+            for (int i = 0; i < group.size(); i++) {
+                if (i < nTrain) {
+                    train.add(group.get(i));
+                } else {
+                    test.add(group.get(i));
+                }
+            }
+        }
+        // the sets are built class by class: shuffle them, since some
+        // classifiers depend on the order of the training instances
+        train.randomize(r);
+        test.randomize(r);
+        return new Instances[]{train, test};
+    }
+
+    /**
+     * Bootstrap sample (as many instances as in data, drawn with
+     * replacement) and the instances left out of it. For a nominal class,
+     * each class is resampled separately (stratified bootstrap), so that
+     * the class proportions are kept.
+     *
+     * @param data
+     * @param r
+     * @return {bootstrap sample, instances not drawn}
+     */
+    public static Instances[] bootstrapSample(Instances data, Random r) {
+        int[][] sample = bootstrapSampleIndexes(data, r);
+        //prepare train and test sets
+        Instances trainSet = new Instances(data, sample[0].length);
+        for (int k : sample[0]) {
+            trainSet.add(data.instance(k));
+        }
+        Instances testSet = new Instances(data, sample[1].length);
+        for (int k : sample[1]) {
+            testSet.add(data.instance(k));
+        }
+        return new Instances[]{trainSet, testSet};
+    }
+
+    /**
+     * Indexes of the instances of a bootstrap sample (see bootstrapSample)
+     * and of the instances left out of it.
+     *
+     * @param data
+     * @param r
+     * @return {indexes of the bootstrap sample, indexes of the instances not
+     * drawn}
+     */
+    public static int[][] bootstrapSampleIndexes(Instances data, Random r) {
+        ArrayList<Integer> al_trainSet = new ArrayList<>(data.size()); // Empty list (add one-by-one)
+        ArrayList<Integer> al_testSet = new ArrayList<>();
+        if (data.classAttribute().isNominal()) {
+            for (ArrayList<Integer> group : groupIndexesByClass(data)) {
+                boolean[] drawn = new boolean[group.size()];
+                for (int j = 0; j < group.size(); j++) {
+                    int k = r.nextInt(group.size());
+                    al_trainSet.add(group.get(k));
+                    drawn[k] = true;
+                }
+                for (int k = 0; k < group.size(); k++) {
+                    if (!drawn[k]) {
+                        al_testSet.add(group.get(k));
+                    }
+                }
+            }
+            // the sample is drawn class by class: shuffle it, since some
+            // classifiers depend on the order of the training instances
+            Collections.shuffle(al_trainSet, r);
+            Collections.shuffle(al_testSet, r);
+        } else {
+            boolean[] drawn = new boolean[data.size()];
+            for (int j = 0; j < data.size(); j++) {
+                // Random select instance
+                int k = r.nextInt(data.size());
+                al_trainSet.add(k);
+                drawn[k] = true;
+            }
+            for (int k = 0; k < data.size(); k++) {
+                if (!drawn[k]) {
+                    al_testSet.add(k);
+                }
+            }
+        }
+        int[][] sample = new int[2][];
+        sample[0] = al_trainSet.stream().mapToInt(Integer::intValue).toArray();
+        sample[1] = al_testSet.stream().mapToInt(Integer::intValue).toArray();
+        return sample;
+    }
+
+    /**
+     * Small sample of the instances for the short test: about 5% of each
+     * class, but at least 5 instances of each class (or all of them if the
+     * class has fewer). For a numeric class, about 5% of the instances but at
+     * least 10.
+     *
+     * @param data randomized data, with class index set
+     * @return sample
+     */
+    public static Instances shortTestSample(Instances data) {
+        Instances sample = new Instances(data, data.numInstances());
+        int minimum = data.classAttribute().isNominal() ? 5 : 10;
+        for (ArrayList<Instance> group : groupByClass(data)) {
+            int n = Math.max((int) Math.ceil(group.size() * 0.05), Math.min(group.size(), minimum));
+            for (int i = 0; i < n; i++) {
+                sample.add(group.get(i));
+            }
+        }
+        return sample;
+    }
+
+    /**
      * short test on 10% of instances
      *
      * @param attributesToUse
@@ -296,16 +497,16 @@ public class Weka_module {
             Boolean classification) {
 
         try {
-            // load data
-            Instances data = myData;
+            // load data. Work on a copy: myData is shared by the training threads
+            Instances data = new Instances(myData);
+            if (data.classIndex() == -1) {
+                data.setClassIndex(data.numAttributes() - 1);
+            }
             //get a sample of instances
             //// randomize data
-            data.randomize(new Random());
-
-            //// Percent split
-            int trainSize = (int) Math.round(data.numInstances() * 95 / 100);
-            int testSize = data.numInstances() - trainSize;
-            data = new Instances(data, trainSize, testSize);
+            data.randomize(new Random(Main.seed));
+            //// about 5% of the instances, with all the classes
+            data = shortTestSample(data);
 
             //set last attribute as index
             if (data.classIndex() == -1) {
@@ -316,6 +517,8 @@ public class Weka_module {
              * if we are using Vote, it means it already contains the features
              * to use for each classifier
              */
+            //if cost sensitive case
+            classifier_options = setCostSensitiveRatio(classifier, classifier_options, data);
             String configuration = classifier + " " + classifier_options;
             if (!classifier.contains("meta.Vote")) {
                 //keep only attributesToUse. ID is still here
@@ -336,14 +539,6 @@ public class Weka_module {
 
                 //create config
                 configuration = filterID + "" + classifier + " -- " + classifier_options;
-            }
-
-            //if cost sensitive case
-            if (classifier.contains("CostSensitiveClassifier")) {
-                int falseExemples = data.attributeStats(data.classIndex()).nominalCounts[1];
-                int trueExemples = data.attributeStats(data.classIndex()).nominalCounts[0];
-                double ratio = (double) trueExemples / (double) falseExemples;
-                classifier_options = classifier_options.replace("ratio", df.format(ratio));
             }
 
             //train
@@ -412,6 +607,8 @@ public class Weka_module {
              * if we are using Vote, it means it already contains the features
              * to use for each classifier
              */
+            //if cost sensitive case
+            classifier_options = setCostSensitiveRatio(classifier, classifier_options, data);
             String configuration = classifier + " " + classifier_options;
             if (!classifier.contains("meta.Vote")) {
                 //keep only attributesToUse. ID is still here
@@ -432,14 +629,6 @@ public class Weka_module {
 
                 //create config
                 configuration = filterID + "" + classifier + " -- " + classifier_options;
-            }
-
-            //if cost sensitive case
-            if (classifier.contains("CostSensitiveClassifier")) {
-                int falseExemples = data.attributeStats(data.classIndex()).nominalCounts[1];
-                int trueExemples = data.attributeStats(data.classIndex()).nominalCounts[0];
-                double ratio = (double) trueExemples / (double) falseExemples;
-                classifier_options = classifier_options.replace("ratio", df.format(ratio));
             }
 
             //train
@@ -463,7 +652,7 @@ public class Weka_module {
             pt.setBuffer(sb);
 
             //10 fold cross validation
-            eval.crossValidateModel(model, data, numberOfFolds, new Random(1), pt, new Range("first,last"), true);
+            eval.crossValidateModel(model, data, numberOfFolds, new Random(Main.seed), pt, new Range("first,last"), true);
 
             if (Main.debug2) {
                 Instant finish = Instant.now();
@@ -528,6 +717,8 @@ public class Weka_module {
                 data.setClassIndex(data.numAttributes() - 1);
             }
 
+            //if cost sensitive case
+            classifier_options = setCostSensitiveRatio(classifier, classifier_options, data);
             String configuration = classifier + " " + classifier_options;
             if (!classifier.contains("meta.Vote") && attributesToUse != null) {
                 //keep only attributesToUse. ID (if present) is still here
@@ -548,21 +739,23 @@ public class Weka_module {
                 configuration = filterID + "" + classifier + " -- " + classifier_options;
             }
 
-            // randomize data
-            data.randomize(new Random(seed));
+            Random random = new Random(repetitionSeed(seed));
+            Instances train;
+            Instances test;
+            if (data.classAttribute().isNominal()) {
+                // Stratified percent split
+                Instances[] split = stratifiedSplit(data, 0.66, random);
+                train = split[0];
+                test = split[1];
+            } else {
+                // randomize data
+                data.randomize(random);
 
-            // Percent split
-            int trainSize = (int) Math.round(data.numInstances() * 66 / 100);
-            int testSize = data.numInstances() - trainSize;
-            Instances train = new Instances(data, 0, trainSize);
-            Instances test = new Instances(data, trainSize, testSize);
-
-            //if cost sensitive case
-            if (classifier.contains("CostSensitiveClassifier")) {
-                int falseExemples = train.attributeStats(train.classIndex()).nominalCounts[1];
-                int trueExemples = train.attributeStats(train.classIndex()).nominalCounts[0];
-                double ratio = (double) trueExemples / (double) falseExemples;
-                classifier_options = classifier_options.replace("ratio", df.format(ratio));
+                // Percent split
+                int trainSize = (int) Math.round(data.numInstances() * 66 / 100);
+                int testSize = data.numInstances() - trainSize;
+                train = new Instances(data, 0, trainSize);
+                test = new Instances(data, trainSize, testSize);
             }
 
             //train
@@ -635,6 +828,8 @@ public class Weka_module {
                 data.setClassIndex(data.numAttributes() - 1);
             }
 
+            //if cost sensitive case
+            classifier_options = setCostSensitiveRatio(classifier, classifier_options, data);
             String configuration = classifier + " " + classifier_options;
             if (!classifier.contains("meta.Vote") && attributesToUse != null) {
                 //keep only attributesToUse. ID (if present) is still here
@@ -655,7 +850,7 @@ public class Weka_module {
                 configuration = filterID + "" + classifier + " -- " + classifier_options;
             }
 
-            Random r = new Random(seed);
+            Random r = new Random(repetitionSeed(seed));
             //train
             String config[] = Utils.splitOptions(configuration);
             String classname = config[0];
@@ -671,20 +866,9 @@ public class Weka_module {
             }
 
             // Custom sampling (100%, with replacement)
-            ArrayList<Instance> al_trainSet = new ArrayList<>(data.size()); // Empty list (add one-by-one)
-            ArrayList<Instance> al_testSet = new ArrayList<>(data); // Full (remove one-by-one)
-            for (int j = 0; j < data.size(); j++) {
-                // Random select instance
-                Instance instance = data.get(r.nextInt(data.size()));
-                // Add to TRAIN, remove from TEST
-                al_trainSet.add(instance);
-                al_testSet.remove(instance);
-            }
-            //prepare train and test sets
-            Instances trainSet = new Instances(data, al_trainSet.size());
-            trainSet.addAll(al_trainSet);
-            Instances testSet = new Instances(data, al_testSet.size());
-            testSet.addAll(al_testSet);
+            Instances[] sample = bootstrapSample(data, r);
+            Instances trainSet = sample[0];
+            Instances testSet = sample[1];
 
             //train the train set            
             try {
@@ -742,6 +926,8 @@ public class Weka_module {
                 data.setClassIndex(data.numAttributes() - 1);
             }
 
+            //if cost sensitive case
+            classifier_options = setCostSensitiveRatio(classifier, classifier_options, data);
             String configuration = classifier + " " + classifier_options;
             if (!classifier.contains("meta.Vote") && attributesToUse != null) {
                 //keep only attributesToUse. ID (if present) is still here
@@ -752,8 +938,10 @@ public class Weka_module {
                 r.setInputFormat(data);
                 data = Filter.useFilter(data, r);
                 data.setClassIndex(data.numAttributes() - 1);
-
-                //create weka configuration string
+            }
+            if (!classifier.contains("meta.Vote")) {
+                //create weka configuration string, removing the ID (first
+                //attribute) also when the dataset is used as is (attributesToUse == null)
                 String filterID = "weka.classifiers.meta.FilteredClassifier "
                         + "-F \"weka.filters.unsupervised.attribute.Remove -R 1\" "
                         + "-W weka.classifiers.";
@@ -776,91 +964,141 @@ public class Weka_module {
             eval.evaluateModel(model, data);
 
             // Apparent error rate
-            Double err = eval.errorRate();
+            double err = eval.errorRate();
 
-            // Calculate Leave One Out (LOO) Bootstrap
-            AtomicIntegerArray p_l = new AtomicIntegerArray(data.numClasses());
-            AtomicIntegerArray q_l = new AtomicIntegerArray(data.numClasses());
-            double sum = 0;
+            // No-information error rate, from the model fitted on the whole data
+            double gamma = noInformationErrorRate(eval.confusionMatrix());
 
+            // Leave-one-out bootstrap error (Efron and Tibshirani, 1997, eq. 23):
+            // for each instance, error rate of the models whose bootstrap
+            // sample does not contain it, then the average over the instances
+            // (each instance has the same weight, whatever the number of
+            // bootstrap samples it was left out of)
+            double[] errors = new double[data.numInstances()];
+            int[] timesLeftOut = new int[data.numInstances()];
             for (int i = 0; i < Main.bootstrapAndRepeatedHoldoutFolds; i++) {
-                Random r = new Random();
+                Random r = new Random(repetitionSeed(i));
 
                 // Custom sampling (100%, with replacement)
-                ArrayList<Instance> al_trainSet = new ArrayList<>(data.size()); // Empty list (add one-by-one)
-                ArrayList<Instance> al_testSet = new ArrayList<>(data); // Full (remove one-by-one)
-                for (int j = 0; j < data.size(); j++) {
-                    // Random select instance
-                    Instance instance = data.get(r.nextInt(data.size()));
-                    // Add to TRAIN, remove from TEST
-                    al_trainSet.add(instance);
-                    al_testSet.remove(instance);
+                int[][] sample = bootstrapSampleIndexes(data, r);
+                // no instance left out: nothing to evaluate
+                if (sample[1].length == 0) {
+                    continue;
                 }
                 //train the train set
-                Instances trainSet = new Instances(data, al_trainSet.size());
-                trainSet.addAll(al_trainSet);
+                Instances trainSet = new Instances(data, sample[0].length);
+                for (int k : sample[0]) {
+                    trainSet.add(data.instance(k));
+                }
                 model.buildClassifier(trainSet);
 
-                // Test the test set
-                Instances testSet = new Instances(data, al_testSet.size());
-                testSet.addAll(al_testSet);
-                Evaluation evaluation = new Evaluation(data);
-                evaluation.evaluateModel(model, testSet);
-
-                // total error rates
-                sum += evaluation.errorRate();
-
-                //GAMMA
-                double[][] confusionMatrix = evaluation.confusionMatrix();
-                for (int l = 0; l < data.numClasses(); l++) {
-                    int p_tmp = 0, q_tmp = 0;
-                    for (int n = 0; n < data.numClasses(); n++) {
-                        // Sum for l-th class
-                        p_tmp += confusionMatrix[l][n];
-                        q_tmp += confusionMatrix[n][l];
+                // Test the instances left out, as Evaluation does: the
+                // predicted class is the most probable one, and an instance
+                // without prediction is not an error
+                for (int k : sample[1]) {
+                    Instance instance = data.instance(k);
+                    if (instance.classIsMissing()) {
+                        continue;
                     }
-
-                    // Add data for l-th class
-                    p_l.addAndGet(l, p_tmp);
-                    q_l.addAndGet(l, q_tmp);
+                    Instance classMissing = (Instance) instance.copy();
+                    classMissing.setDataset(data);
+                    classMissing.setClassMissing();
+                    double[] distribution = model.distributionForInstance(classMissing);
+                    int predicted = Utils.maxIndex(distribution);
+                    timesLeftOut[k]++;
+                    if (distribution[predicted] > 0 && predicted != (int) instance.classValue()) {
+                        errors[k]++;
+                    }
                 }
             }
-            double Err1 = sum / Main.bootstrapAndRepeatedHoldoutFolds;
+            double Err1 = leaveOneOutBootstrapError(errors, timesLeftOut);
 
-            // Plain 0.632 bootstrap
-            Double Err632 = .368 * err + .632 * Err1;
-
-            // GAMA
-            final double observations = data.size() * Main.bootstrapAndRepeatedHoldoutFolds;
-            double gama = 0;
-            for (int l = 0; l < data.numClasses(); l++) {
-                // Normalize numbers -> divide by number of all observations (repeats * dataset size)
-                gama += ((double) p_l.get(l) / observations) * (1 - ((double) q_l.get(l) / observations));
-            }
-
-            // Relative overfitting rate (R)
-            double R = (Err1 - err) / (gama - err);
-
-            // Modified variables (according to original journal article)
-            double Err1_ = Double.min(Err1, gama);
-            double R_ = R;
-
-            // R can fall out of [0, 1] -> set it to 0
-            if (!(Err1 > err && gama > err)) {
-                R_ = 0;
-            }
-
-            // The 0.632+ bootstrap (as used in original article)
-            double Err632plus = Err632 + (Err1_ - err) * (.368 * .632 * R_) / (1 - .368 * R_);
-
-            return Err632plus;
+            return compute632plus(err, Err1, gamma);
 
         } catch (Exception e) {
             if (Main.debug) {
                 e.printStackTrace();
             }
-            return -1.0;
+            // undefined (not -1: the .632+ columns are error rates, sorted
+            // in ascending order by -bestmodel, where NaN values come last)
+            return Double.NaN;
         }
+    }
+
+    /**
+     * No-information error rate of Efron and Tibshirani (1997):
+     * gamma = sum over classes l of p_l * (1 - q_l), where p_l is the observed
+     * proportion of class l and q_l the proportion of predictions of class l,
+     * both for the model fitted on the whole dataset.
+     *
+     * @param confusionMatrix confusion matrix of the model fitted and evaluated
+     * on the whole dataset (rows: actual class, columns: predicted class)
+     * @return gamma
+     */
+    public static double noInformationErrorRate(double[][] confusionMatrix) {
+        int numClasses = confusionMatrix.length;
+        double total = 0;
+        double[] actual = new double[numClasses];
+        double[] predicted = new double[numClasses];
+        for (int l = 0; l < numClasses; l++) {
+            for (int n = 0; n < numClasses; n++) {
+                actual[l] += confusionMatrix[l][n];
+                predicted[n] += confusionMatrix[l][n];
+                total += confusionMatrix[l][n];
+            }
+        }
+        double gamma = 0;
+        for (int l = 0; l < numClasses; l++) {
+            gamma += (actual[l] / total) * (1 - predicted[l] / total);
+        }
+        return gamma;
+    }
+
+    /**
+     * Leave-one-out bootstrap error Err1 of Efron and Tibshirani (1997, eq.
+     * 23): mean over the instances of their error rate in the bootstrap
+     * samples that do not contain them. Instances never left out are not
+     * counted.
+     *
+     * @param errors number of errors on each instance
+     * @param timesLeftOut number of bootstrap samples without each instance
+     * @return Err1, NaN if no instance was left out
+     */
+    public static double leaveOneOutBootstrapError(double[] errors, int[] timesLeftOut) {
+        double sum = 0;
+        int n = 0;
+        for (int k = 0; k < errors.length; k++) {
+            if (timesLeftOut[k] > 0) {
+                sum += errors[k] / timesLeftOut[k];
+                n++;
+            }
+        }
+        return n == 0 ? Double.NaN : sum / n;
+    }
+
+    /**
+     * The .632+ bootstrap estimate of the error rate (Efron and Tibshirani,
+     * 1997, "Improvements on cross-validation: the .632+ bootstrap method").
+     *
+     * @param err apparent (resubstitution) error rate
+     * @param Err1 leave-one-out bootstrap error rate
+     * @param gamma no-information error rate
+     * @return the .632+ error rate
+     */
+    public static double compute632plus(double err, double Err1, double gamma) {
+        // Plain 0.632 bootstrap
+        double Err632 = .368 * err + .632 * Err1;
+
+        // Modified variables (according to original journal article)
+        double Err1_ = Math.min(Err1, gamma);
+        // Relative overfitting rate, in [0, 1]
+        double R_ = 0;
+        if (Err1 > err && gamma > err) {
+            R_ = (Err1_ - err) / (gamma - err);
+        }
+
+        // The 0.632+ bootstrap (as used in original article)
+        return Err632 + (Err1_ - err) * (.368 * .632 * R_) / (1 - .368 * R_);
     }
 
     public void attributeSelectionByRelieFFAndSaveToCSV(String outfile) {
@@ -1159,8 +1397,8 @@ public class Weka_module {
             return attrsel;
         } catch (Exception e) {
             e.printStackTrace();
-            System.err.println("Check your input files. Probably missing classes");
-            System.exit(0);
+            System.err.println("[error] Check your input files. Probably missing classes");
+            System.exit(1);
             return null;
         }
     }
@@ -1175,6 +1413,15 @@ public class Weka_module {
             //csvToArff(true);
             ConverterUtils.DataSource source = new ConverterUtils.DataSource(csvFile);
             Instances data = source.getDataSet();
+            // class labels such as 0/1 are read from the csv file as numbers:
+            // the class must be nominal for the information gain
+            if (data.attribute(data.numAttributes() - 1).isNumeric()) {
+                weka.filters.unsupervised.attribute.NumericToNominal n
+                        = new weka.filters.unsupervised.attribute.NumericToNominal();
+                n.setOptions(new String[]{"-R", "last"});
+                n.setInputFormat(data);
+                data = Filter.useFilter(data, n);
+            }
             AttributeSelection attrsel = new AttributeSelection();
             weka.attributeSelection.InfoGainAttributeEval eval = new weka.attributeSelection.InfoGainAttributeEval();
 
@@ -1648,6 +1895,11 @@ public class Weka_module {
 
             } else {
                 for (String s : model.toString().split("\n")) {
+                    // only the first header: a FilteredClassifier given in
+                    // ccmd prints its own header after it
+                    if (s.startsWith("@data") && !al.isEmpty()) {
+                        break;
+                    }
                     if (s.startsWith("@attribute")) {
                         if (s.split(" ")[1].equals("class")) {
                             al.add("class");
@@ -1706,6 +1958,11 @@ public class Weka_module {
         try {
             //load model
             for (String s : model.toString().split("\n")) {
+                // only the first header: a FilteredClassifier given in ccmd
+                // prints its own header after it
+                if (s.startsWith("@data") && !al.isEmpty()) {
+                    break;
+                }
                 if (s.startsWith("@attribute '") && s.endsWith("numeric")) {
                     s = s.replace("@attribute '", "").trim();
                     s = s.substring(0, s.lastIndexOf("'"));
@@ -1846,9 +2103,9 @@ public class Weka_module {
         if (data.classIndex() == -1) {
             data.setClassIndex(data.numAttributes() - 1);
         }
-        //calculate seed
-        Random rand = new Random();
-        int seed = 1 + rand.nextInt(1000);
+        DecimalFormat df = utils.newDecimalFormat();
+        //seed of the train/test split
+        int seed = Main.seed;
 
         try {
             Instances TestData = null;
@@ -2289,7 +2546,11 @@ public class Weka_module {
         private void parsePredictions(StringBuffer sb) {
             String lines[] = sb.toString().split("\n");
 
-            for (int i = 1; i < lines.length; i++) {
+            for (int i = 0; i < lines.length; i++) {
+                // skip the header line, if any (the first line can be a prediction)
+                if (lines[i].trim().isEmpty() || lines[i].trim().startsWith("inst#")) {
+                    continue;
+                }
                 String p = lines[i].replaceAll(" +", "\t");
                 String tab[] = p.split("\t");
                 String inst = tab[1];
@@ -2343,11 +2604,15 @@ public class Weka_module {
             String[] s = featuresRankingResults.split("\n");
             StringBuilder toreturn = new StringBuilder();
             int index = 0;
-            while (!s[index].equals("Ranked attributes:")) {
+            while (index < s.length && !s[index].equals("Ranked attributes:")) {
                 index++;
             }
+            if (index >= s.length) {
+                // the ranking could not be computed
+                return "";
+            }
             index++;
-            while (!s[index].startsWith("Selected")) {
+            while (index < s.length && !s[index].startsWith("Selected")) {
                 if (!s[index].contains(Main.mergingID) && !s[index].isEmpty()) {
                     String out = s[index].substring(1); //remove first space
                     out = out.replaceAll(" +", "\t");
@@ -2425,22 +2690,42 @@ public class Weka_module {
             }
 
             //measures
+            double[][] m = eval.confusionMatrix();
             ACC = Utils.doubleToString(eval.pctCorrect() / 100, 12, 4).trim();
             MCC = Utils.doubleToString(eval.weightedMatthewsCorrelation(), 12, 4).trim();
-            TPR = Utils.doubleToString(eval.weightedTruePositiveRate(), 12, 4).trim();//sensitivity
-            TNR = Utils.doubleToString(eval.weightedTrueNegativeRate(), 12, 4).trim();//specificity
-            FPR = Utils.doubleToString(eval.weightedFalsePositiveRate(), 12, 4).trim();
-            FNR = Utils.doubleToString(eval.weightedFalseNegativeRate(), 12, 4).trim();
             AUC = Utils.doubleToString(eval.weightedAreaUnderROC(), 12, 4).trim();
-            AUPRC = Utils.doubleToString(eval.weightedAreaUnderPRC(), 12, 4).trim();
-            Fscore = Utils.doubleToString(eval.weightedFMeasure(), 12, 4).trim();
             kappa = Utils.doubleToString(eval.kappa(), 12, 4).trim();
             MAE = Utils.doubleToString(eval.meanAbsoluteError(), 12, 4).trim();
-            precision = Utils.doubleToString(eval.weightedPrecision(), 12, 4).trim();
-            FDR = Utils.doubleToString(1 - eval.weightedPrecision(), 12, 4).trim();
-            recall = Utils.doubleToString(eval.weightedRecall(), 12, 4).trim();
+            double tpr, tnr;
+            if (m.length == 2) {
+                // binary class: sensitivity, specificity, PPV, etc. of the
+                // positive class. (The class-weighted averages are useless
+                // here: the weighted TPR is the accuracy.)
+                int p = getPositiveClassIndex(eval.getHeader().classAttribute());
+                tpr = eval.truePositiveRate(p);
+                tnr = eval.trueNegativeRate(p);
+                FPR = Utils.doubleToString(eval.falsePositiveRate(p), 12, 4).trim();
+                FNR = Utils.doubleToString(eval.falseNegativeRate(p), 12, 4).trim();
+                AUPRC = Utils.doubleToString(eval.areaUnderPRC(p), 12, 4).trim();
+                Fscore = Utils.doubleToString(eval.fMeasure(p), 12, 4).trim();
+                precision = Utils.doubleToString(eval.precision(p), 12, 4).trim();
+                FDR = Utils.doubleToString(1 - eval.precision(p), 12, 4).trim();
+                recall = Utils.doubleToString(eval.recall(p), 12, 4).trim();
+            } else {
+                // more than 2 classes: averages weighted by class size
+                tpr = eval.weightedTruePositiveRate();
+                tnr = eval.weightedTrueNegativeRate();
+                FPR = Utils.doubleToString(eval.weightedFalsePositiveRate(), 12, 4).trim();
+                FNR = Utils.doubleToString(eval.weightedFalseNegativeRate(), 12, 4).trim();
+                AUPRC = Utils.doubleToString(eval.weightedAreaUnderPRC(), 12, 4).trim();
+                Fscore = Utils.doubleToString(eval.weightedFMeasure(), 12, 4).trim();
+                precision = Utils.doubleToString(eval.weightedPrecision(), 12, 4).trim();
+                FDR = Utils.doubleToString(1 - eval.weightedPrecision(), 12, 4).trim();
+                recall = Utils.doubleToString(eval.weightedRecall(), 12, 4).trim();
+            }
+            TPR = Utils.doubleToString(tpr, 12, 4).trim();//sensitivity
+            TNR = Utils.doubleToString(tnr, 12, 4).trim();//specificity
 
-            double[][] m = eval.confusionMatrix();
             matrix = "";
             for (int i = 0; i < m.length; i++) {
                 matrix += "[";
@@ -2682,11 +2967,15 @@ public class Weka_module {
             String[] s = featuresRankingResults.split("\n");
             StringBuilder toreturn = new StringBuilder();
             int index = 0;
-            while (!s[index].equals("Ranked attributes:")) {
+            while (index < s.length && !s[index].equals("Ranked attributes:")) {
                 index++;
             }
+            if (index >= s.length) {
+                // the ranking could not be computed
+                return "";
+            }
             index++;
-            while (!s[index].startsWith("Selected")) {
+            while (index < s.length && !s[index].startsWith("Selected")) {
                 if (!s[index].contains(Main.mergingID) && !s[index].isEmpty()) {
                     //String out = s[index].substring(1); //remove first space
                     String out = s[index].trim(); //remove first space
@@ -2701,6 +2990,75 @@ public class Weka_module {
             }
             return toreturn.toString();
         }
+    }
+
+    /**
+     * Index of the positive class of a binary class attribute, used for the
+     * sensitivity, specificity, PPV, FDR, F-score and AUPRC: the value set by
+     * the positiveClass option if any, else the value "true" (any case) or
+     * "1" if present, else the first value of the class attribute.
+     *
+     * @param classAttribute
+     * @return index of the positive class
+     */
+    public static int getPositiveClassIndex(Attribute classAttribute) {
+        int i = indexOfPositiveClassOption(classAttribute);
+        if (i >= 0) {
+            return i;
+        }
+        i = indexOfTrueValue(classAttribute);
+        if (i >= 0) {
+            return i;
+        }
+        return 0;
+    }
+
+    /**
+     * @param classAttribute
+     * @return index of the class value set by the positiveClass option, -1 if
+     * the option is not set or matches no class value. The value is matched
+     * as is, then ignoring case, then with spaces replaced by _ (as in the
+     * class labels of the input files)
+     */
+    public static int indexOfPositiveClassOption(Attribute classAttribute) {
+        String wanted = Main.positiveClass.trim();
+        if (wanted.isEmpty()) {
+            return -1;
+        }
+        int i = classAttribute.indexOfValue(wanted);
+        if (i >= 0) {
+            return i;
+        }
+        for (int j = 0; j < classAttribute.numValues(); j++) {
+            String value = classAttribute.value(j);
+            if (value.equalsIgnoreCase(wanted) || value.equalsIgnoreCase(wanted.replace(" ", "_"))) {
+                return j;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * @param classAttribute
+     * @return index of the class value "true" (any case) or "1", -1 if none
+     */
+    private static int indexOfTrueValue(Attribute classAttribute) {
+        for (int i = 0; i < classAttribute.numValues(); i++) {
+            if (classAttribute.value(i).equalsIgnoreCase("true") || classAttribute.value(i).equals("1")) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * @param classAttribute
+     * @return true if the positive class is chosen by default from the order
+     * of the class values (positiveClass not set or not matching, and no
+     * value true or 1)
+     */
+    public static boolean isPositiveClassArbitrary(Attribute classAttribute) {
+        return indexOfPositiveClassOption(classAttribute) < 0 && indexOfTrueValue(classAttribute) < 0;
     }
 
     /**

@@ -165,7 +165,7 @@ public class demo {
                 //train
                 Main.hmTrainFiles = new HashMap<>();
                 Main.needConfigFile = true;
-                Main.testing = false;
+                Main.predictNewData = false;
                 Main.training = true;
                 System.out.println("\n-------------\nTRAIN " + i);
                 String s[] = {"-config " + folder + "Data\\TCGA_PRAD\\datamining\\config_opt.conf -train"};
@@ -176,7 +176,7 @@ public class demo {
                 Main.hmTrainFiles = new HashMap<>();
                 Main.configFile = "";
                 Main.needConfigFile = false;
-                Main.testing = true;
+                Main.predictNewData = true;
                 Main.training = false;
                 Main.project = "outfile";
                 System.out.println("\n-------------\nTEST " + i);

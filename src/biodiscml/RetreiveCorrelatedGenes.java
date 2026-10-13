@@ -6,13 +6,14 @@ package biodiscml;
 
 
 import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.HashMap;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
 import utils.utils.TableObject;
 import static utils.utils.convertStringListToDoubles;
+import static utils.utils.newDecimalFormat;
 import static utils.utils.readTable;
 
 /**
@@ -22,12 +23,6 @@ import static utils.utils.readTable;
 public class RetreiveCorrelatedGenes {
 
     public static void correlation(String signatureFile, String allFeaturesFile, String bestFeatures) {
-        DecimalFormat df = new DecimalFormat();
-        df.setMaximumFractionDigits(3);
-        DecimalFormatSymbols dfs = new DecimalFormatSymbols();
-        dfs.setDecimalSeparator('.');
-        df.setDecimalFormatSymbols(dfs);
-
         TableObject tboAllFeatures = new TableObject(readTable(allFeaturesFile));
         TableObject tboSignature = new TableObject(readTable(signatureFile));
         TableObject tboBestFeatures = new TableObject(readTable(bestFeatures));
@@ -42,6 +37,8 @@ public class RetreiveCorrelatedGenes {
 
         tboSignature.hmData.keySet().parallelStream().forEach((signatureGene) -> {
             //iterate through all signature genes
+            // DecimalFormat is not thread-safe: one instance per task
+            DecimalFormat df = newDecimalFormat();
             double max = 0;
             for (String otherGene : tboAllFeatures.hmData.keySet()) { //iterate through all features
                 if (!otherGene.equals(signatureGene)) { //do not compare the signature gene against itself
@@ -67,15 +64,17 @@ public class RetreiveCorrelatedGenes {
     }
 
     public static TreeMap<String, Double> spearmanCorrelation(String signatureFile, String allFeaturesFile) {
-        TreeMap<String, Double> tm = new TreeMap<>();
-        DecimalFormat df = new DecimalFormat();
-        df.setMaximumFractionDigits(3);
+        // Filled concurrently by the parallel stream below: TreeMap is not thread-safe
+        // (concurrent puts can corrupt it into a cycle, then iterating it never ends)
+        ConcurrentSkipListMap<String, Double> tm = new ConcurrentSkipListMap<>();
 
         TableObject tboAllFeatures = new TableObject(readTable(allFeaturesFile));
         TableObject tboSignature = new TableObject(readTable(signatureFile));
 
         tboSignature.hmData.keySet().parallelStream().forEach((signatureGene) -> {
             //iterate through all signature genes
+            // DecimalFormat is not thread-safe: one instance per task
+            DecimalFormat df = newDecimalFormat();
             double max = 0;
             for (String otherGene : tboAllFeatures.hmData.keySet()) { //iterate through all features
 
@@ -96,19 +95,21 @@ public class RetreiveCorrelatedGenes {
             }
         });
 
-        return tm;
+        return new TreeMap<>(tm);
     }
 
     public static TreeMap<String, Double> pearsonCorrelation(String signatureFile, String allFeaturesFile) {
-        TreeMap<String, Double> tm = new TreeMap<>();
-        DecimalFormat df = new DecimalFormat();
-        df.setMaximumFractionDigits(3);
+        // Filled concurrently by the parallel stream below: TreeMap is not thread-safe
+        // (concurrent puts can corrupt it into a cycle, then iterating it never ends)
+        ConcurrentSkipListMap<String, Double> tm = new ConcurrentSkipListMap<>();
 
         TableObject tboAllFeatures = new TableObject(readTable(allFeaturesFile));
         TableObject tboSignature = new TableObject(readTable(signatureFile));
 
         tboSignature.hmData.keySet().parallelStream().forEach((signatureGene) -> {
             //iterate through all signature genes
+            // DecimalFormat is not thread-safe: one instance per task
+            DecimalFormat df = newDecimalFormat();
             double max = 0;
             for (String otherGene : tboAllFeatures.hmData.keySet()) { //iterate through all features
 
@@ -129,7 +130,7 @@ public class RetreiveCorrelatedGenes {
             }
         });
 
-        return tm;
+        return new TreeMap<>(tm);
     }
 
 }

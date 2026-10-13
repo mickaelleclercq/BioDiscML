@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.nio.file.StandardCopyOption;
 
 /**
@@ -37,7 +38,7 @@ public class Main {
     public static boolean training = false;
     public static boolean predictNewData = false;
     public static boolean trainingBestModel = false;
-    public static HashMap<String, String> hmTrainingBestModelList = new HashMap<>();//modelID, identifier prefix
+    public static LinkedHashMap<String, String> hmTrainingBestModelList = new LinkedHashMap<>();//modelID, identifier prefix
 
     public static String modelFile = "";
     public static HashMap<String, String> hmExcludedFeatures = new HashMap<>();//features to exclude from the final dataset
@@ -45,9 +46,11 @@ public class Main {
     //config
     public static String mergingID = "Instance";
 
-    //source files
-    public static HashMap<String, String> hmTrainFiles = new HashMap<>();//filename, identifier prefix
-    public static HashMap<String, String> hmNewDataFiles = new HashMap<>();//filename, identifier prefix
+    //source files, in the order of the configuration (the class is taken
+    //from the first file that contains it)
+    public static HashMap<String, String> hmTrainFiles = new LinkedHashMap<>();//filename, identifier prefix
+    public static HashMap<String, String> hmNewDataFiles = new LinkedHashMap<>();//filename, identifier prefix (-predict)
+    public static HashMap<String, String> hmValidationFiles = new LinkedHashMap<>();//filename, identifier prefix (-train)
 
     //options
     public static Boolean doClassification = false;
@@ -108,9 +111,26 @@ public class Main {
     static boolean ROCcurves = false; //experimental
     static boolean UpSetR = false; //experimental
     static boolean performShortTest = true;
+    // seed of all random number generators (sampling, cross validations,
+    // holdouts, bootstraps), so that two identical runs give identical results
+    public static int seed = 1;
+    // positive class of a binary classification (sensitivity, specificity,
+    // PPV, FDR, F-score, AUPRC). Empty: see Weka_module.getPositiveClassIndex
+    public static String positiveClass = "";
+    // exit code of the run: set to 1 by the errors that do not stop the run
+    // at once, so that schedulers and pipelines see the failure
+    public static int exitCode = 0;
 
     public static void main(String[] args) throws IOException {
         System.out.println("#### BioDiscML ####\n");
+        // -help works with any java version
+        for (String arg : args) {
+            String a = arg.trim().replaceFirst("^-+", "");
+            if (a.equals("help")) {
+                System.out.println("Read readme.md file or https://github.com/mickaelleclercq/BioDiscML");
+                System.exit(0);
+            }
+        }
         // check java version
         String version = System.getProperty("java.version");
         if (!version.contains("1.8")) {
@@ -126,7 +146,7 @@ public class Main {
             } else {
                 System.out.println("/mnt/software/jvm/jdk1.8.0_371/bin/java -jar biodiscml.jar " + arg);
             }
-            System.exit(0);
+            System.exit(1);
         }
         //read configuration file
         System.out.println("#### Parsing options...");
@@ -151,11 +171,11 @@ public class Main {
                 } else {
                     br = new BufferedReader(new FileReader(classifiers));
                 }
-                line = "";
-                while (br.ready()) {
-                    if (!line.startsWith("#") && !line.trim().isEmpty()) {
-                        String option = line.split("=")[0].trim();
-                        String value = line.split("=")[1].trim();
+                // (the last line used to be skipped by a br.ready() loop)
+                while ((line = br.readLine()) != null) {
+                    if (!line.trim().startsWith("#") && line.contains("=")) {
+                        String option = line.substring(0, line.indexOf("=")).trim();
+                        String value = line.substring(line.indexOf("=") + 1).trim();
                         switch (option) {
                             case "ccmd":
                                 classificationBruteForceCommands.add(value.trim());
@@ -165,16 +185,32 @@ public class Main {
                                 break;
                         }
                     }
-                    line = br.readLine();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                System.err.println("[error] Unable to read classifiers.conf");
+                System.exit(1);
             }
         } else {
             System.out.println("Model search mode: Fast way mode");
         }
 
         //set number of max cpus to use
+        if (!cpus.equals("max")) {
+            // with a parallelism of 0, the common pool has no worker thread and,
+            // with Java 8, a parallel stream can wait forever for a task that
+            // only a worker would run (observed in -bestmodel, when retrieving
+            // correlated features): use 1, i.e. run sequentially
+            try {
+                if (Integer.parseInt(cpus) < 1) {
+                    System.err.println("[warning] cpus=" + cpus + " is not a valid number of cpus: 1 is used");
+                    cpus = "1";
+                }
+            } catch (NumberFormatException e) {
+                System.err.println("[warning] cpus=" + cpus + " is not a number (or max): max is used");
+                cpus = "max";
+            }
+        }
         if (!cpus.equals("max")) {
             System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", cpus);
         }
@@ -226,6 +262,8 @@ public class Main {
                 f.createNewFile();
             } catch (Exception e) {
                 e.printStackTrace();
+                System.err.println("[error] Unable to restore the previous run");
+                System.exit(1);
             }
 
         }
@@ -290,19 +328,28 @@ public class Main {
             if (!doClassification && !doRegression) {
                 System.err.println("[error] No prediction type has been set (classification or regression)."
                         + " Set doClassification or doRegression at true");
-                System.exit(0);
+                System.exit(1);
             }
         }
 
         if (predictNewData) {
             System.out.println("#### Start predicting new data...");
+            //prediction type from the configuration
+            if (doRegression && !doClassification) {
+                isClassification = false;
+            } else if (doClassification) {
+                isClassification = true;
+            }
+            // printed here: they are only known once the config file is read
+            System.out.println("Merging ID: " + mergingID);
+            System.out.println("Prediction type: " + (isClassification ? "Classification" : "Regression"));
             if (modelFile.isEmpty()) {
                 System.err.println("[error] No model file have been provided (Set a modelFile in config file)");
-                System.exit(0);
+                System.exit(1);
             }
             if (hmNewDataFiles.isEmpty()) {
                 System.err.println("[error] No new data file have been provided (Set a newDataFile in config file)");
-                System.exit(0);
+                System.exit(1);
             }
 
             //put data together in the same file for ML
@@ -345,6 +392,10 @@ public class Main {
          */
         //System.out.println("##Finished with success !");
         //System.exit(0);
+        if (exitCode != 0) {
+            System.err.println("[error] BioDiscML finished with errors (see above)");
+            System.exit(exitCode);
+        }
     }
 
     public static void Main() {
@@ -385,12 +436,12 @@ public class Main {
         //set options
         boolean prefixesDefined = false;
         for (String s : options) {
-            if (s.equals("help")) {
+            if (s.trim().equals("help")) {
                 System.out.println("Read readme.md file or https://github.com/mickaelleclercq/BioDiscML");
                 System.exit(0);
             }
             if (s.contains("=")) {
-                setOption(s.split("=")[0], s.split("=")[1]);
+                setOption(s.substring(0, s.indexOf("=")).trim(), s.substring(s.indexOf("=") + 1).trim());
             }
             // get config
             if (s.startsWith("config") && configFile.isEmpty()) {
@@ -435,13 +486,7 @@ public class Main {
 
         if (predictNewData) {
             System.out.println("#### Mode: Prediction");
-            System.out.println("Merging ID: " + mergingID);
             System.out.println("Configuration file: " + configFile);
-            if (isClassification) {
-                System.out.println("Prediction type: Classification");
-            } else {
-                System.out.println("Prediction type: Regression");
-            }
         } else if (training) {
             System.out.println("#### Mode: Training");
         } else if (trainingBestModel) {
@@ -449,6 +494,7 @@ public class Main {
         } else {
             System.err.println("[error] No mode selected (train, bestmodel or predict). "
                     + "Add -train or -bestmodel or -predict to your command line");
+            System.exit(1);
         }
 
         //export config file when executing command line options
@@ -481,28 +527,100 @@ public class Main {
                 configFile = "empty";
             }
             System.err.println("[error] Configuration file not found (provided source: " + configFile + "). Set config file with -config option");
-            System.exit(0);
+            System.exit(1);
         }
         System.out.println("#### Reading configuration file " + configFile);
         String line = null;
         try {
             BufferedReader br = new BufferedReader(new FileReader(configFile));
-            while (br.ready()) {
-                line = br.readLine();
-                if (!line.startsWith("#") && !line.trim().isEmpty()) {
-                    String option = line.split("=")[0].trim();
-                    String value = line.split("=")[1].trim();
+            while ((line = br.readLine()) != null) {
+                if (!line.trim().startsWith("#") && !line.trim().isEmpty()) {
+                    if (!line.contains("=")) {
+                        System.err.println("[warning] Line ignored in config file (no option=value): " + line);
+                        continue;
+                    }
+                    // split at the first '=' only: values can contain '='
+                    String option = line.substring(0, line.indexOf("=")).trim();
+                    // remove end of line comments ("value # comment")
+                    String value = line.substring(line.indexOf("=") + 1).replaceAll("\\s+#.*$", "").trim();
+                    if (value.isEmpty()) {
+                        System.err.println("[warning] No value for option " + option + " in config file: default value kept");
+                        continue;
+                    }
                     //System.out.println(option + ":" + value);
                     setOption(option, value);
                 }
             }
+            br.close();
 
         } catch (Exception e) {
-            System.err.println("Parsing error in config file at line " + line);
+            System.err.println("[error] Parsing error in config file at line " + line);
             e.printStackTrace();
-            System.exit(0);
+            System.exit(1);
         }
 
+    }
+
+    /**
+     * Parse a fast way command: "classifier options[, optimizer[, search mode]]".
+     * The optimizer and the search mode are recognized from the end, so that
+     * the classifier options can contain commas.
+     *
+     * @param value
+     * @return classifier options:optimizer:searchmode (allopt and allsearch if
+     * not provided)
+     */
+    static String parseFastWayCommand(String value) {
+        String parts[] = value.split(",", -1);
+        int n = parts.length;
+        String optimizer = "allopt";
+        String searchmode = "allsearch";
+        int end = n; // parts[0..end-1] are the classifier and its options
+        if (n >= 3 && isSearchMode(parts[n - 1]) && isOptimizer(parts[n - 2])) {
+            optimizer = parts[n - 2].trim().toLowerCase();
+            searchmode = parts[n - 1].trim().toLowerCase();
+            end = n - 2;
+        } else if (n >= 2 && isOptimizer(parts[n - 1])) {
+            optimizer = parts[n - 1].trim().toLowerCase();
+            end = n - 1;
+        }
+        String command = String.join(",", java.util.Arrays.copyOfRange(parts, 0, end)).trim();
+        return command + ":" + optimizer + ":" + searchmode;
+    }
+
+    private static boolean isOptimizer(String s) {
+        s = s.trim().toLowerCase();
+        return s.equals("allopt") || Training.KNOWN_OPTIMIZERS.contains(s);
+    }
+
+    private static boolean isSearchMode(String s) {
+        s = s.trim().toLowerCase();
+        return s.equals("allsearch") || s.equals("f") || s.equals("fb") || s.equals("b")
+                || s.equals("bf") || s.equals("all") || s.matches("top[0-9]+");
+    }
+
+    /**
+     * @param option
+     * @param value
+     * @return the boolean value: true/yes/1/on or false/no/0/off (any case)
+     */
+    static boolean parseBoolean(String option, String value) {
+        switch (value.trim().toLowerCase()) {
+            case "true":
+            case "yes":
+            case "1":
+            case "on":
+                return true;
+            case "false":
+            case "no":
+            case "0":
+            case "off":
+                return false;
+            default:
+                System.err.println("[warning] Invalid value " + value + " for option " + option
+                        + " (expected true or false): false is used");
+                return false;
+        }
     }
 
     private static void setOption(String option, String value) {
@@ -511,10 +629,10 @@ public class Main {
                 configFile = value.trim();
                 break;
             case "debug":
-                debug = Boolean.valueOf(value.trim());
+                debug = parseBoolean(option, value);
                 break;
             case "debug2":
-                debug2 = Boolean.valueOf(value.trim());
+                debug2 = parseBoolean(option, value);
                 break;
             case "wd":
                 wd = value.trim();
@@ -542,9 +660,9 @@ public class Main {
                 break;
             case "validationFile":
                 try {
-                    hmNewDataFiles.put(wd + value.split(",")[0].trim(), value.split(",")[1].trim()); //filename,prefix
+                    hmValidationFiles.put(wd + value.split(",")[0].trim(), value.split(",")[1].trim()); //filename,prefix
                 } catch (Exception e) {
-                    hmNewDataFiles.put(wd + value.replace(",", "").trim(), ""); //filename
+                    hmValidationFiles.put(wd + value.replace(",", "").trim(), ""); //filename
                 }
                 break;
             case "excluded":
@@ -570,7 +688,7 @@ public class Main {
                 break;
 
             case "doClassification":
-                doClassification = Boolean.valueOf(value.trim());
+                doClassification = parseBoolean(option, value);
                 break;
 
             case "classificationClassName":
@@ -580,54 +698,23 @@ public class Main {
                 }
                 break;
             case "classificationFastWay":
-                classificationFastWay = Boolean.valueOf(value.trim());
+                classificationFastWay = parseBoolean(option, value);
                 break;
             case "numberOfBestModels":
                 numberOfBestModels = Integer.valueOf(value.trim());
                 break;
             case "numberOfBestModelsSortingMetric":
-                bestModelsSortingMetric = value.trim().toUpperCase();
+                // case is resolved against the results file header
+                bestModelsSortingMetric = value.trim();
                 break;
             case "numberOfBestModelsSortingMetricThreshold":
                 bestModelsSortingMetricThreshold = Double.valueOf(value.trim());
                 break;
             case "ccmd":
-                switch (value.split(",").length) {
-                    case 1:
-                        classificationFastWayCommands.add(value.trim()
-                                + ":allopt:allsearch");
-                        break;
-                    case 2:
-                        classificationFastWayCommands.add(value.split(",")[0].trim()
-                                + ":" + value.split(",")[1].trim().toLowerCase() + ":allsearch");
-                        break;
-                    case 3:
-                        classificationFastWayCommands.add(value.split(",")[0].trim()
-                                + ":" + value.split(",")[1].trim().toLowerCase()
-                                + ":" + value.split(",")[2].trim().toLowerCase());
-                        break;
-                    default:
-                        break;
-                }
+                classificationFastWayCommands.add(parseFastWayCommand(value));
                 break;
             case "rcmd":
-                switch (value.split(",").length) {
-                    case 1:
-                        regressionFastWayCommands.add(value.trim()
-                                + ":allopt:allsearch");
-                        break;
-                    case 2:
-                        regressionFastWayCommands.add(value.split(",")[0].trim()
-                                + ":" + value.split(",")[1].trim().toLowerCase() + ":allsearch");
-                        break;
-                    case 3:
-                        regressionFastWayCommands.add(value.split(",")[0].trim()
-                                + ":" + value.split(",")[1].trim().toLowerCase()
-                                + ":" + value.split(",")[2].trim().toLowerCase());
-                        break;
-                    default:
-                        break;
-                }
+                regressionFastWayCommands.add(parseFastWayCommand(value));
                 break;
             case "coptimizers":
                 classificationOptimizers = value.trim().toLowerCase();
@@ -636,13 +723,13 @@ public class Main {
                 searchmodes = value.trim().toLowerCase();
                 break;
             case "doRegression":
-                doRegression = Boolean.valueOf(value.trim());
+                doRegression = parseBoolean(option, value);
                 break;
             case "regressionClassName":
                 regressionClassName = value.trim();
                 break;
             case "regressionFastWay":
-                regressionFastWay = Boolean.valueOf(value.trim());
+                regressionFastWay = parseBoolean(option, value);
                 break;
 
             case "roptimizers":
@@ -673,28 +760,28 @@ public class Main {
                 maxRankingScoreDifference = Double.valueOf(value.trim());
                 break;
             case "retreiveCorrelatedGenesByRankingScore":
-                retreiveCorrelatedGenesByRankingScore = Boolean.valueOf(value.trim());
+                retreiveCorrelatedGenesByRankingScore = parseBoolean(option, value);
                 break;
             case "combineModels":
-                combineModels = Boolean.valueOf(value.trim());
+                combineModels = parseBoolean(option, value);
                 break;
             case "retrieveCorrelatedGenes":
-                retrieveCorrelatedGenes = Boolean.valueOf(value.trim());
+                retrieveCorrelatedGenes = parseBoolean(option, value);
                 break;
             case "generateModelWithCorrelatedGenes":
-                generateModelWithCorrelatedGenes = Boolean.valueOf(value.trim());
+                generateModelWithCorrelatedGenes = parseBoolean(option, value);
                 break;
             case "combinationRule":
                 combinationRule = value.trim().toUpperCase();
                 break;
             case "sampling":
-                doSampling = Boolean.valueOf(value.trim());
+                doSampling = parseBoolean(option, value);
                 break;
             case "roc_curves":
-                ROCcurves = Boolean.valueOf(value.trim());
+                ROCcurves = parseBoolean(option, value);
                 break;
             case "loocv":
-                loocv = Boolean.valueOf(value.trim());
+                loocv = parseBoolean(option, value);
                 break;
             case "samplingFold":
                 samplingFold = Integer.valueOf(value.trim());
@@ -703,31 +790,31 @@ public class Main {
                 cpus = value.trim();
                 break;
             case "computeBestModel":
-                computeBestModel = Boolean.valueOf(value.trim());
+                computeBestModel = parseBoolean(option, value);
                 break;
             case "modelFile":
                 modelFile = value.trim();
                 break;
             case "printFailedModels":
-                printFailedModels = Boolean.valueOf(value.trim());
+                printFailedModels = parseBoolean(option, value);
                 break;
             case "resumeTraining":
-                resumeTraining = Boolean.valueOf(value.trim());
+                resumeTraining = parseBoolean(option, value);
                 break;
             case "upsetr":
-                UpSetR = Boolean.valueOf(value.trim());
+                UpSetR = parseBoolean(option, value);
                 break;
             case "repeatedHoldoutTrain":
-                repeatedHoldout = Boolean.valueOf(value.trim());
+                repeatedHoldout = parseBoolean(option, value);
                 break;
             case "bootstrap":
-                bootstrap = Boolean.valueOf(value.trim());
+                bootstrap = parseBoolean(option, value);
                 break;
             case "restoreRun":
-                restoreRun = Boolean.valueOf(value.trim());
+                restoreRun = parseBoolean(option, value);
                 break;
             case "noFeatureSelection":
-                noFeatureSelection = Boolean.valueOf(value.trim());
+                noFeatureSelection = parseBoolean(option, value);
                 break;
             case "previousRunPath":
                 previousRunPath = value.trim();
@@ -736,10 +823,20 @@ public class Main {
                 previousRunProjectName = value.trim();
                 break;
             case "performShortTest":
-                performShortTest = Boolean.valueOf(value.trim());
+                performShortTest = parseBoolean(option, value);
+                break;
+            case "positiveClass":
+                positiveClass = value.trim();
+                break;
+            case "seed":
+                seed = Integer.valueOf(value.trim());
                 break;
             case "missingValueToReplace":
                 missingValueToReplace = value.trim();
+                break;
+            default:
+                // e.g. a misspelled option, which would otherwise be silently ignored
+                System.err.println("[warning] Unknown option " + option + ": ignored");
                 break;
         }
     }

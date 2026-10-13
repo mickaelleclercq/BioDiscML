@@ -231,6 +231,8 @@ public class AdaptDatasetToTesting {
             pw.close();
         } catch (Exception e) {
             e.printStackTrace();
+            System.err.println("[error] Unable to prepare the file of new data " + outfile);
+            System.exit(1);
         }
     }
 

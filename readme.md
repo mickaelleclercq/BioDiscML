@@ -32,6 +32,62 @@ includes consensus feature search, to visualize your results.
 
 Full manuscript: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6532608/
 
+## Design notes
+- The feature search modes are additive stepwise searches on the features 
+ranked by information gain (classification) or RELIEFF (regression): 
+F adds the features from the best ranked one, B runs the same additive search 
+from the lowest-ranked feature (it is not a backward elimination). FB and BF 
+add a backward step: after each added feature, the previously retained features 
+are removed one at a time if the model is not worse without them.
+- Feature ranking and selection use the whole training set. The cross validation 
+(10CV, LOOCV), repeated holdout (RH) and bootstrap (BS) scores computed on the 
+training set (TRAIN_* columns) are therefore optimistic. Only the scores on the 
+held-out test set (TEST_* columns, with sampling=true or a validationFile) are 
+unbiased estimates of the performance on new data.
+
+## Changes since 1.8.14
+Results differ from those of version 1.8.14 and earlier. Main changes:
+- Metrics. For a binary class, SEN, SPE, FPR, FNR, PPV, FDR, F-score and AUPRC 
+are those of the positive class (option positiveClass), not class-weighted 
+averages. A warning is printed when the positive class is chosen arbitrarily 
+(positiveClass not set and no class value true or 1), and the positive class is 
+written in the header of the details.txt files. The .632+ estimate is computed 
+as described by Efron and Tibshirani (1997); its column is empty when 
+bootstrap=false and NaN when it cannot be computed. Averages and standard 
+deviations ignore undefined (NaN) values. Undefined and infinite values are 
+written NaN and Infinity, and numbers never have a grouping separator.
+- Search. FB and BF now run their backward step (they were identical to F and 
+B since 1.8.12), so they take longer. maxNumberOfFeaturesInModel is enforced.
+- Reproducibility. All random number generators are seeded (option seed, 
+default 1), and the results file of a parallel run is rewritten in the order 
+of the queue at the end of the run (the lines of a resumed run come after 
+those of the previous run). Repeated holdout and bootstrap samples are 
+stratified by class (then shuffled). The short test uses about 5% of each 
+class (at least 5 instances per class, 10 for a regression), so that more 
+models pass it on small datasets.
+- -bestmodel sorts the models numerically (error rates, including the .632+ 
+columns, in ascending order), the thresholds are inclusive, the metric name is 
+not case-sensitive, and a failing model does not stop the others. -predict 
+works for regression.
+- Input files. newDataFile is only used by -predict (it was also used as a 
+validation file at training). Validation rows are aligned on the training 
+columns by name (with or without the file prefixes); the run stops if no 
+feature is found. Instances with an empty, ?, NA or N/A class are ignored. 
+With several input files, IDs are matched ignoring case and the class is taken 
+from the first file (in the order of the config file) that contains it.
+- Config file. Values are split at the first '=', end-of-line comments 
+(value # comment) are removed, booleans accept true/false, yes/no, 1/0 and 
+on/off, empty values are ignored (default kept), and unknown options are 
+reported. The last line of classifiers.conf is read even without a final 
+newline. cpus values below 1 mean 1. -help works with any Java version.
+- Training. Models whose options contain the word error (e.g. the SquaredError 
+loss of MLPClassifier) are no longer discarded as failed models.
+- Errors. BioDiscML exits with code 1 when it fails (configuration errors, no 
+model trained or selected, a best model or a prediction that failed...), so 
+that schedulers and pipelines see the failure.
+- combineModels. The combination rule is checked: MED (median) only works for 
+regression, MAJ and PROD only for classification.
+
 ## Requirements
 JAVA 8 (https://www.java.com/en/download/)
 
@@ -214,7 +270,7 @@ For each model, we perform various evaluations summarized in this table:
 | TRAIN_TEST_BS_MCC | Bootstrap Matthews Correlation Coefficient on merged Train and Test sets|
 | TRAIN_TEST_BS_MAE | Bootstrap Mean Absolute Error on merged Train and Test sets|
 | TRAIN_TEST_BS_BER | Bootstrap Balanced Error Rate on merged Train and Test sets|
-| TRAIN_TEST_BS_BER_BS.632+ | Bootstrap .632+ rule on merged Train and Test sets|
+| TRAIN_TEST_BS.632+ | Bootstrap .632+ rule on merged Train and Test sets|
 | AVG_BER | Average of all calculated Balanced Error Rates |
 | STD_BER | Standard deviation of the calculated Balanced Error Rates|
 | AVG_MAE | Average of all calculated Mean Absolute Errors |
@@ -224,6 +280,18 @@ For each model, we perform various evaluations summarized in this table:
 | AttributeList | Selected features. Use the option -bestmodel to generate a report and get the features' full names|
 
 Note that all columns refering to a test set will be empty if no test set have been generated or provided
+
+For a binary class, the sensitivity (SEN), specificity (SPE), FPR, FNR, PPV, FDR, 
+F-score and AUPRC are those of the positive class (option positiveClass, see 
+config.conf): SEN = TP/(TP+FN), SPE = TN/(TN+FP), PPV = TP/(TP+FP), 
+FDR = 1 - PPV. With more than two classes they are averages weighted by class 
+size (the weighted sensitivity is then equal to the accuracy). Up to version 
+1.8.14, they were always class-weighted averages (for a binary class, SEN was 
+then equal to ACC).
+Repeated holdout (66/34 split) and bootstrap samples are stratified by class. 
+The .632+ columns are error rates (Efron and Tibshirani, 1997).
+All random number generators are seeded (option seed): two runs with the same 
+configuration give the same results.
 
 - {project_name}_d.{model_name}_{model_hyperparameters}_{feature_search_mode}.*details.txt
 
